@@ -46,17 +46,12 @@ function populateGradeOptions() {
 function populateStepOptions() {
   const tableKey = currentTableKey();
   const grade = document.getElementById("grade").value;
-  const stepSelect = document.getElementById("step");
-  const currentValue = Number(stepSelect.value) || 1;
+  const stepInput = document.getElementById("step");
+  const currentValue = Number(stepInput.value) || 1;
   const maxStep = getMaxStep(tableKey, grade);
-  stepSelect.innerHTML = "";
-  for (let s = 1; s <= maxStep; s++) {
-    const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = `${s}号俸`;
-    stepSelect.appendChild(opt);
-  }
-  stepSelect.value = Math.min(currentValue, maxStep);
+  stepInput.max = maxStep;
+  stepInput.value = Math.min(Math.max(currentValue, 1), maxStep);
+  document.getElementById("step-max").textContent = `/ ${maxStep}号俸`;
 }
 
 function populateRegionalRateOptions() {
@@ -174,7 +169,26 @@ function initForm() {
     }
     recalculate();
   });
-  form.addEventListener("change", recalculate);
+  form.addEventListener("change", (e) => {
+    if (e.target.id === "step") {
+      const stepInput = document.getElementById("step");
+      const maxStep = Number(stepInput.max) || 1;
+      const clamped = Math.min(Math.max(Number(stepInput.value) || 1, 1), maxStep);
+      stepInput.value = clamped;
+    }
+    recalculate();
+  });
+
+  document.querySelectorAll(".step-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const stepInput = document.getElementById("step");
+      const maxStep = Number(stepInput.max) || 1;
+      const delta = Number(btn.dataset.delta);
+      const next = Math.min(Math.max((Number(stepInput.value) || 1) + delta, 1), maxStep);
+      stepInput.value = next;
+      recalculate();
+    });
+  });
 
   recalculate();
 }
