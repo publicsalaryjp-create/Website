@@ -47,6 +47,7 @@ function initForm() {
   populateGradeOptions("1");
   populateStepOptions();
   populateRegionalRateOptions();
+  populateRegionalRateTable();
   populateBonusRateOptions();
   updateVisibility();
 

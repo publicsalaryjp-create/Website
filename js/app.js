@@ -178,7 +178,7 @@ function renderLifetimeTable() {
     REGIONAL_ALLOWANCE_RATES.forEach((r) => {
       const opt = document.createElement("option");
       opt.value = r.value;
-      opt.textContent = r.label.split("（")[0];
+      opt.textContent = r.name;
       if (r.value === row.regionalRate) opt.selected = true;
       regionSelect.appendChild(opt);
     });
@@ -297,6 +297,7 @@ function initForm() {
   populateGradeOptions();
   populateStepOptions();
   populateRegionalRateOptions();
+  populateRegionalRateTable();
   populateMeritStaffTypeOptions();
   populateMeritGradeOptions();
   updateVisibility();

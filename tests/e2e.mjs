@@ -255,6 +255,24 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
+// index.html: 地域手当の級地区分ごとの支給割合表が折りたたみ内に描画され、開閉できる
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  const rowCount = await page.$$eval("#regional-rate-table-body tr", (trs) => trs.length);
+  const isOpenBefore = await page.$eval(".regional-rate-details", (el) => el.open);
+  await page.click(".regional-rate-details summary");
+  await page.waitForTimeout(150);
+  const isOpenAfter = await page.$eval(".regional-rate-details", (el) => el.open);
+  report(
+    "index.html: 地域手当の割合表が6区分描画され、クリックで開閉できる",
+    rowCount === 6 && isOpenBefore === false && isOpenAfter === true,
+    `行数=${rowCount} 開閉前=${isOpenBefore} 開閉後=${isOpenAfter}`
+  );
+  await page.close();
+}
+
 await browser.close();
 await new Promise((resolve) => server.close(resolve));
 

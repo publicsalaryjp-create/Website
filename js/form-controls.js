@@ -2,8 +2,8 @@
  * form-controls.js
  * index.html / new-hire.html の両方で使う共通のフォーム制御・表示ロジック。
  * 両ページで一致しているDOM ID（salary-table, grade, grade-field, step, step-max,
- * regional-rate, child-under15-count, child-16to22-count, parent-count,
- * housing-allowance, table-source-note, r-base, r-regional, r-dependent,
+ * regional-rate, regional-rate-table-body, child-under15-count, child-16to22-count,
+ * parent-count, housing-allowance, table-source-note, r-base, r-regional, r-dependent,
  * r-housing, r-monthly-total）を前提にする。
  * 期末・勤勉手当の入力（index.htmlは成績率区分、new-hire.htmlは在職期間率）は
  * ページごとに構成が異なるため、それぞれ js/app.js / js/new-hire.js 側で扱う。
@@ -66,14 +66,39 @@ function populateStepOptions() {
   document.getElementById("step-max").textContent = `/ ${maxStep}号俸`;
 }
 
+function regionalRateLabel(r) {
+  const percent = `${(r.value * 100).toFixed(0)}%`;
+  return `${r.name}（${percent}）${r.example ? `例：${r.example}` : ""}`;
+}
+
 function populateRegionalRateOptions() {
   const select = document.getElementById("regional-rate");
   select.innerHTML = "";
   REGIONAL_ALLOWANCE_RATES.forEach((r) => {
     const opt = document.createElement("option");
     opt.value = r.value;
-    opt.textContent = r.label;
+    opt.textContent = regionalRateLabel(r);
     select.appendChild(opt);
+  });
+}
+
+/** 地域手当の級地区分ごとの支給割合を一覧表（折りたたみ）に描画する */
+function populateRegionalRateTable() {
+  const tbody = document.getElementById("regional-rate-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  REGIONAL_ALLOWANCE_RATES.forEach((r) => {
+    const tr = document.createElement("tr");
+    const nameTd = document.createElement("td");
+    nameTd.textContent = r.name;
+    const rateTd = document.createElement("td");
+    rateTd.textContent = `${(r.value * 100).toFixed(0)}%`;
+    const exampleTd = document.createElement("td");
+    exampleTd.textContent = r.example || "-";
+    tr.appendChild(nameTd);
+    tr.appendChild(rateTd);
+    tr.appendChild(exampleTd);
+    tbody.appendChild(tr);
   });
 }
 
