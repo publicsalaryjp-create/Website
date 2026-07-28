@@ -133,7 +133,8 @@ function recalculate() {
 function updateTableSourceNote() {
   const note = document.getElementById("table-source-note");
   if (SALARY_CATALOG_IS_OFFICIAL) {
-    note.innerHTML = `俸給表は<strong>提供データ（${getTableKeys().length}表）</strong>を使用しています。${
+    const date = SALARY_CATALOG.effectiveDate ? `（${SALARY_CATALOG.effectiveDate}時点）` : "";
+    note.innerHTML = `俸給表は<strong>提供データ（${getTableKeys().length}表${date}）</strong>を使用しています。${
       SALARY_CATALOG_SOURCE_NOTE ? ` ${SALARY_CATALOG_SOURCE_NOTE}` : ""
     }`;
   } else {

@@ -13,7 +13,8 @@
 ```json
 {
   "source": "ユーザー提供の公式俸給表データ（...）",
-  "note": "適用年度・施行日は未確認のため、必ず最新の人事院公表資料と照合してください。",
+  "note": "提供時点（2026-07-28）で有効な俸給表として掲載。実際の施行日は前年度分の可能性があるため、最新の人事院公表資料と照合してください。",
+  "effectiveDate": "2026-07-28",
   "order": ["administrative_1", "administrative_2", "...", "designated"],
   "tables": {
     "administrative_1": {

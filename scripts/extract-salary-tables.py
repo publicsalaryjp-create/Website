@@ -153,9 +153,12 @@ def main():
             order_keys.append(key)
             print(key, "->", steps)
 
+    from datetime import date
+
     out = {
         "source": "ユーザー提供の公式俸給表データ（一般職の職員の給与に関する法律 別表に基づく）",
-        "note": "適用年度・施行日は未確認のため、必ず最新の人事院公表資料と照合してください。",
+        "note": f"提供時点（{date.today().isoformat()}）で有効な俸給表として掲載。実際の施行日は前年度分の可能性があるため、最新の人事院公表資料と照合してください。",
+        "effectiveDate": date.today().isoformat(),
         "order": order_keys,
         "tables": tables,
     }
