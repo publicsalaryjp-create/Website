@@ -104,6 +104,30 @@ test("calculateOvertimeAllowance: 月60時間超は超過分の割増率が上�
   assert.equal(r.excessHours, 10);
 });
 
+test("calculateOvertimeAllowance: 平日時間外がちょうど60時間の場合は超過扱いにならない（境界値）", () => {
+  const r = context.calculateOvertimeAllowance(1000, {
+    weekdayNormalHours: 50,
+    weekdayNightHours: 10,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+  // 合計60時間ちょうど -> 超過なし。50*1.25 + 10*1.5 = 62.5+15 = 77.5 -> 77500円
+  assert.equal(r.excessHours, 0);
+  assert.equal(r.totalAllowance, 77500);
+});
+
+test("calculateOvertimeAllowance: 平日時間外が60.5時間の場合は0.5時間分だけ超過扱いになる（境界値）", () => {
+  const r = context.calculateOvertimeAllowance(1000, {
+    weekdayNormalHours: 50.5,
+    weekdayNightHours: 10,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+  // 合計60.5時間 -> 0.5時間だけ超過。50*1.25 + 0.5*1.5(超過分) + 10*1.5 = 62.5+0.75+15 = 78.25 -> 78250円
+  assert.equal(r.excessHours, 0.5);
+  assert.equal(r.totalAllowance, 78250);
+});
+
 test("calculateOvertimeAllowance: 休日勤務は60時間判定に含まれない", () => {
   const r = context.calculateOvertimeAllowance(1000, {
     weekdayNormalHours: 0,

@@ -93,6 +93,44 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
+// index.html: flat型俸給表（指定職）を選ぶと級の入力欄が隠れ、俸給月額が正の値になる
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "designated");
+  await page.selectOption("#step", "1");
+  await page.waitForTimeout(300);
+  const gradeFieldHidden = await page.isHidden("#grade-field");
+  const baseSalaryText = await page.textContent("#r-base");
+  const baseSalary = Number(baseSalaryText.replace(/[^\d]/g, ""));
+  report(
+    "index.html: 指定職俸給表（flat型）で級の入力欄が隠れ、俸給月額が正の値になる",
+    gradeFieldHidden && baseSalary > 0,
+    `grade-field非表示=${gradeFieldHidden} 俸給月額=${baseSalaryText}`
+  );
+  await page.close();
+}
+
+// index.html: 行政職以外の俸給表（graded型、医療職俸給表(一)）でも俸給月額が正の値になる
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "medical_1");
+  await page.selectOption("#grade", "1");
+  await page.selectOption("#step", "1");
+  await page.waitForTimeout(300);
+  const baseSalaryText = await page.textContent("#r-base");
+  const baseSalary = Number(baseSalaryText.replace(/[^\d]/g, ""));
+  report(
+    "index.html: 医療職俸給表(一) 1級1号俸の俸給月額が正の値",
+    baseSalary > 0,
+    `俸給月額=${baseSalaryText}`
+  );
+  await page.close();
+}
+
 // index.html: 扶養手当が15歳以下/16〜22歳/父母等の区分ごとに正しく合算される
 {
   const page = await browser.newPage();
