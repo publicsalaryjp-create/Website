@@ -41,6 +41,7 @@ function recalculate() {
   document.getElementById("r-bonus-first").textContent = yen.format(firstBonus);
   document.getElementById("r-bonus-second").textContent = yen.format(secondBonus);
   document.getElementById("r-annual").textContent = yen.format(annualIncome);
+  document.getElementById("r-annual-hero").textContent = yen.format(annualIncome);
 }
 
 function initForm() {

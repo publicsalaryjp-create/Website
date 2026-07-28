@@ -62,6 +62,7 @@ function renderResult(result) {
   document.getElementById("r-kinben-december").textContent = yen.format(result.kinbenDecember);
   document.getElementById("r-bonus-annual").textContent = yen.format(result.bonusAnnual);
   document.getElementById("r-annual").textContent = yen.format(result.annualIncome);
+  document.getElementById("r-annual-hero").textContent = yen.format(result.annualIncome);
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
 }
 
