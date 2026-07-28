@@ -118,14 +118,6 @@ legend {
   margin-bottom: 4px;
 }
 
-.checkbox-field label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.95rem;
-  color: var(--color-text);
-}
-
 select,
 input[type="number"] {
   width: 100%;

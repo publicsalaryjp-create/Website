@@ -84,10 +84,9 @@ function calculateOvertimeAllowance(hourlyWage, hours) {
  * @param {number} input.grade 職務の級（flat型の俸給表では無視される）
  * @param {number} input.step 号俸
  * @param {number} input.regionalRate 地域手当率 (0〜0.2)
- * @param {boolean} input.hasSpouse 配偶者の有無
- * @param {number} input.childCount 扶養する子の数
+ * @param {number} input.childUnder15Count 扶養する子の数（15歳以下）
+ * @param {number} input.child16to22Count 扶養する子の数（16歳以上22歳以下）
  * @param {number} input.parentCount 扶養する父母等の数
- * @param {string} input.fiscalYear "r6" | "r7" | "r8"
  * @param {string} input.housingType "rent" | "owned" | "none"
  * @param {number} input.rent 家賃(円)
  * @param {string} input.commuteType "transit" | "vehicle" | "none"
@@ -103,11 +102,10 @@ function calculateSalary(input) {
   const baseSalary = getSalaryAmount(input.tableKey, input.grade, input.step);
   const regionalAllowance = Math.floor(baseSalary * input.regionalRate);
 
-  const dep = DEPENDENT_ALLOWANCE_SCHEDULE[input.fiscalYear] || DEPENDENT_ALLOWANCE_SCHEDULE.r8;
   const dependentAllowance =
-    (input.hasSpouse ? dep.spouse : 0) +
-    dep.child * Math.max(0, input.childCount || 0) +
-    dep.parent * Math.max(0, input.parentCount || 0);
+    DEPENDENT_ALLOWANCE_RATES.childUnder15 * Math.max(0, input.childUnder15Count || 0) +
+    DEPENDENT_ALLOWANCE_RATES.child16to22 * Math.max(0, input.child16to22Count || 0) +
+    DEPENDENT_ALLOWANCE_RATES.parent * Math.max(0, input.parentCount || 0);
 
   const housingAllowance =
     input.housingType === "rent" ? calcHousingAllowance(input.rent || 0) : 0;

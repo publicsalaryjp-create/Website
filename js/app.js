@@ -255,7 +255,6 @@ function initForm() {
   populateGradeOptions();
   populateStepOptions();
   populateRegionalRateOptions();
-  populateFiscalYearOptions();
   updateVisibility();
 
   const form = document.getElementById("calc-form");

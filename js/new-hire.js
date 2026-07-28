@@ -46,7 +46,6 @@ function initForm() {
   populateGradeOptions("1");
   populateStepOptions();
   populateRegionalRateOptions();
-  populateFiscalYearOptions();
   populateBonusRateOptions();
   updateVisibility();
 

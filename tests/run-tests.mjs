@@ -161,10 +161,9 @@ test("calculateSalary: 各手当と合計額が期待通り計算される", () 
     grade: 1,
     step: 2,
     regionalRate: 0.2,
-    fiscalYear: "r8",
-    hasSpouse: false,
-    childCount: 2,
-    parentCount: 0,
+    childUnder15Count: 1,
+    child16to22Count: 1,
+    parentCount: 1,
     housingType: "rent",
     rent: 70000,
     commuteType: "transit",
@@ -178,11 +177,48 @@ test("calculateSalary: 各手当と合計額が期待通り計算される", () 
 
   assert.equal(result.baseSalary, 101000);
   assert.equal(result.regionalAllowance, 20200); // 101000*0.2
-  assert.equal(result.dependentAllowance, 26000); // 子2人 x 13000円(r8)
+  assert.equal(result.dependentAllowance, 37500); // 15歳以下の子1人13000 + 16-22歳の子1人18000 + 父母等1人6500
   assert.equal(result.housingAllowance, 28000); // 70000円は上限28000円
   assert.equal(result.commuteAllowance, 15000);
-  assert.equal(result.monthlyTotal, 190200);
+  assert.equal(result.monthlyTotal, 201700);
   assert.equal(result.overtimeAllowance, 0);
+});
+
+test("calculateSalary: 扶養手当は15歳以下と16〜22歳で額が異なる", () => {
+  const under15 = context.calculateSalary({
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1,
+    regionalRate: 0,
+    childUnder15Count: 1,
+    child16to22Count: 0,
+    parentCount: 0,
+    housingType: "none",
+    commuteType: "none",
+    bonusMonths: 0,
+    weekdayNormalHours: 0,
+    weekdayNightHours: 0,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+  const age16to22 = context.calculateSalary({
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1,
+    regionalRate: 0,
+    childUnder15Count: 0,
+    child16to22Count: 1,
+    parentCount: 0,
+    housingType: "none",
+    commuteType: "none",
+    bonusMonths: 0,
+    weekdayNormalHours: 0,
+    weekdayNightHours: 0,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+  assert.equal(under15.dependentAllowance, 13000);
+  assert.equal(age16to22.dependentAllowance, 18000);
 });
 
 // --- 結果サマリ -----------------------------------------------------------------

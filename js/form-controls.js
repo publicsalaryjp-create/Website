@@ -2,9 +2,10 @@
  * form-controls.js
  * index.html / new-hire.html の両方で使う共通のフォーム制御・表示ロジック。
  * 両ページで一致しているDOM ID（salary-table, grade, grade-field, step, step-max,
- * regional-rate, fiscal-year, housing-type, rent-field, commute-type,
- * commute-fare-field, commute-km-field, table-source-note, r-base, r-regional,
- * r-dependent, r-housing, r-commute, r-monthly-total）を前提にする。
+ * regional-rate, child-under15-count, child-16to22-count, parent-count,
+ * housing-type, rent-field, commute-type, commute-fare-field, commute-km-field,
+ * table-source-note, r-base, r-regional, r-dependent, r-housing, r-commute,
+ * r-monthly-total）を前提にする。
  * ページ固有の項目（超過勤務・生涯賃金・新規採用者の賞与期間率など）は
  * それぞれ js/app.js / js/new-hire.js 側で扱う。
  */
@@ -77,18 +78,6 @@ function populateRegionalRateOptions() {
   });
 }
 
-function populateFiscalYearOptions(defaultYear) {
-  const select = document.getElementById("fiscal-year");
-  select.innerHTML = "";
-  Object.entries(DEPENDENT_ALLOWANCE_SCHEDULE).forEach(([key, v]) => {
-    const opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = v.label;
-    select.appendChild(opt);
-  });
-  select.value = defaultYear || "r8";
-}
-
 function updateVisibility() {
   document.getElementById("grade-field").hidden = currentTableType() !== "graded";
 
@@ -107,9 +96,8 @@ function readCommonInput() {
     grade: Number(document.getElementById("grade").value),
     step: Number(document.getElementById("step").value),
     regionalRate: Number(document.getElementById("regional-rate").value),
-    fiscalYear: document.getElementById("fiscal-year").value,
-    hasSpouse: document.getElementById("has-spouse").checked,
-    childCount: Number(document.getElementById("child-count").value),
+    childUnder15Count: Number(document.getElementById("child-under15-count").value),
+    child16to22Count: Number(document.getElementById("child-16to22-count").value),
     parentCount: Number(document.getElementById("parent-count").value),
     housingType: document.getElementById("housing-type").value,
     rent: Number(document.getElementById("rent").value),

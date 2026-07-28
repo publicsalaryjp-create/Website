@@ -93,6 +93,28 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
+// index.html: 扶養手当が15歳以下/16〜22歳/父母等の区分ごとに正しく合算される
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "administrative_1");
+  await page.selectOption("#grade", "1");
+  await page.fill("#step", "1");
+  await page.selectOption("#regional-rate", "0");
+  await page.fill("#child-under15-count", "1");
+  await page.fill("#child-16to22-count", "1");
+  await page.fill("#parent-count", "1");
+  await page.waitForTimeout(300);
+  const dependentText = await page.textContent("#r-dependent");
+  report(
+    "index.html: 扶養手当が15歳以下13,000+16〜22歳18,000+父母等6,500=37,500円",
+    dependentText.includes("37,500"),
+    `実際の表示: ${dependentText}`
+  );
+  await page.close();
+}
+
 // index.html: 生涯賃金シミュレーションの自動生成が動く
 {
   const page = await browser.newPage();

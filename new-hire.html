@@ -52,16 +52,14 @@
 
     <fieldset>
       <legend>扶養手当</legend>
+      <p class="hint">令和8年4月現在の額です（配偶者に係る手当は廃止済みのため対象外）。</p>
       <div class="field">
-        <label for="fiscal-year">適用年度</label>
-        <select id="fiscal-year" name="fiscal-year"></select>
-      </div>
-      <div class="field checkbox-field">
-        <label><input type="checkbox" id="has-spouse" name="has-spouse"> 配偶者を扶養している</label>
+        <label for="child-under15-count">扶養する子の数（15歳以下）</label>
+        <input type="number" id="child-under15-count" name="child-under15-count" min="0" value="0">
       </div>
       <div class="field">
-        <label for="child-count">扶養する子の数</label>
-        <input type="number" id="child-count" name="child-count" min="0" value="0">
+        <label for="child-16to22-count">扶養する子の数（16歳以上22歳以下）</label>
+        <input type="number" id="child-16to22-count" name="child-16to22-count" min="0" value="0">
       </div>
       <div class="field">
         <label for="parent-count">扶養する父母等の数</label>
