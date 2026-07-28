@@ -3,11 +3,10 @@
  * index.html / new-hire.html の両方で使う共通のフォーム制御・表示ロジック。
  * 両ページで一致しているDOM ID（salary-table, grade, grade-field, step, step-max,
  * regional-rate, child-under15-count, child-16to22-count, parent-count,
- * housing-type, rent-field, commute-type, commute-fare-field, commute-km-field,
- * table-source-note, r-base, r-regional, r-dependent, r-housing, r-commute,
- * r-monthly-total）を前提にする。
- * ページ固有の項目（超過勤務・生涯賃金・新規採用者の賞与期間率など）は
- * それぞれ js/app.js / js/new-hire.js 側で扱う。
+ * housing-allowance, table-source-note, r-base, r-regional, r-dependent,
+ * r-housing, r-monthly-total）を前提にする。
+ * 期末・勤勉手当の入力（index.htmlは成績率区分、new-hire.htmlは在職期間率）は
+ * ページごとに構成が異なるため、それぞれ js/app.js / js/new-hire.js 側で扱う。
  */
 
 const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" });
@@ -80,16 +79,9 @@ function populateRegionalRateOptions() {
 
 function updateVisibility() {
   document.getElementById("grade-field").hidden = currentTableType() !== "graded";
-
-  const housingType = document.getElementById("housing-type").value;
-  document.getElementById("rent-field").hidden = housingType !== "rent";
-
-  const commuteType = document.getElementById("commute-type").value;
-  document.getElementById("commute-fare-field").hidden = commuteType !== "transit";
-  document.getElementById("commute-km-field").hidden = commuteType !== "vehicle";
 }
 
-/** 両ページ共通の入力項目（超過勤務時間・新規採用者の期間率などページ固有の項目は含まない） */
+/** 両ページ共通の入力項目（期末・勤勉手当や超過勤務時間などページ固有の項目は含まない） */
 function readCommonInput() {
   return {
     tableKey: currentTableKey(),
@@ -99,12 +91,7 @@ function readCommonInput() {
     childUnder15Count: Number(document.getElementById("child-under15-count").value),
     child16to22Count: Number(document.getElementById("child-16to22-count").value),
     parentCount: Number(document.getElementById("parent-count").value),
-    housingType: document.getElementById("housing-type").value,
-    rent: Number(document.getElementById("rent").value),
-    commuteType: document.getElementById("commute-type").value,
-    commuteFare: Number(document.getElementById("commute-fare").value),
-    commuteKm: Number(document.getElementById("commute-km").value),
-    bonusMonths: Number(document.getElementById("bonus-months").value),
+    housingAllowance: Number(document.getElementById("housing-allowance").value),
   };
 }
 
@@ -114,7 +101,6 @@ function renderCommonResult(result) {
   document.getElementById("r-regional").textContent = yen.format(result.regionalAllowance);
   document.getElementById("r-dependent").textContent = yen.format(result.dependentAllowance);
   document.getElementById("r-housing").textContent = yen.format(result.housingAllowance);
-  document.getElementById("r-commute").textContent = yen.format(result.commuteAllowance);
   document.getElementById("r-monthly-total").textContent = yen.format(result.monthlyTotal);
 }
 
@@ -133,8 +119,8 @@ function updateTableSourceNote() {
 }
 
 /**
- * 「俸給表を変えたら級・号俸を再構成する」「住居形態/通勤手段を変えたら表示を切り替える」
- * 「号俸の入力値を号俸数の範囲にクランプする」という両ページ共通のイベント配線を行う。
+ * 「俸給表を変えたら級・号俸を再構成する」「号俸の入力値を号俸数の範囲にクランプする」
+ * という両ページ共通のイベント配線を行う。
  * ページ固有の追加処理は onInputExtra / onChangeExtra（両方とも async 対応）で行う。
  *
  * @param {HTMLFormElement} form
@@ -152,9 +138,6 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
     }
     if (e.target.id === "grade") {
       populateStepOptions();
-    }
-    if (e.target.id === "housing-type" || e.target.id === "commute-type") {
-      updateVisibility();
     }
     if (onInputExtra) await onInputExtra(e);
     onRecalculate();

@@ -25,7 +25,7 @@ function getMaxStep(tableKey, grade) {
 /**
  * 勤務1時間当たりの給与額を算定する。
  * 算定基礎額（俸給月額＋地域手当＋扶養手当）× 12ヶ月 ÷ 年間所定勤務時間（週38時間45分×52週）。
- * 住居手当・通勤手当は実費補填的な手当のため算定基礎に含めない。
+ * 住居手当は実費補填的な手当のため算定基礎に含めない。
  */
 function calcHourlyWage(overtimeBase) {
   return (overtimeBase * 12) / ANNUAL_SCHEDULED_HOURS;
@@ -87,12 +87,10 @@ function calculateOvertimeAllowance(hourlyWage, hours) {
  * @param {number} input.childUnder15Count 扶養する子の数（15歳以下）
  * @param {number} input.child16to22Count 扶養する子の数（16歳以上22歳以下）
  * @param {number} input.parentCount 扶養する父母等の数
- * @param {string} input.housingType "rent" | "owned" | "none"
- * @param {number} input.rent 家賃(円)
- * @param {string} input.commuteType "transit" | "vehicle" | "none"
- * @param {number} input.commuteFare 公共交通機関の月額運賃相当額(円)
- * @param {number} input.commuteKm 自動車等利用時の片道距離(km)
- * @param {number} input.bonusMonths 期末・勤勉手当の年間支給月数
+ * @param {number} input.housingAllowance 住居手当の月額（円、支給がある場合のみ直接入力）
+ * @param {number} input.teishuMonths 期末手当の年間支給月数
+ * @param {number} input.kinbenMonths 勤勉手当の年間支給月数（成績率適用前）
+ * @param {number} input.meritRate 勤務成績区分に応じた成績率（例: 1.0225）
  * @param {number} input.weekdayNormalHours 平日の時間外勤務時間（深夜を除く月間合計）
  * @param {number} input.weekdayNightHours 平日の時間外勤務時間のうち深夜（22時〜翌5時）
  * @param {number} input.holidayNormalHours 休日勤務時間（深夜を除く月間合計）
@@ -107,15 +105,7 @@ function calculateSalary(input) {
     DEPENDENT_ALLOWANCE_RATES.child16to22 * Math.max(0, input.child16to22Count || 0) +
     DEPENDENT_ALLOWANCE_RATES.parent * Math.max(0, input.parentCount || 0);
 
-  const housingAllowance =
-    input.housingType === "rent" ? calcHousingAllowance(input.rent || 0) : 0;
-
-  let commuteAllowance = 0;
-  if (input.commuteType === "transit") {
-    commuteAllowance = Math.min(input.commuteFare || 0, COMMUTE_TRANSIT_CAP);
-  } else if (input.commuteType === "vehicle") {
-    commuteAllowance = calcVehicleCommuteAllowance(input.commuteKm || 0);
-  }
+  const housingAllowance = Math.max(0, input.housingAllowance || 0);
 
   // 超過勤務手当の算定基礎額（俸給月額＋地域手当＋扶養手当）
   const overtimeBase = baseSalary + regionalAllowance + dependentAllowance;
@@ -127,15 +117,24 @@ function calculateSalary(input) {
     holidayNightHours: input.holidayNightHours,
   });
 
-  const monthlyTotal =
-    baseSalary + regionalAllowance + dependentAllowance + housingAllowance + commuteAllowance;
+  const monthlyTotal = baseSalary + regionalAllowance + dependentAllowance + housingAllowance;
   const monthlyTotalWithOvertime = monthlyTotal + overtime.totalAllowance;
 
   // 期末・勤勉手当の算定基礎額は簡略化し「俸給+地域手当」とする（実際は扶養手当等も一部算入）。超過勤務手当は含まない。
+  // 期末手当 = 基礎額×支給月数（成績率なし）。勤勉手当 = 基礎額×支給月数×成績率。
+  // 6月期・12月期はそれぞれ年間支給月数の半分として計算する。
   const bonusBase = baseSalary + regionalAllowance;
-  const bonusMonths = input.bonusMonths || 0;
-  const bonusAnnual = Math.floor(bonusBase * bonusMonths);
-  const bonusPerOccasion = Math.floor(bonusAnnual / 2);
+  const teishuMonths = input.teishuMonths || 0;
+  const kinbenMonths = input.kinbenMonths || 0;
+  const meritRate = input.meritRate == null ? 1 : input.meritRate;
+
+  const teishuJune = Math.floor(bonusBase * (teishuMonths / 2));
+  const teishuDecember = Math.floor(bonusBase * (teishuMonths / 2));
+  const kinbenJune = Math.floor(bonusBase * (kinbenMonths / 2) * meritRate);
+  const kinbenDecember = Math.floor(bonusBase * (kinbenMonths / 2) * meritRate);
+  const bonusJune = teishuJune + kinbenJune;
+  const bonusDecember = teishuDecember + kinbenDecember;
+  const bonusAnnual = bonusJune + bonusDecember;
 
   // 年収概算は「毎月同じ超過勤務時間が続く」と仮定した概算値
   const annualIncome = monthlyTotalWithOvertime * 12 + bonusAnnual;
@@ -145,7 +144,6 @@ function calculateSalary(input) {
     regionalAllowance,
     dependentAllowance,
     housingAllowance,
-    commuteAllowance,
     overtimeHourlyWage: overtime.hourlyWage,
     overtimeHours: overtime.totalHours,
     overtimeExcessHours: overtime.excessHours,
@@ -153,8 +151,13 @@ function calculateSalary(input) {
     monthlyTotal,
     monthlyTotalWithOvertime,
     bonusBase,
+    teishuJune,
+    teishuDecember,
+    kinbenJune,
+    kinbenDecember,
+    bonusJune,
+    bonusDecember,
     bonusAnnual,
-    bonusPerOccasion,
     annualIncome,
   };
 }

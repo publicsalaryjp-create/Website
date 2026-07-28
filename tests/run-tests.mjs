@@ -41,6 +41,10 @@ const fixtureCatalog = {
 };
 vm.runInContext(`SALARY_CATALOG = ${JSON.stringify(fixtureCatalog)};`, context);
 
+// MERIT_RATE_CATEGORIES も data.js 内で `const` 宣言されているため、
+// context のプロパティとしては見えない。コンテキスト内で式を評価して取り出す。
+const MERIT_RATE_CATEGORIES = vm.runInContext("MERIT_RATE_CATEGORIES", context);
+
 let passed = 0;
 let failed = 0;
 
@@ -72,38 +76,6 @@ test("getSalaryAmount: flat型俸給表は級を無視してstepsを参照", () 
 test("getMaxStep: 級ごとの号俸数を返す", () => {
   assert.equal(context.getMaxStep("test_graded", 1), 4);
   assert.equal(context.getMaxStep("test_graded", 2), 2);
-});
-
-// --- calcHousingAllowance ----------------------------------------------------------
-
-test("calcHousingAllowance: 16,000円以下は0円", () => {
-  assert.equal(context.calcHousingAllowance(16000), 0);
-});
-
-test("calcHousingAllowance: 16,000円超〜27,000円は家賃-16,000円", () => {
-  assert.equal(context.calcHousingAllowance(20000), 4000);
-});
-
-test("calcHousingAllowance: 27,000円超〜59,000円は11,000+(家賃-27,000)/2", () => {
-  assert.equal(context.calcHousingAllowance(40000), 17500);
-});
-
-test("calcHousingAllowance: 59,000円超は上限28,000円", () => {
-  assert.equal(context.calcHousingAllowance(100000), 28000);
-});
-
-// --- calcVehicleCommuteAllowance ----------------------------------------------------
-
-test("calcVehicleCommuteAllowance: 2km未満は0円", () => {
-  assert.equal(context.calcVehicleCommuteAllowance(1), 0);
-});
-
-test("calcVehicleCommuteAllowance: 5kmは4,200円（5km以上10km未満帯）", () => {
-  assert.equal(context.calcVehicleCommuteAllowance(5), 4200);
-});
-
-test("calcVehicleCommuteAllowance: 60km以上は上限31,600円", () => {
-  assert.equal(context.calcVehicleCommuteAllowance(100), 31600);
 });
 
 // --- calculateOvertimeAllowance -----------------------------------------------------
@@ -164,11 +136,10 @@ test("calculateSalary: 各手当と合計額が期待通り計算される", () 
     childUnder15Count: 1,
     child16to22Count: 1,
     parentCount: 1,
-    housingType: "rent",
-    rent: 70000,
-    commuteType: "transit",
-    commuteFare: 15000,
-    bonusMonths: 4.9,
+    housingAllowance: 20000,
+    teishuMonths: 2.45,
+    kinbenMonths: 2.45,
+    meritRate: MERIT_RATE_CATEGORIES.general.grades.find((g) => g.key === "good").rate,
     weekdayNormalHours: 0,
     weekdayNightHours: 0,
     holidayNormalHours: 0,
@@ -178,9 +149,8 @@ test("calculateSalary: 各手当と合計額が期待通り計算される", () 
   assert.equal(result.baseSalary, 101000);
   assert.equal(result.regionalAllowance, 20200); // 101000*0.2
   assert.equal(result.dependentAllowance, 37500); // 15歳以下の子1人13000 + 16-22歳の子1人18000 + 父母等1人6500
-  assert.equal(result.housingAllowance, 28000); // 70000円は上限28000円
-  assert.equal(result.commuteAllowance, 15000);
-  assert.equal(result.monthlyTotal, 201700);
+  assert.equal(result.housingAllowance, 20000); // 直接入力した値がそのまま使われる
+  assert.equal(result.monthlyTotal, 178700);
   assert.equal(result.overtimeAllowance, 0);
 });
 
@@ -193,9 +163,10 @@ test("calculateSalary: 扶養手当は15歳以下と16〜22歳で額が異なる
     childUnder15Count: 1,
     child16to22Count: 0,
     parentCount: 0,
-    housingType: "none",
-    commuteType: "none",
-    bonusMonths: 0,
+    housingAllowance: 0,
+    teishuMonths: 0,
+    kinbenMonths: 0,
+    meritRate: 1,
     weekdayNormalHours: 0,
     weekdayNightHours: 0,
     holidayNormalHours: 0,
@@ -209,9 +180,10 @@ test("calculateSalary: 扶養手当は15歳以下と16〜22歳で額が異なる
     childUnder15Count: 0,
     child16to22Count: 1,
     parentCount: 0,
-    housingType: "none",
-    commuteType: "none",
-    bonusMonths: 0,
+    housingAllowance: 0,
+    teishuMonths: 0,
+    kinbenMonths: 0,
+    meritRate: 1,
     weekdayNormalHours: 0,
     weekdayNightHours: 0,
     holidayNormalHours: 0,
@@ -219,6 +191,72 @@ test("calculateSalary: 扶養手当は15歳以下と16〜22歳で額が異なる
   });
   assert.equal(under15.dependentAllowance, 13000);
   assert.equal(age16to22.dependentAllowance, 18000);
+});
+
+// --- 期末・勤勉手当（6月/12月split・成績率） --------------------------------------
+
+test("calculateSalary: 期末手当は成績率の影響を受けず、勤勉手当だけに成績率がかかる", () => {
+  const result = context.calculateSalary({
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1, // baseSalary=100000
+    regionalRate: 0,
+    childUnder15Count: 0,
+    child16to22Count: 0,
+    parentCount: 0,
+    housingAllowance: 0,
+    teishuMonths: 2.45,
+    kinbenMonths: 2.45,
+    meritRate: 1.0225, // 一般職員「良好」
+    weekdayNormalHours: 0,
+    weekdayNightHours: 0,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+  // bonusBase=100000, 半期分月数=2.45/2=1.225
+  // 期末手当(6月)=floor(100000*1.225)=122500（成績率なし）
+  // 勤勉手当(6月)=floor(100000*1.225*1.0225)=125256（成績率あり）
+  assert.equal(result.teishuJune, 122500);
+  assert.equal(result.teishuDecember, 122500);
+  assert.equal(result.kinbenJune, 125256);
+  assert.equal(result.kinbenDecember, 125256);
+  assert.equal(result.bonusJune, result.teishuJune + result.kinbenJune);
+  assert.equal(result.bonusAnnual, result.bonusJune + result.bonusDecember);
+});
+
+test("calculateSalary: 一般職員の成績区分ごとに勤勉手当が変わる（下限値を採用）", () => {
+  const baseInput = {
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1, // baseSalary=100000
+    regionalRate: 0,
+    childUnder15Count: 0,
+    child16to22Count: 0,
+    parentCount: 0,
+    housingAllowance: 0,
+    teishuMonths: 0,
+    kinbenMonths: 2.0,
+    weekdayNormalHours: 0,
+    weekdayNightHours: 0,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  };
+  const grades = MERIT_RATE_CATEGORIES.general.grades;
+  const rateFor = (key) => grades.find((g) => g.key === key).rate;
+
+  const excellentPlus = context.calculateSalary({ ...baseInput, meritRate: rateFor("excellent_plus") });
+  const excellent = context.calculateSalary({ ...baseInput, meritRate: rateFor("excellent") });
+  const good = context.calculateSalary({ ...baseInput, meritRate: rateFor("good") });
+  const notGood = context.calculateSalary({ ...baseInput, meritRate: rateFor("not_good") });
+
+  // kinbenJune = floor(100000 * 1.0 * meritRate)
+  assert.equal(excellentPlus.kinbenJune, 125250); // 1.2525
+  assert.equal(excellent.kinbenJune, 113750); // 1.1375
+  assert.equal(good.kinbenJune, 102250); // 1.0225
+  assert.equal(notGood.kinbenJune, 93750); // 0.9375
+  assert.ok(excellentPlus.kinbenJune > excellent.kinbenJune);
+  assert.ok(excellent.kinbenJune > good.kinbenJune);
+  assert.ok(good.kinbenJune > notGood.kinbenJune);
 });
 
 // --- 結果サマリ -----------------------------------------------------------------

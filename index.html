@@ -17,7 +17,7 @@
   <strong>⚠️ ご利用にあたって：</strong>
   このツールは国家公務員の給与制度への理解を助けるための<strong>概算シミュレーター</strong>です。
   <span id="table-source-note">俸給表データを読み込み中です…</span>
-  地域手当・扶養手当・住居手当・通勤手当・賞与支給月数は公表情報をもとにした概算です。
+  地域手当・扶養手当・賞与支給月数は公表情報をもとにした概算です。
   所得税・住民税・共済組合掛金（社会保険料相当）等は控除していない<strong>額面（支給額）ベース</strong>の金額です。
   正確な金額は必ず
   <a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">人事院公表の俸給表</a>
@@ -86,46 +86,37 @@
 
     <fieldset>
       <legend>住居手当</legend>
+      <p class="hint">支給がある場合のみ、実際の支給月額を入力してください（既定値は0円）。</p>
       <div class="field">
-        <label for="housing-type">住居形態</label>
-        <select id="housing-type" name="housing-type">
-          <option value="none">支給なし（官舎・実家など）</option>
-          <option value="rent" selected>賃貸住宅（家賃を負担）</option>
-          <option value="owned">持ち家（原則支給なし）</option>
-        </select>
-      </div>
-      <div class="field" id="rent-field">
-        <label for="rent">家賃（月額・円）</label>
-        <input type="number" id="rent" name="rent" min="0" step="1000" value="60000">
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>通勤手当</legend>
-      <div class="field">
-        <label for="commute-type">通勤手段</label>
-        <select id="commute-type" name="commute-type">
-          <option value="none">なし（徒歩・社宅など）</option>
-          <option value="transit" selected>公共交通機関</option>
-          <option value="vehicle">自動車・バイク・自転車等</option>
-        </select>
-      </div>
-      <div class="field" id="commute-fare-field">
-        <label for="commute-fare">1か月あたりの運賃相当額（円）</label>
-        <input type="number" id="commute-fare" name="commute-fare" min="0" step="100" value="10000">
-      </div>
-      <div class="field" id="commute-km-field" hidden>
-        <label for="commute-km">片道の通勤距離（km）</label>
-        <input type="number" id="commute-km" name="commute-km" min="0" step="0.5" value="5">
+        <label for="housing-allowance">住居手当（月額・円）</label>
+        <input type="number" id="housing-allowance" name="housing-allowance" min="0" step="1000" value="0">
       </div>
     </fieldset>
 
     <fieldset>
       <legend>期末・勤勉手当（賞与）</legend>
+      <p class="hint">
+        期末手当 = 算定基礎額（俸給+地域手当）×支給月数。
+        勤勉手当 = 算定基礎額×支給月数×成績率。
+        6月期・12月期はそれぞれ年間支給月数の半分として計算します
+        （出典: 人事院「国家公務員の諸手当の概要」令和8年度）。
+      </p>
       <div class="field">
-        <label for="bonus-months">年間支給月数</label>
-        <input type="number" id="bonus-months" name="bonus-months" min="0" step="0.05" value="4.9">
-        <p class="hint">令和6年12月以降の目安。基礎額（俸給+地域手当）×支給月数の概算です。</p>
+        <label for="teishu-months">期末手当の年間支給月数</label>
+        <input type="number" id="teishu-months" name="teishu-months" min="0" step="0.05" value="2.45">
+      </div>
+      <div class="field">
+        <label for="kinben-months">勤勉手当の年間支給月数（成績率適用前）</label>
+        <input type="number" id="kinben-months" name="kinben-months" min="0" step="0.05" value="2.45">
+      </div>
+      <div class="field">
+        <label for="merit-staff-type">職員区分</label>
+        <select id="merit-staff-type" name="merit-staff-type"></select>
+      </div>
+      <div class="field">
+        <label for="merit-grade">勤務成績区分</label>
+        <select id="merit-grade" name="merit-grade"></select>
+        <p class="hint">成績率に幅がある区分は下限値を採用しています。</p>
       </div>
     </fieldset>
 
@@ -163,13 +154,15 @@
         <tr><th>地域手当</th><td id="r-regional">-</td></tr>
         <tr><th>扶養手当</th><td id="r-dependent">-</td></tr>
         <tr><th>住居手当</th><td id="r-housing">-</td></tr>
-        <tr><th>通勤手当</th><td id="r-commute">-</td></tr>
         <tr class="total-row"><th>月額支給額 合計（残業代除く）</th><td id="r-monthly-total">-</td></tr>
         <tr><th>時間外勤務の時間単価</th><td id="r-ot-hourly">-</td></tr>
         <tr><th>超過勤務手当</th><td id="r-ot-allowance">-</td></tr>
         <tr class="total-row"><th>月額支給額 合計（残業代込み）</th><td id="r-monthly-total-ot">-</td></tr>
-        <tr><th>賞与（1回あたり目安）</th><td id="r-bonus-once">-</td></tr>
-        <tr><th>賞与（年間合計目安）</th><td id="r-bonus-annual">-</td></tr>
+        <tr><th>期末手当（6月期）</th><td id="r-teishu-june">-</td></tr>
+        <tr><th>勤勉手当（6月期）</th><td id="r-kinben-june">-</td></tr>
+        <tr><th>期末手当（12月期）</th><td id="r-teishu-december">-</td></tr>
+        <tr><th>勤勉手当（12月期）</th><td id="r-kinben-december">-</td></tr>
+        <tr><th>賞与（年間合計）</th><td id="r-bonus-annual">-</td></tr>
         <tr class="total-row grand-total"><th>年収 概算</th><td id="r-annual">-</td></tr>
       </tbody>
     </table>
@@ -181,7 +174,7 @@
 <section class="panel lifetime-panel">
   <h2>生涯賃金シミュレーション</h2>
   <p class="hint">
-    左のフォームで選択した俸給表・扶養手当・住居手当・通勤手当・賞与支給月数・超過勤務の設定を全期間共通で使い、
+    左のフォームで選択した俸給表・扶養手当・住居手当・賞与支給月数・超過勤務の設定を全期間共通で使い、
     年ごとに級・号俸・地域手当区分を設定して生涯賃金の概算を試算します。左のフォームを変更すると自動的に再計算されます。
   </p>
   <div class="lifetime-controls">
@@ -237,7 +230,6 @@
     <li><a href="https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r06_kyuyo.pdf" target="_blank" rel="noopener">内閣人事局 国家公務員の給与（令和6年版）</a></li>
     <li><a href="https://laws.e-gov.go.jp/" target="_blank" rel="noopener">e-Gov法令検索</a></li>
     <li><a href="https://laws.e-gov.go.jp/law/325AC1000000095" target="_blank" rel="noopener">一般職の職員の給与に関する法律（e-Gov法令検索）</a></li>
-    <li><a href="https://laws.e-gov.go.jp/law/333RJNJ09024000/" target="_blank" rel="noopener">人事院規則9-24（通勤手当）（e-Gov法令検索）</a></li>
   </ul>
   <p class="footer-note">
     俸給表・諸手当の制度は毎年の人事院勧告により改定されます。本ツールの計算結果と実際の給与が異なる場合は、

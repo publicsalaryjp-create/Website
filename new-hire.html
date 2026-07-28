@@ -69,37 +69,10 @@
 
     <fieldset>
       <legend>住居手当</legend>
+      <p class="hint">支給がある場合のみ、実際の支給月額を入力してください（既定値は0円）。</p>
       <div class="field">
-        <label for="housing-type">住居形態</label>
-        <select id="housing-type" name="housing-type">
-          <option value="none">支給なし（官舎・実家など）</option>
-          <option value="rent" selected>賃貸住宅（家賃を負担）</option>
-          <option value="owned">持ち家（原則支給なし）</option>
-        </select>
-      </div>
-      <div class="field" id="rent-field">
-        <label for="rent">家賃（月額・円）</label>
-        <input type="number" id="rent" name="rent" min="0" step="1000" value="55000">
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>通勤手当</legend>
-      <div class="field">
-        <label for="commute-type">通勤手段</label>
-        <select id="commute-type" name="commute-type">
-          <option value="none">なし（徒歩・社宅など）</option>
-          <option value="transit" selected>公共交通機関</option>
-          <option value="vehicle">自動車・バイク・自転車等</option>
-        </select>
-      </div>
-      <div class="field" id="commute-fare-field">
-        <label for="commute-fare">1か月あたりの運賃相当額（円）</label>
-        <input type="number" id="commute-fare" name="commute-fare" min="0" step="100" value="8000">
-      </div>
-      <div class="field" id="commute-km-field" hidden>
-        <label for="commute-km">片道の通勤距離（km）</label>
-        <input type="number" id="commute-km" name="commute-km" min="0" step="0.5" value="5">
+        <label for="housing-allowance">住居手当（月額・円）</label>
+        <input type="number" id="housing-allowance" name="housing-allowance" min="0" step="1000" value="0">
       </div>
     </fieldset>
 
@@ -132,7 +105,6 @@
         <tr><th>地域手当</th><td id="r-regional">-</td></tr>
         <tr><th>扶養手当</th><td id="r-dependent">-</td></tr>
         <tr><th>住居手当</th><td id="r-housing">-</td></tr>
-        <tr><th>通勤手当</th><td id="r-commute">-</td></tr>
         <tr class="total-row"><th>月額支給額 合計</th><td id="r-monthly-total">-</td></tr>
         <tr><th>1回目の賞与</th><td id="r-bonus-first">-</td></tr>
         <tr><th>2回目の賞与</th><td id="r-bonus-second">-</td></tr>

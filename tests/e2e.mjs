@@ -178,15 +178,62 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
-// index.html: 住居形態を「持ち家」にすると家賃入力欄が隠れる
+// index.html: 住居手当は既定値0円で、入力した金額がそのまま反映される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#housing-type", "owned");
-  await page.waitForTimeout(150);
-  const rentFieldHidden = await page.getAttribute("#rent-field", "hidden");
-  report("index.html: 持ち家を選ぶと家賃入力欄が非表示になる", rentFieldHidden === "", `hidden属性: ${rentFieldHidden}`);
+  const defaultValue = await page.inputValue("#housing-allowance");
+  await page.fill("#housing-allowance", "15000");
+  await page.waitForTimeout(200);
+  const housingText = await page.textContent("#r-housing");
+  report(
+    "index.html: 住居手当の既定値は0円で、入力額(15,000円)がそのまま反映される",
+    defaultValue === "0" && housingText.includes("15,000"),
+    `既定値=${defaultValue} 表示=${housingText}`
+  );
+  await page.close();
+}
+
+// index.html: 勤務成績区分を変えると勤勉手当（6月期）が変わる（一般職員: 良好→特に優秀）
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "administrative_1");
+  await page.selectOption("#grade", "1");
+  await page.fill("#step", "1");
+  await page.selectOption("#regional-rate", "0");
+  await page.selectOption("#merit-staff-type", "general");
+  await page.selectOption("#merit-grade", "good");
+  await page.waitForTimeout(200);
+  const kinbenGood = await page.textContent("#r-kinben-june");
+  const teishuGood = await page.textContent("#r-teishu-june");
+  await page.selectOption("#merit-grade", "excellent_plus");
+  await page.waitForTimeout(200);
+  const kinbenExcellentPlus = await page.textContent("#r-kinben-june");
+  const teishuExcellentPlus = await page.textContent("#r-teishu-june");
+  report(
+    "index.html: 成績区分を「良好」→「特に優秀」に変えると勤勉手当が増え、期末手当は変わらない",
+    kinbenExcellentPlus !== kinbenGood && teishuExcellentPlus === teishuGood,
+    `勤勉(良好)=${kinbenGood} 勤勉(特に優秀)=${kinbenExcellentPlus} 期末(良好)=${teishuGood} 期末(特に優秀)=${teishuExcellentPlus}`
+  );
+  await page.close();
+}
+
+// index.html: 指定職職員では「特に優秀」の選択肢が存在しない
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#merit-staff-type", "designated");
+  await page.waitForTimeout(200);
+  const gradeOptions = await page.$$eval("#merit-grade option", (opts) => opts.map((o) => o.value));
+  report(
+    "index.html: 指定職職員には「特に優秀」の選択肢がない",
+    !gradeOptions.includes("excellent_plus"),
+    `選択肢: ${JSON.stringify(gradeOptions)}`
+  );
   await page.close();
 }
 

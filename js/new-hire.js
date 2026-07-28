@@ -29,10 +29,11 @@ function recalculate() {
   };
   const result = calculateSalary(input);
 
+  const bonusMonths = Number(document.getElementById("bonus-months").value);
   const firstRate = Number(document.getElementById("first-bonus-rate").value);
   const secondRate = Number(document.getElementById("second-bonus-rate").value);
-  const firstBonus = calculateBonusWithPeriodRate(result.bonusBase, input.bonusMonths, firstRate);
-  const secondBonus = calculateBonusWithPeriodRate(result.bonusBase, input.bonusMonths, secondRate);
+  const firstBonus = calculateBonusWithPeriodRate(result.bonusBase, bonusMonths, firstRate);
+  const secondBonus = calculateBonusWithPeriodRate(result.bonusBase, bonusMonths, secondRate);
   const annualIncome = result.monthlyTotal * 12 + firstBonus + secondBonus;
 
   renderCommonResult(result);

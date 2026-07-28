@@ -29,9 +29,20 @@ function updateVintageNote() {
   }
 }
 
+function currentMeritRate() {
+  const staffType = document.getElementById("merit-staff-type").value;
+  const gradeKey = document.getElementById("merit-grade").value;
+  const category = MERIT_RATE_CATEGORIES[staffType];
+  const grade = category && category.grades.find((g) => g.key === gradeKey);
+  return grade && grade.rate != null ? grade.rate : 1;
+}
+
 function readInput() {
   return {
     ...readCommonInput(),
+    teishuMonths: Number(document.getElementById("teishu-months").value),
+    kinbenMonths: Number(document.getElementById("kinben-months").value),
+    meritRate: currentMeritRate(),
     weekdayNormalHours: Number(document.getElementById("ot-weekday-normal").value),
     weekdayNightHours: Number(document.getElementById("ot-weekday-night").value),
     holidayNormalHours: Number(document.getElementById("ot-holiday-normal").value),
@@ -44,10 +55,41 @@ function renderResult(result) {
   document.getElementById("r-ot-hourly").textContent = `${yen.format(result.overtimeHourlyWage)} /時間`;
   document.getElementById("r-ot-allowance").textContent = yen.format(result.overtimeAllowance);
   document.getElementById("r-monthly-total-ot").textContent = yen.format(result.monthlyTotalWithOvertime);
-  document.getElementById("r-bonus-once").textContent = yen.format(result.bonusPerOccasion);
+  document.getElementById("r-teishu-june").textContent = yen.format(result.teishuJune);
+  document.getElementById("r-kinben-june").textContent = yen.format(result.kinbenJune);
+  document.getElementById("r-teishu-december").textContent = yen.format(result.teishuDecember);
+  document.getElementById("r-kinben-december").textContent = yen.format(result.kinbenDecember);
   document.getElementById("r-bonus-annual").textContent = yen.format(result.bonusAnnual);
   document.getElementById("r-annual").textContent = yen.format(result.annualIncome);
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
+}
+
+function populateMeritStaffTypeOptions() {
+  const select = document.getElementById("merit-staff-type");
+  select.innerHTML = "";
+  Object.entries(MERIT_RATE_CATEGORIES).forEach(([key, category]) => {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = category.label;
+    select.appendChild(opt);
+  });
+  select.value = "general";
+}
+
+function populateMeritGradeOptions() {
+  const select = document.getElementById("merit-grade");
+  const staffType = document.getElementById("merit-staff-type").value;
+  const category = MERIT_RATE_CATEGORIES[staffType];
+  select.innerHTML = "";
+  category.grades
+    .filter((g) => g.rate != null)
+    .forEach((g) => {
+      const opt = document.createElement("option");
+      opt.value = g.key;
+      opt.textContent = g.label;
+      select.appendChild(opt);
+    });
+  select.value = "good";
 }
 
 function recalculate() {
@@ -255,12 +297,15 @@ function initForm() {
   populateGradeOptions();
   populateStepOptions();
   populateRegionalRateOptions();
+  populateMeritStaffTypeOptions();
+  populateMeritGradeOptions();
   updateVisibility();
 
   const form = document.getElementById("calc-form");
   wireCommonFormEvents(form, {
     onInputExtra: (e) => {
       if (e.target.id === "salary-table") resetLifetimeSimulation();
+      if (e.target.id === "merit-staff-type") populateMeritGradeOptions();
     },
     onChangeExtra: handleVintageChange,
     onRecalculate: recalculate,
