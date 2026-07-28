@@ -273,6 +273,62 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
+// index.html: 入力内容がlocalStorageに保存され、リロード後も復元される
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.fill("#housing-allowance", "23000");
+  await page.selectOption("#regional-rate", "0.12");
+  await page.waitForTimeout(200);
+  await page.reload();
+  await page.waitForTimeout(500);
+  const housingValue = await page.inputValue("#housing-allowance");
+  const regionalValue = await page.inputValue("#regional-rate");
+  report(
+    "index.html: 入力内容がリロード後も復元される",
+    housingValue === "23000" && regionalValue === "0.12",
+    `housing=${housingValue} regional=${regionalValue}`
+  );
+  await page.close();
+}
+
+// index.html: 「保存した入力内容を削除」ボタンで初期状態に戻る
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.fill("#housing-allowance", "23000");
+  await page.waitForTimeout(200);
+  await page.click("#reset-saved-input");
+  await page.waitForTimeout(500);
+  const housingValue = await page.inputValue("#housing-allowance");
+  report(
+    "index.html: 保存データ削除ボタンで住居手当が初期値0に戻る",
+    housingValue === "0",
+    `housing=${housingValue}`
+  );
+  await page.close();
+}
+
+// new-hire.html: 入力内容がリロード後も復元される
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/new-hire.html`);
+  await page.waitForTimeout(500);
+  await page.fill("#housing-allowance", "8000");
+  await page.waitForTimeout(200);
+  await page.reload();
+  await page.waitForTimeout(500);
+  const housingValue = await page.inputValue("#housing-allowance");
+  report(
+    "new-hire.html: 入力内容がリロード後も復元される",
+    housingValue === "8000",
+    `housing=${housingValue}`
+  );
+  await page.close();
+}
+
 await browser.close();
 await new Promise((resolve) => server.close(resolve));
 

@@ -93,6 +93,7 @@ function populateMeritGradeOptions() {
 }
 
 function recalculate() {
+  saveFormState("index", document.getElementById("calc-form"));
   const input = readInput();
   const result = calculateSalary(input);
   renderResult(result);
@@ -292,17 +293,27 @@ async function handleVintageChange(e) {
 }
 
 function initForm() {
+  const saved = loadFormState("index");
+  const form = document.getElementById("calc-form");
+
   populateVintageOptions();
-  populateSalaryTableOptions();
-  populateGradeOptions();
+  populateSalaryTableOptions(saved && saved["salary-table"]);
+  populateGradeOptions(saved && saved.grade);
   populateStepOptions();
   populateRegionalRateOptions();
   populateRegionalRateTable();
   populateMeritStaffTypeOptions();
+  if (saved && saved["merit-staff-type"]) {
+    const staffTypeSelect = document.getElementById("merit-staff-type");
+    if (Array.from(staffTypeSelect.options).some((o) => o.value === saved["merit-staff-type"])) {
+      staffTypeSelect.value = saved["merit-staff-type"];
+    }
+  }
   populateMeritGradeOptions();
   updateVisibility();
+  applySavedFormValues(form, saved);
+  populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
 
-  const form = document.getElementById("calc-form");
   wireCommonFormEvents(form, {
     onInputExtra: (e) => {
       if (e.target.id === "salary-table") resetLifetimeSimulation();
@@ -321,6 +332,11 @@ function initForm() {
       stepInput.value = next;
       recalculate();
     });
+  });
+
+  document.getElementById("reset-saved-input").addEventListener("click", () => {
+    clearFormState("index");
+    location.reload();
   });
 
   initLifetimeSimulator();

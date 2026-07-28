@@ -19,6 +19,7 @@
   <span id="table-source-note">俸給表データを読み込み中です…</span>
   地域手当・扶養手当・賞与支給月数は公表情報をもとにした概算です。
   所得税・住民税・共済組合掛金（社会保険料相当）等は控除していない<strong>額面（支給額）ベース</strong>の金額です。
+  入力内容はこの端末のブラウザ内に保存され、次回アクセス時に自動的に復元されます（サーバーには送信されません）。
   正確な金額は必ず
   <a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">人事院公表の俸給表</a>
   等の一次情報をご確認ください。
@@ -153,6 +154,11 @@
         <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="0.5" value="0">
       </div>
     </fieldset>
+
+    <div class="form-actions">
+      <button type="button" id="reset-saved-input" class="reset-button">保存した入力内容を削除して初期状態に戻す</button>
+      <p class="hint">入力内容はこの端末のブラウザ内（localStorage）に保存され、次回アクセス時に自動的に復元されます。サーバーには送信されません。</p>
+    </div>
   </form>
 
   <section class="panel result-panel" aria-live="polite">

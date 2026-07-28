@@ -106,6 +106,69 @@ function updateVisibility() {
   document.getElementById("grade-field").hidden = currentTableType() !== "graded";
 }
 
+// ---------------------------------------------------------------------------
+// 入力内容の保存・復元（localStorage。この端末のブラウザ内のみで完結し、
+// サーバーには送信されない）
+// ---------------------------------------------------------------------------
+
+function formStorageKey(pageKey) {
+  return `salary-calculator:${pageKey}`;
+}
+
+/** フォーム内のid付きinput/selectの現在値をlocalStorageに保存する */
+function saveFormState(pageKey, form) {
+  try {
+    const data = {};
+    form.querySelectorAll("input[id], select[id]").forEach((el) => {
+      data[el.id] = el.value;
+    });
+    localStorage.setItem(formStorageKey(pageKey), JSON.stringify(data));
+  } catch {
+    // プライベートブラウジング等でlocalStorageが使えない場合は保存をあきらめる
+  }
+}
+
+/** 保存されている入力値を読み込む。保存がない・読み込めない場合はnullを返す */
+function loadFormState(pageKey) {
+  try {
+    const raw = localStorage.getItem(formStorageKey(pageKey));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** 保存されている入力値を削除する */
+function clearFormState(pageKey) {
+  try {
+    localStorage.removeItem(formStorageKey(pageKey));
+  } catch {
+    // 何もしない
+  }
+}
+
+/**
+ * 保存済みの値を、対応するフォーム内のinput/selectに反映する。
+ * select要素は、保存値が現在の選択肢に存在し、かつ無効化されていない場合のみ反映する
+ * （俸給表の切替などで選択肢の構成が変わっている場合があるため）。
+ * 俸給表・級・号俸・成績区分など他の項目の選択肢に影響する項目は、
+ * 呼び出し側（app.js / new-hire.js）で先にpopulate*Options()へ渡して復元してから、
+ * この関数で残りの項目をまとめて復元する想定。
+ */
+function applySavedFormValues(form, saved) {
+  if (!saved) return;
+  form.querySelectorAll("input[id], select[id]").forEach((el) => {
+    const value = saved[el.id];
+    if (value === undefined) return;
+    if (el.tagName === "SELECT") {
+      const hasOption = Array.from(el.options).some((o) => o.value === value && !o.disabled);
+      if (hasOption) el.value = value;
+    } else {
+      el.value = value;
+    }
+  });
+}
+
 /** 両ページ共通の入力項目（期末・勤勉手当や超過勤務時間などページ固有の項目は含まない） */
 function readCommonInput() {
   return {

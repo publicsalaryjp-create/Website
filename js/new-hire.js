@@ -20,6 +20,7 @@ function populateBonusRateOptions() {
 }
 
 function recalculate() {
+  saveFormState("new-hire", document.getElementById("calc-form"));
   const input = {
     ...readCommonInput(),
     weekdayNormalHours: 0,
@@ -43,16 +44,25 @@ function recalculate() {
 }
 
 function initForm() {
-  populateSalaryTableOptions("administrative_1");
-  populateGradeOptions("1");
+  const saved = loadFormState("new-hire");
+  const form = document.getElementById("calc-form");
+
+  populateSalaryTableOptions((saved && saved["salary-table"]) || "administrative_1");
+  populateGradeOptions((saved && saved.grade) || "1");
   populateStepOptions();
   populateRegionalRateOptions();
   populateRegionalRateTable();
   populateBonusRateOptions();
   updateVisibility();
+  applySavedFormValues(form, saved);
+  populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
 
-  const form = document.getElementById("calc-form");
   wireCommonFormEvents(form, { onRecalculate: recalculate });
+
+  document.getElementById("reset-saved-input").addEventListener("click", () => {
+    clearFormState("new-hire");
+    location.reload();
+  });
 
   recalculate();
 }
