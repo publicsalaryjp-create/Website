@@ -168,3 +168,23 @@ function calcVehicleCommuteAllowance(oneWayKm) {
   }
   return COMMUTE_VEHICLE_TABLE[COMMUTE_VEHICLE_TABLE.length - 1].amount;
 }
+
+// ---------------------------------------------------------------------------
+// 6. 超過勤務手当（給与法第16条・人事院規則15-14に基づく割増率）
+// ---------------------------------------------------------------------------
+
+// 1週間の正規の勤務時間（38時間45分）。年間所定勤務時間 = WEEKLY_HOURS × 52 として時間単価を算定する。
+const WEEKLY_SCHEDULED_HOURS = 38 + 45 / 60;
+const ANNUAL_SCHEDULED_HOURS = WEEKLY_SCHEDULED_HOURS * 52;
+
+// 月60時間以下 / 60時間超で切り替わる割増率
+const OVERTIME_RATES = {
+  weekdayNormal: 1.25, // 平日の時間外勤務（22時まで）
+  weekdayNight: 1.5, // 平日の時間外勤務のうち深夜（22時〜翌5時）
+  weekdayNormalOver60: 1.5, // 月60時間超の部分（22時まで）
+  weekdayNightOver60: 1.75, // 月60時間超の部分のうち深夜
+  holidayNormal: 1.35, // 休日勤務（22時まで）
+  holidayNight: 1.6, // 休日勤務のうち深夜（22時〜翌5時）
+};
+
+const OVERTIME_MONTHLY_THRESHOLD_HOURS = 60; // これを超えた時間外勤務（休日勤務を除く）から割増率が上がる

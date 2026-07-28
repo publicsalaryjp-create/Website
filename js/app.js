@@ -98,6 +98,10 @@ function readInput() {
     commuteFare: Number(document.getElementById("commute-fare").value),
     commuteKm: Number(document.getElementById("commute-km").value),
     bonusMonths: Number(document.getElementById("bonus-months").value),
+    weekdayNormalHours: Number(document.getElementById("ot-weekday-normal").value),
+    weekdayNightHours: Number(document.getElementById("ot-weekday-night").value),
+    holidayNormalHours: Number(document.getElementById("ot-holiday-normal").value),
+    holidayNightHours: Number(document.getElementById("ot-holiday-night").value),
   };
 }
 
@@ -108,9 +112,13 @@ function renderResult(result) {
   document.getElementById("r-housing").textContent = yen.format(result.housingAllowance);
   document.getElementById("r-commute").textContent = yen.format(result.commuteAllowance);
   document.getElementById("r-monthly-total").textContent = yen.format(result.monthlyTotal);
+  document.getElementById("r-ot-hourly").textContent = `${yen.format(result.overtimeHourlyWage)} /時間`;
+  document.getElementById("r-ot-allowance").textContent = yen.format(result.overtimeAllowance);
+  document.getElementById("r-monthly-total-ot").textContent = yen.format(result.monthlyTotalWithOvertime);
   document.getElementById("r-bonus-once").textContent = yen.format(result.bonusPerOccasion);
   document.getElementById("r-bonus-annual").textContent = yen.format(result.bonusAnnual);
   document.getElementById("r-annual").textContent = yen.format(result.annualIncome);
+  document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
 }
 
 function updateVisibility() {

@@ -112,6 +112,31 @@
         <p class="hint">令和6年12月以降の目安。基礎額（俸給+地域手当）×支給月数の概算です。</p>
       </div>
     </fieldset>
+
+    <fieldset>
+      <legend>超過勤務手当（残業代）</legend>
+      <p class="hint">
+        時間単価 = （俸給+地域手当+扶養手当）×12か月 ÷ 年間所定勤務時間（週38時間45分×52週）。
+        平日時間外は125%、深夜(22時〜翌5時)は150%、休日勤務は135%、休日深夜は160%。
+        月60時間を超える時間外勤務（休日を除く）は150%／深夜175%に切り替わります。
+      </p>
+      <div class="field">
+        <label for="ot-weekday-normal">平日の時間外勤務（深夜を除く・月間合計時間）</label>
+        <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="0.5" value="0">
+      </div>
+      <div class="field">
+        <label for="ot-weekday-night">うち深夜(22時〜翌5時)の時間外勤務時間</label>
+        <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="0.5" value="0">
+      </div>
+      <div class="field">
+        <label for="ot-holiday-normal">休日勤務（深夜を除く・月間合計時間）</label>
+        <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="0.5" value="0">
+      </div>
+      <div class="field">
+        <label for="ot-holiday-night">うち深夜(22時〜翌5時)の休日勤務時間</label>
+        <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="0.5" value="0">
+      </div>
+    </fieldset>
   </form>
 
   <section class="panel result-panel" aria-live="polite">
@@ -123,13 +148,17 @@
         <tr><th>扶養手当</th><td id="r-dependent">-</td></tr>
         <tr><th>住居手当</th><td id="r-housing">-</td></tr>
         <tr><th>通勤手当</th><td id="r-commute">-</td></tr>
-        <tr class="total-row"><th>月額支給額 合計</th><td id="r-monthly-total">-</td></tr>
+        <tr class="total-row"><th>月額支給額 合計（残業代除く）</th><td id="r-monthly-total">-</td></tr>
+        <tr><th>時間外勤務の時間単価</th><td id="r-ot-hourly">-</td></tr>
+        <tr><th>超過勤務手当</th><td id="r-ot-allowance">-</td></tr>
+        <tr class="total-row"><th>月額支給額 合計（残業代込み）</th><td id="r-monthly-total-ot">-</td></tr>
         <tr><th>賞与（1回あたり目安）</th><td id="r-bonus-once">-</td></tr>
         <tr><th>賞与（年間合計目安）</th><td id="r-bonus-annual">-</td></tr>
         <tr class="total-row grand-total"><th>年収 概算</th><td id="r-annual">-</td></tr>
       </tbody>
     </table>
-    <p class="hint">※ 税・社会保険料等控除前の額面金額です。時間外勤務手当や単身赴任手当等は含まれていません。</p>
+    <p class="hint" id="ot-warning" hidden>※ 入力された時間外勤務時間（休日を除く）が月60時間を超えています。超過分は割増率150%／深夜175%で計算しています。</p>
+    <p class="hint">※ 税・社会保険料等控除前の額面金額です。単身赴任手当・寒冷地手当等は含まれていません。年収概算は毎月同じ時間外勤務が続くと仮定した概算値です。</p>
   </section>
 </main>
 
