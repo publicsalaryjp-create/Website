@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>国家公務員給与計算シミュレーター</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <h1>国家公務員給与計算シミュレーター</h1>
+  <p class="subtitle">行政職俸給表(一)を想定した月給・賞与・年収の概算計算ツール</p>
+</header>
+
+<div class="disclaimer" id="disclaimer">
+  <strong>⚠️ ご利用にあたって：</strong>
+  このツールは国家公務員の給与制度への理解を助けるための<strong>概算シミュレーター</strong>です。
+  <span id="table-source-note">俸給表データを読み込み中です…</span>
+  地域手当・扶養手当・住居手当・通勤手当・賞与支給月数は公表情報をもとにした概算です。
+  所得税・住民税・共済組合掛金（社会保険料相当）等は控除していない<strong>額面（支給額）ベース</strong>の金額です。
+  正確な金額は必ず
+  <a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">人事院公表の俸給表</a>
+  等の一次情報をご確認ください。
+</div>
+
+<main class="layout">
+  <form id="calc-form" class="panel form-panel">
+    <fieldset>
+      <legend>俸給</legend>
+      <div class="field">
+        <label for="salary-table">適用される俸給表</label>
+        <select id="salary-table" name="salary-table"></select>
+      </div>
+      <div class="field" id="grade-field">
+        <label for="grade">職務の級</label>
+        <select id="grade" name="grade"></select>
+      </div>
+      <div class="field">
+        <label for="step">号俸</label>
+        <select id="step" name="step"></select>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>地域手当</legend>
+      <div class="field">
+        <label for="regional-rate">勤務地の級地区分</label>
+        <select id="regional-rate" name="regional-rate"></select>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>扶養手当</legend>
+      <div class="field">
+        <label for="fiscal-year">適用年度</label>
+        <select id="fiscal-year" name="fiscal-year"></select>
+      </div>
+      <div class="field checkbox-field">
+        <label><input type="checkbox" id="has-spouse" name="has-spouse"> 配偶者を扶養している</label>
+      </div>
+      <div class="field">
+        <label for="child-count">扶養する子の数</label>
+        <input type="number" id="child-count" name="child-count" min="0" value="0">
+      </div>
+      <div class="field">
+        <label for="parent-count">扶養する父母等の数</label>
+        <input type="number" id="parent-count" name="parent-count" min="0" value="0">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>住居手当</legend>
+      <div class="field">
+        <label for="housing-type">住居形態</label>
+        <select id="housing-type" name="housing-type">
+          <option value="none">支給なし（官舎・実家など）</option>
+          <option value="rent" selected>賃貸住宅（家賃を負担）</option>
+          <option value="owned">持ち家（原則支給なし）</option>
+        </select>
+      </div>
+      <div class="field" id="rent-field">
+        <label for="rent">家賃（月額・円）</label>
+        <input type="number" id="rent" name="rent" min="0" step="1000" value="60000">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>通勤手当</legend>
+      <div class="field">
+        <label for="commute-type">通勤手段</label>
+        <select id="commute-type" name="commute-type">
+          <option value="none">なし（徒歩・社宅など）</option>
+          <option value="transit" selected>公共交通機関</option>
+          <option value="vehicle">自動車・バイク・自転車等</option>
+        </select>
+      </div>
+      <div class="field" id="commute-fare-field">
+        <label for="commute-fare">1か月あたりの運賃相当額（円）</label>
+        <input type="number" id="commute-fare" name="commute-fare" min="0" step="100" value="10000">
+      </div>
+      <div class="field" id="commute-km-field" hidden>
+        <label for="commute-km">片道の通勤距離（km）</label>
+        <input type="number" id="commute-km" name="commute-km" min="0" step="0.5" value="5">
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>期末・勤勉手当（賞与）</legend>
+      <div class="field">
+        <label for="bonus-months">年間支給月数</label>
+        <input type="number" id="bonus-months" name="bonus-months" min="0" step="0.05" value="4.9">
+        <p class="hint">令和6年12月以降の目安。基礎額（俸給+地域手当）×支給月数の概算です。</p>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>超過勤務手当（残業代）</legend>
+      <p class="hint">
+        時間単価 = （俸給+地域手当+扶養手当）×12か月 ÷ 年間所定勤務時間（週38時間45分×52週）。
+        平日時間外は125%、深夜(22時〜翌5時)は150%、休日勤務は135%、休日深夜は160%。
+        月60時間を超える時間外勤務（休日を除く）は150%／深夜175%に切り替わります。
+      </p>
+      <div class="field">
+        <label for="ot-weekday-normal">平日の時間外勤務（深夜を除く・月間合計時間）</label>
+        <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="0.5" value="0">
+      </div>
+      <div class="field">
+        <label for="ot-weekday-night">うち深夜(22時〜翌5時)の時間外勤務時間</label>
+        <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="0.5" value="0">
+      </div>
+      <div class="field">
+        <label for="ot-holiday-normal">休日勤務（深夜を除く・月間合計時間）</label>
+        <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="0.5" value="0">
+      </div>
+      <div class="field">
+        <label for="ot-holiday-night">うち深夜(22時〜翌5時)の休日勤務時間</label>
+        <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="0.5" value="0">
+      </div>
+    </fieldset>
+  </form>
+
+  <section class="panel result-panel" aria-live="polite">
+    <h2>計算結果</h2>
+    <table class="result-table">
+      <tbody>
+        <tr><th>俸給月額</th><td id="r-base">-</td></tr>
+        <tr><th>地域手当</th><td id="r-regional">-</td></tr>
+        <tr><th>扶養手当</th><td id="r-dependent">-</td></tr>
+        <tr><th>住居手当</th><td id="r-housing">-</td></tr>
+        <tr><th>通勤手当</th><td id="r-commute">-</td></tr>
+        <tr class="total-row"><th>月額支給額 合計（残業代除く）</th><td id="r-monthly-total">-</td></tr>
+        <tr><th>時間外勤務の時間単価</th><td id="r-ot-hourly">-</td></tr>
+        <tr><th>超過勤務手当</th><td id="r-ot-allowance">-</td></tr>
+        <tr class="total-row"><th>月額支給額 合計（残業代込み）</th><td id="r-monthly-total-ot">-</td></tr>
+        <tr><th>賞与（1回あたり目安）</th><td id="r-bonus-once">-</td></tr>
+        <tr><th>賞与（年間合計目安）</th><td id="r-bonus-annual">-</td></tr>
+        <tr class="total-row grand-total"><th>年収 概算</th><td id="r-annual">-</td></tr>
+      </tbody>
+    </table>
+    <p class="hint" id="ot-warning" hidden>※ 入力された時間外勤務時間（休日を除く）が月60時間を超えています。超過分は割増率150%／深夜175%で計算しています。</p>
+    <p class="hint">※ 税・社会保険料等控除前の額面金額です。単身赴任手当・寒冷地手当等は含まれていません。年収概算は毎月同じ時間外勤務が続くと仮定した概算値です。</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>
+    参考：
+    <a href="https://www.jinji.go.jp/seisaku/kankoku/archive/r6/r6_top.html" target="_blank" rel="noopener">人事院 令和6年人事院勧告</a>
+    /
+    <a href="https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r06_kyuyo.pdf" target="_blank" rel="noopener">内閣人事局 国家公務員の給与（令和6年版）</a>
+  </p>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/calculator.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
