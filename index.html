@@ -15,10 +15,11 @@
 <div class="disclaimer" id="disclaimer">
   <strong>⚠️ ご利用にあたって：</strong>
   このツールは国家公務員の給与制度への理解を助けるための<strong>概算シミュレーター</strong>です。
-  <span id="table-source-note">俸給表は正式な官報別表ではなく、実際の俸給表の傾向を模した<strong>参考値</strong>を使用しています。</span>
+  <span id="table-source-note">俸給表データを読み込み中です…</span>
+  地域手当・扶養手当・住居手当・通勤手当・賞与支給月数は公表情報をもとにした概算です。
   所得税・住民税・共済組合掛金（社会保険料相当）等は控除していない<strong>額面（支給額）ベース</strong>の金額です。
   正確な金額は必ず
-  <a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">人事院公表の俸給表（別表第一）</a>
+  <a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">人事院公表の俸給表</a>
   等の一次情報をご確認ください。
 </div>
 
@@ -27,6 +28,10 @@
     <fieldset>
       <legend>俸給</legend>
       <div class="field">
+        <label for="salary-table">適用される俸給表</label>
+        <select id="salary-table" name="salary-table"></select>
+      </div>
+      <div class="field" id="grade-field">
         <label for="grade">職務の級</label>
         <select id="grade" name="grade"></select>
       </div>

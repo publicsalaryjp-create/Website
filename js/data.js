@@ -2,25 +2,23 @@
  * data.js
  * 国家公務員給与計算に使う各種データ（俸給表・手当額・支給率）を定義する。
  *
- * ⚠️ 俸給表（SALARY_TABLE）は人事院公表の正式な官報別表を取得できなかったため、
- *    実在の俸給表の"形状"（級が上がるほど号俸間の昇給額が小さくなるカーブ）を
- *    模した参考値（推定値）です。正確な金額ではありません。
- *    正式データが手に入り次第 data/salary-table.json に配置してください。
- *    読み込みは loadOfficialSalaryTable() が自動で試みます（無ければ参考値を使用）。
+ * 俸給表は data/salary-tables.json（ユーザー提供の公式データ、行政職・公安職・
+ * 教育職・医療職など20表）を読み込んで使用する。何らかの理由で読み込みに失敗
+ * した場合（file:// で開いた等）は、行政職俸給表(一)のみ簡易な参考値で代替する。
  *
  * 出典（数値を直接確認したい場合）:
- *  - 俸給表（別表第一）: https://www.jinji.go.jp/content/900030877.pdf
+ *  - 俸給表（別表第一〜第十）: https://www.jinji.go.jp/content/900030877.pdf
  *  - 地域手当（級地区分）: 人事院規則9-49
  *  - 扶養手当・住居手当・通勤手当: 人事院規則9-80, 9-42, 9-24
  *  - 期末・勤勉手当の支給月数: 内閣人事局 給与関係資料
  */
 
 // ---------------------------------------------------------------------------
-// 1. 俸給表（行政職俸給表(一) 相当の参考値）
+// 1. 俸給表
 // ---------------------------------------------------------------------------
 
-// 各級の1号俸の額（円）と号俸数（参考値）
-const GRADE_SEED = {
+// data/salary-tables.json が読み込めなかった場合の最終フォールバック（行政職(一)のみ、参考値）
+const FALLBACK_GRADE_SEED = {
   1: { base: 145600, steps: 125 },
   2: { base: 177100, steps: 125 },
   3: { base: 208900, steps: 113 },
@@ -33,56 +31,76 @@ const GRADE_SEED = {
   10: { base: 411200, steps: 29 },
 };
 
-// 号俸が上がるほど昇給額が小さくなるカーブを模した参考テーブルを生成する。
-function generateReferenceSalaryTable() {
-  const table = {};
-  for (const grade of Object.keys(GRADE_SEED)) {
-    const { base, steps } = GRADE_SEED[grade];
+function generateFallbackSalaryTable() {
+  const grades = {};
+  for (const grade of Object.keys(FALLBACK_GRADE_SEED)) {
+    const { base, steps } = FALLBACK_GRADE_SEED[grade];
     const amounts = [base];
     for (let step = 1; step < steps; step++) {
-      const progress = step / steps; // 0〜1
-      const raw = 1900 - progress * 1500; // 昇給額は1,900円→400円へ逓減
+      const progress = step / steps;
+      const raw = 1900 - progress * 1500;
       const increment = Math.max(200, Math.round(raw / 100) * 100);
       amounts.push(amounts[step - 1] + increment);
     }
-    table[grade] = amounts;
+    grades[grade] = amounts;
   }
-  return table;
+  return grades;
 }
 
-const REFERENCE_SALARY_TABLE = generateReferenceSalaryTable();
+const FALLBACK_CATALOG = {
+  order: ["administrative_1"],
+  tables: {
+    administrative_1: {
+      label: "行政職俸給表(一)相当（参考値・要確認）",
+      type: "graded",
+      grades: generateFallbackSalaryTable(),
+    },
+  },
+};
 
-// 実際に使用する俸給表（初期値は参考値。公式データがあれば差し替えられる）
-let SALARY_TABLE = REFERENCE_SALARY_TABLE;
-let SALARY_TABLE_IS_OFFICIAL = false;
-let SALARY_TABLE_META = { table: "行政職俸給表(一) 相当（参考値）", effectiveDate: null };
+// 俸給表カタログ（全俸給表を保持）。読み込み完了後に data/salary-tables.json の内容へ差し替わる。
+let SALARY_CATALOG = FALLBACK_CATALOG;
+let SALARY_CATALOG_IS_OFFICIAL = false;
+let SALARY_CATALOG_SOURCE_NOTE = "";
 
 /**
- * data/salary-table.json が配置されていれば読み込んで SALARY_TABLE を差し替える。
+ * data/salary-tables.json を読み込んで SALARY_CATALOG を差し替える。
  * 期待するJSON形式:
  * {
- *   "table": "行政職俸給表(一)",
- *   "effectiveDate": "2025-04-01",
- *   "grades": { "1": [145600, 146700, ...], "2": [...], ... }
+ *   "source": "...", "note": "...",
+ *   "order": ["administrative_1", ...],
+ *   "tables": {
+ *     "administrative_1": { "label": "行政職俸給表(一)", "type": "graded",
+ *                            "grades": { "1": [195800, ...], ... } },
+ *     "designated":       { "label": "指定職俸給表", "type": "flat",
+ *                            "steps": [736000, ...] }
+ *   }
  * }
- * file:// で開いている場合など fetch できない環境では黙って参考値を使い続ける。
+ * file:// で開いている場合など fetch できない環境では黙ってフォールバックを使い続ける。
  */
 async function loadOfficialSalaryTable() {
   try {
-    const res = await fetch("data/salary-table.json", { cache: "no-store" });
+    const res = await fetch("data/salary-tables.json", { cache: "no-store" });
     if (!res.ok) return false;
     const json = await res.json();
-    if (!json || typeof json.grades !== "object") return false;
-    SALARY_TABLE = json.grades;
-    SALARY_TABLE_IS_OFFICIAL = true;
-    SALARY_TABLE_META = {
-      table: json.table || "行政職俸給表(一)",
-      effectiveDate: json.effectiveDate || null,
-    };
+    if (!json || typeof json.tables !== "object") return false;
+    SALARY_CATALOG = json;
+    SALARY_CATALOG_IS_OFFICIAL = true;
+    SALARY_CATALOG_SOURCE_NOTE = json.note || "";
     return true;
   } catch (e) {
     return false;
   }
+}
+
+function getTableKeys() {
+  return SALARY_CATALOG.order && SALARY_CATALOG.order.length
+    ? SALARY_CATALOG.order
+    : Object.keys(SALARY_CATALOG.tables);
+}
+
+function getTable(tableKey) {
+  return SALARY_CATALOG.tables[tableKey];
 }
 
 // ---------------------------------------------------------------------------

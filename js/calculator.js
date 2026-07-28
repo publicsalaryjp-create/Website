@@ -3,21 +3,29 @@
  * 入力値から各種給与項目を計算する純粋関数群。DOM には触れない。
  */
 
-function getSalaryAmount(grade, step) {
-  const amounts = SALARY_TABLE[String(grade)];
-  if (!amounts || amounts.length === 0) return 0;
+function getStepAmounts(tableKey, grade) {
+  const table = getTable(tableKey);
+  if (!table) return [];
+  if (table.type === "flat") return table.steps || [];
+  return (table.grades && table.grades[String(grade)]) || [];
+}
+
+function getSalaryAmount(tableKey, grade, step) {
+  const amounts = getStepAmounts(tableKey, grade);
+  if (!amounts.length) return 0;
   const index = Math.min(Math.max(step - 1, 0), amounts.length - 1);
   return amounts[index];
 }
 
-function getMaxStep(grade) {
-  const amounts = SALARY_TABLE[String(grade)];
-  return amounts ? amounts.length : 1;
+function getMaxStep(tableKey, grade) {
+  const amounts = getStepAmounts(tableKey, grade);
+  return amounts.length || 1;
 }
 
 /**
  * @param {Object} input
- * @param {number} input.grade 職務の級 (1-10)
+ * @param {string} input.tableKey 俸給表の種類（"administrative_1" など）
+ * @param {number} input.grade 職務の級（flat型の俸給表では無視される）
  * @param {number} input.step 号俸
  * @param {number} input.regionalRate 地域手当率 (0〜0.2)
  * @param {boolean} input.hasSpouse 配偶者の有無
@@ -32,7 +40,7 @@ function getMaxStep(grade) {
  * @param {number} input.bonusMonths 期末・勤勉手当の年間支給月数
  */
 function calculateSalary(input) {
-  const baseSalary = getSalaryAmount(input.grade, input.step);
+  const baseSalary = getSalaryAmount(input.tableKey, input.grade, input.step);
   const regionalAllowance = Math.floor(baseSalary * input.regionalRate);
 
   const dep = DEPENDENT_ALLOWANCE_SCHEDULE[input.fiscalYear] || DEPENDENT_ALLOWANCE_SCHEDULE.r8;
