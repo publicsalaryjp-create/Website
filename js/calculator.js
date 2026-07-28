@@ -90,7 +90,8 @@ function calculateOvertimeAllowance(hourlyWage, hours) {
  * @param {number} input.housingAllowance 住居手当の月額（円、支給がある場合のみ直接入力）
  * @param {number} input.teishuMonths 期末手当の年間支給月数
  * @param {number} input.kinbenMonths 勤勉手当の年間支給月数（成績率適用前）
- * @param {number} input.meritRate 勤務成績区分に応じた成績率（例: 1.0225）
+ * @param {number} input.meritRateJune 6月期の勤務成績区分に応じた成績率（例: 1.0225）
+ * @param {number} input.meritRateDecember 12月期の勤務成績区分に応じた成績率（例: 1.0225）
  * @param {number} input.weekdayNormalHours 平日の時間外勤務時間（深夜を除く月間合計）
  * @param {number} input.weekdayNightHours 平日の時間外勤務時間のうち深夜（22時〜翌5時）
  * @param {number} input.holidayNormalHours 休日勤務時間（深夜を除く月間合計）
@@ -126,12 +127,13 @@ function calculateSalary(input) {
   const bonusBase = baseSalary + regionalAllowance;
   const teishuMonths = input.teishuMonths || 0;
   const kinbenMonths = input.kinbenMonths || 0;
-  const meritRate = input.meritRate == null ? 1 : input.meritRate;
+  const meritRateJune = input.meritRateJune == null ? 1 : input.meritRateJune;
+  const meritRateDecember = input.meritRateDecember == null ? 1 : input.meritRateDecember;
 
   const teishuJune = Math.floor(bonusBase * (teishuMonths / 2));
   const teishuDecember = Math.floor(bonusBase * (teishuMonths / 2));
-  const kinbenJune = Math.floor(bonusBase * (kinbenMonths / 2) * meritRate);
-  const kinbenDecember = Math.floor(bonusBase * (kinbenMonths / 2) * meritRate);
+  const kinbenJune = Math.floor(bonusBase * (kinbenMonths / 2) * meritRateJune);
+  const kinbenDecember = Math.floor(bonusBase * (kinbenMonths / 2) * meritRateDecember);
   const bonusJune = teishuJune + kinbenJune;
   const bonusDecember = teishuDecember + kinbenDecember;
   const bonusAnnual = bonusJune + bonusDecember;

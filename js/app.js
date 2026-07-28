@@ -29,9 +29,9 @@ function updateVintageNote() {
   }
 }
 
-function currentMeritRate() {
-  const staffType = document.getElementById("merit-staff-type").value;
-  const gradeKey = document.getElementById("merit-grade").value;
+function currentMeritRate(period) {
+  const staffType = document.getElementById(`merit-staff-type-${period}`).value;
+  const gradeKey = document.getElementById(`merit-grade-${period}`).value;
   const category = MERIT_RATE_CATEGORIES[staffType];
   const grade = category && category.grades.find((g) => g.key === gradeKey);
   return grade && grade.rate != null ? grade.rate : 1;
@@ -42,7 +42,8 @@ function readInput() {
     ...readCommonInput(),
     teishuMonths: Number(document.getElementById("teishu-months").value),
     kinbenMonths: Number(document.getElementById("kinben-months").value),
-    meritRate: currentMeritRate(),
+    meritRateJune: currentMeritRate("june"),
+    meritRateDecember: currentMeritRate("december"),
     weekdayNormalHours: Number(document.getElementById("ot-weekday-normal").value),
     weekdayNightHours: Number(document.getElementById("ot-weekday-night").value),
     holidayNormalHours: Number(document.getElementById("ot-holiday-normal").value),
@@ -64,8 +65,8 @@ function renderResult(result) {
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
 }
 
-function populateMeritStaffTypeOptions() {
-  const select = document.getElementById("merit-staff-type");
+function populateMeritStaffTypeOptions(period) {
+  const select = document.getElementById(`merit-staff-type-${period}`);
   select.innerHTML = "";
   Object.entries(MERIT_RATE_CATEGORIES).forEach(([key, category]) => {
     const opt = document.createElement("option");
@@ -76,9 +77,9 @@ function populateMeritStaffTypeOptions() {
   select.value = "general";
 }
 
-function populateMeritGradeOptions() {
-  const select = document.getElementById("merit-grade");
-  const staffType = document.getElementById("merit-staff-type").value;
+function populateMeritGradeOptions(period) {
+  const select = document.getElementById(`merit-grade-${period}`);
+  const staffType = document.getElementById(`merit-staff-type-${period}`).value;
   const category = MERIT_RATE_CATEGORIES[staffType];
   select.innerHTML = "";
   category.grades
@@ -302,22 +303,27 @@ function initForm() {
   populateStepOptions();
   populateRegionalRateOptions();
   populateRegionalRateTable();
-  populateMeritStaffTypeOptions();
-  if (saved && saved["merit-staff-type"]) {
-    const staffTypeSelect = document.getElementById("merit-staff-type");
-    if (Array.from(staffTypeSelect.options).some((o) => o.value === saved["merit-staff-type"])) {
-      staffTypeSelect.value = saved["merit-staff-type"];
+  ["june", "december"].forEach((period) => {
+    populateMeritStaffTypeOptions(period);
+    const savedStaffType = saved && saved[`merit-staff-type-${period}`];
+    if (savedStaffType) {
+      const staffTypeSelect = document.getElementById(`merit-staff-type-${period}`);
+      if (Array.from(staffTypeSelect.options).some((o) => o.value === savedStaffType)) {
+        staffTypeSelect.value = savedStaffType;
+      }
     }
-  }
-  populateMeritGradeOptions();
+    populateMeritGradeOptions(period);
+  });
   updateVisibility();
   applySavedFormValues(form, saved);
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
+  wireCounterButtons(form);
 
   wireCommonFormEvents(form, {
     onInputExtra: (e) => {
       if (e.target.id === "salary-table") resetLifetimeSimulation();
-      if (e.target.id === "merit-staff-type") populateMeritGradeOptions();
+      if (e.target.id === "merit-staff-type-june") populateMeritGradeOptions("june");
+      if (e.target.id === "merit-staff-type-december") populateMeritGradeOptions("december");
     },
     onChangeExtra: handleVintageChange,
     onRecalculate: recalculate,

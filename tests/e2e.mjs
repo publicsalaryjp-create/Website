@@ -102,9 +102,9 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.selectOption("#grade", "1");
   await page.selectOption("#step", "1");
   await page.selectOption("#regional-rate", "0");
-  await page.fill("#child-under15-count", "1");
-  await page.fill("#child-16to22-count", "1");
-  await page.fill("#parent-count", "1");
+  await page.click('.counter-btn[data-target="child-under15-count"][data-delta="1"]');
+  await page.click('.counter-btn[data-target="child-16to22-count"][data-delta="1"]');
+  await page.click('.counter-btn[data-target="parent-count"][data-delta="1"]');
   await page.waitForTimeout(300);
   const dependentText = await page.textContent("#r-dependent");
   report(
@@ -204,12 +204,12 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.selectOption("#grade", "1");
   await page.selectOption("#step", "1");
   await page.selectOption("#regional-rate", "0");
-  await page.selectOption("#merit-staff-type", "general");
-  await page.selectOption("#merit-grade", "good");
+  await page.selectOption("#merit-staff-type-june", "general");
+  await page.selectOption("#merit-grade-june", "good");
   await page.waitForTimeout(200);
   const kinbenGood = await page.textContent("#r-kinben-june");
   const teishuGood = await page.textContent("#r-teishu-june");
-  await page.selectOption("#merit-grade", "excellent_plus");
+  await page.selectOption("#merit-grade-june", "excellent_plus");
   await page.waitForTimeout(200);
   const kinbenExcellentPlus = await page.textContent("#r-kinben-june");
   const teishuExcellentPlus = await page.textContent("#r-teishu-june");
@@ -226,13 +226,59 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#merit-staff-type", "designated");
+  await page.selectOption("#merit-staff-type-june", "designated");
   await page.waitForTimeout(200);
-  const gradeOptions = await page.$$eval("#merit-grade option", (opts) => opts.map((o) => o.value));
+  const gradeOptions = await page.$$eval("#merit-grade-june option", (opts) => opts.map((o) => o.value));
   report(
     "index.html: 指定職職員には「特に優秀」の選択肢がない",
     !gradeOptions.includes("excellent_plus"),
     `選択肢: ${JSON.stringify(gradeOptions)}`
+  );
+  await page.close();
+}
+
+// index.html: 勤勉手当は6月期・12月期で別々に職員区分・成績区分を設定できる
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "administrative_1");
+  await page.selectOption("#grade", "1");
+  await page.selectOption("#step", "1");
+  await page.selectOption("#regional-rate", "0");
+  await page.selectOption("#merit-staff-type-june", "general");
+  await page.selectOption("#merit-grade-june", "excellent_plus");
+  await page.selectOption("#merit-staff-type-december", "general");
+  await page.selectOption("#merit-grade-december", "not_good");
+  await page.waitForTimeout(200);
+  const kinbenJune = await page.textContent("#r-kinben-june");
+  const kinbenDecember = await page.textContent("#r-kinben-december");
+  const teishuJune = await page.textContent("#r-teishu-june");
+  const teishuDecember = await page.textContent("#r-teishu-december");
+  report(
+    "index.html: 6月期「特に優秀」・12月期「良好でない」で勤勉手当が期ごとに異なり、期末手当は変わらない",
+    kinbenJune !== kinbenDecember && teishuJune === teishuDecember,
+    `勤勉(6月)=${kinbenJune} 勤勉(12月)=${kinbenDecember} 期末(6月)=${teishuJune} 期末(12月)=${teishuDecember}`
+  );
+  await page.close();
+}
+
+// index.html: 扶養親族数のボタンで増減し、0未満にはならない
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.click('.counter-btn[data-target="parent-count"][data-delta="-1"]');
+  await page.waitForTimeout(150);
+  const afterDecrementAtZero = await page.inputValue("#parent-count");
+  await page.click('.counter-btn[data-target="parent-count"][data-delta="1"]');
+  await page.click('.counter-btn[data-target="parent-count"][data-delta="1"]');
+  await page.waitForTimeout(150);
+  const afterTwoIncrements = await page.inputValue("#parent-count");
+  report(
+    "index.html: 扶養親族数ボタンは0未満にならず、+1を2回押すと2になる",
+    afterDecrementAtZero === "0" && afterTwoIncrements === "2",
+    `-1後=${afterDecrementAtZero} +1×2後=${afterTwoIncrements}`
   );
   await page.close();
 }

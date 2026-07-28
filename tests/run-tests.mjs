@@ -139,7 +139,8 @@ test("calculateSalary: 各手当と合計額が期待通り計算される", () 
     housingAllowance: 20000,
     teishuMonths: 2.45,
     kinbenMonths: 2.45,
-    meritRate: MERIT_RATE_CATEGORIES.general.grades.find((g) => g.key === "good").rate,
+    meritRateJune: MERIT_RATE_CATEGORIES.general.grades.find((g) => g.key === "good").rate,
+    meritRateDecember: MERIT_RATE_CATEGORIES.general.grades.find((g) => g.key === "good").rate,
     weekdayNormalHours: 0,
     weekdayNightHours: 0,
     holidayNormalHours: 0,
@@ -166,7 +167,8 @@ test("calculateSalary: 扶養手当は15歳以下と16〜22歳で額が異なる
     housingAllowance: 0,
     teishuMonths: 0,
     kinbenMonths: 0,
-    meritRate: 1,
+    meritRateJune: 1,
+    meritRateDecember: 1,
     weekdayNormalHours: 0,
     weekdayNightHours: 0,
     holidayNormalHours: 0,
@@ -183,7 +185,8 @@ test("calculateSalary: 扶養手当は15歳以下と16〜22歳で額が異なる
     housingAllowance: 0,
     teishuMonths: 0,
     kinbenMonths: 0,
-    meritRate: 1,
+    meritRateJune: 1,
+    meritRateDecember: 1,
     weekdayNormalHours: 0,
     weekdayNightHours: 0,
     holidayNormalHours: 0,
@@ -207,7 +210,8 @@ test("calculateSalary: 期末手当は成績率の影響を受けず、勤勉手
     housingAllowance: 0,
     teishuMonths: 2.45,
     kinbenMonths: 2.45,
-    meritRate: 1.0225, // 一般職員「良好」
+    meritRateJune: 1.0225, // 一般職員「良好」
+    meritRateDecember: 1.0225,
     weekdayNormalHours: 0,
     weekdayNightHours: 0,
     holidayNormalHours: 0,
@@ -222,6 +226,30 @@ test("calculateSalary: 期末手当は成績率の影響を受けず、勤勉手
   assert.equal(result.kinbenDecember, 125256);
   assert.equal(result.bonusJune, result.teishuJune + result.kinbenJune);
   assert.equal(result.bonusAnnual, result.bonusJune + result.bonusDecember);
+});
+
+test("calculateSalary: 6月期と12月期で異なる成績率を設定すると勤勉手当だけ期ごとに変わる", () => {
+  const result = context.calculateSalary({
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1, // baseSalary=100000
+    regionalRate: 0,
+    childUnder15Count: 0,
+    child16to22Count: 0,
+    parentCount: 0,
+    housingAllowance: 0,
+    teishuMonths: 2.45,
+    kinbenMonths: 2.45,
+    meritRateJune: MERIT_RATE_CATEGORIES.general.grades.find((g) => g.key === "excellent_plus").rate,
+    meritRateDecember: MERIT_RATE_CATEGORIES.general.grades.find((g) => g.key === "not_good").rate,
+    weekdayNormalHours: 0,
+    weekdayNightHours: 0,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+  assert.equal(result.teishuJune, result.teishuDecember); // 期末手当は成績率と無関係なので6月・12月で同額
+  assert.notEqual(result.kinbenJune, result.kinbenDecember);
+  assert.ok(result.kinbenJune > result.kinbenDecember); // 6月は「特に優秀」、12月は「良好でない」
 });
 
 test("calculateSalary: 一般職員の成績区分ごとに勤勉手当が変わる（下限値を採用）", () => {
@@ -244,10 +272,10 @@ test("calculateSalary: 一般職員の成績区分ごとに勤勉手当が変わ
   const grades = MERIT_RATE_CATEGORIES.general.grades;
   const rateFor = (key) => grades.find((g) => g.key === key).rate;
 
-  const excellentPlus = context.calculateSalary({ ...baseInput, meritRate: rateFor("excellent_plus") });
-  const excellent = context.calculateSalary({ ...baseInput, meritRate: rateFor("excellent") });
-  const good = context.calculateSalary({ ...baseInput, meritRate: rateFor("good") });
-  const notGood = context.calculateSalary({ ...baseInput, meritRate: rateFor("not_good") });
+  const excellentPlus = context.calculateSalary({ ...baseInput, meritRateJune: rateFor("excellent_plus") });
+  const excellent = context.calculateSalary({ ...baseInput, meritRateJune: rateFor("excellent") });
+  const good = context.calculateSalary({ ...baseInput, meritRateJune: rateFor("good") });
+  const notGood = context.calculateSalary({ ...baseInput, meritRateJune: rateFor("not_good") });
 
   // kinbenJune = floor(100000 * 1.0 * meritRate)
   assert.equal(excellentPlus.kinbenJune, 125250); // 1.2525

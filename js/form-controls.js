@@ -112,6 +112,25 @@ function updateVisibility() {
   document.getElementById("grade-field").hidden = currentTableType() !== "graded";
 }
 
+/**
+ * 扶養親族数などのボタン選択式カウンター（.counter-btn）を配線する。
+ * ボタンは data-target（対象inputのid）とdata-delta（増減量）を持つ。
+ * 値の変更は対象inputへの"input"イベント発火で通知するため、
+ * wireCommonFormEvents()側の再計算・保存ロジックがそのまま動く。
+ */
+function wireCounterButtons(form) {
+  form.querySelectorAll(".counter-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const target = document.getElementById(btn.dataset.target);
+      if (!target) return;
+      const min = Number(target.min) || 0;
+      const delta = Number(btn.dataset.delta);
+      target.value = Math.max((Number(target.value) || 0) + delta, min);
+      target.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+}
+
 // ---------------------------------------------------------------------------
 // 入力内容の保存・復元（localStorage。この端末のブラウザ内のみで完結し、
 // サーバーには送信されない）

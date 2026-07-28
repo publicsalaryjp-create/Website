@@ -79,15 +79,27 @@
       <p class="hint">令和8年4月現在の額です（配偶者に係る手当は廃止済みのため対象外）。</p>
       <div class="field">
         <label for="child-under15-count">扶養する子の数（15歳以下）</label>
-        <input type="number" id="child-under15-count" name="child-under15-count" min="0" value="0">
+        <div class="counter-input">
+          <button type="button" class="counter-btn" data-target="child-under15-count" data-delta="-1" aria-label="減らす">−</button>
+          <input type="number" id="child-under15-count" name="child-under15-count" min="0" value="0" readonly>
+          <button type="button" class="counter-btn" data-target="child-under15-count" data-delta="1" aria-label="増やす">＋</button>
+        </div>
       </div>
       <div class="field">
         <label for="child-16to22-count">扶養する子の数（16歳以上22歳以下）</label>
-        <input type="number" id="child-16to22-count" name="child-16to22-count" min="0" value="0">
+        <div class="counter-input">
+          <button type="button" class="counter-btn" data-target="child-16to22-count" data-delta="-1" aria-label="減らす">−</button>
+          <input type="number" id="child-16to22-count" name="child-16to22-count" min="0" value="0" readonly>
+          <button type="button" class="counter-btn" data-target="child-16to22-count" data-delta="1" aria-label="増やす">＋</button>
+        </div>
       </div>
       <div class="field">
         <label for="parent-count">扶養する父母等の数</label>
-        <input type="number" id="parent-count" name="parent-count" min="0" value="0">
+        <div class="counter-input">
+          <button type="button" class="counter-btn" data-target="parent-count" data-delta="-1" aria-label="減らす">−</button>
+          <input type="number" id="parent-count" name="parent-count" min="0" value="0" readonly>
+          <button type="button" class="counter-btn" data-target="parent-count" data-delta="1" aria-label="増やす">＋</button>
+        </div>
       </div>
     </fieldset>
 
@@ -107,6 +119,7 @@
         勤勉手当 = 算定基礎額×支給月数×成績率。
         6月期・12月期はそれぞれ年間支給月数の半分として計算します
         （出典: 人事院「国家公務員の諸手当の概要」令和8年度）。
+        勤務成績は6月期・12月期でそれぞれ別に評価されるため、職員区分・成績区分も期別に設定します。
       </p>
       <div class="field">
         <label for="teishu-months">期末手当の年間支給月数</label>
@@ -117,12 +130,20 @@
         <input type="number" id="kinben-months" name="kinben-months" min="0" step="0.05" value="2.45">
       </div>
       <div class="field">
-        <label for="merit-staff-type">職員区分</label>
-        <select id="merit-staff-type" name="merit-staff-type"></select>
+        <label for="merit-staff-type-june">職員区分（6月期）</label>
+        <select id="merit-staff-type-june" name="merit-staff-type-june"></select>
       </div>
       <div class="field">
-        <label for="merit-grade">勤務成績区分</label>
-        <select id="merit-grade" name="merit-grade"></select>
+        <label for="merit-grade-june">勤務成績区分（6月期）</label>
+        <select id="merit-grade-june" name="merit-grade-june"></select>
+      </div>
+      <div class="field">
+        <label for="merit-staff-type-december">職員区分（12月期）</label>
+        <select id="merit-staff-type-december" name="merit-staff-type-december"></select>
+      </div>
+      <div class="field">
+        <label for="merit-grade-december">勤務成績区分（12月期）</label>
+        <select id="merit-grade-december" name="merit-grade-december"></select>
         <p class="hint">成績率に幅がある区分は下限値を採用しています。</p>
       </div>
     </fieldset>

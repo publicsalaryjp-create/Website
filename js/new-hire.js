@@ -56,6 +56,7 @@ function initForm() {
   updateVisibility();
   applySavedFormValues(form, saved);
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
+  wireCounterButtons(form);
 
   wireCommonFormEvents(form, { onRecalculate: recalculate });
 
