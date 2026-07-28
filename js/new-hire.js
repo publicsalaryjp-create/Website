@@ -52,6 +52,7 @@ function initForm() {
   populateStepOptions();
   populateRegionalRateOptions();
   populateRegionalRateTable();
+  populateHonshoReferenceTable();
   populateBonusRateOptions();
   updateVisibility();
   applySavedFormValues(form, saved);

@@ -137,6 +137,7 @@ test("calculateSalary: 各手当と合計額が期待通り計算される", () 
     child16to22Count: 1,
     parentCount: 1,
     housingAllowance: 20000,
+    honshoAllowance: 10000,
     teishuMonths: 2.45,
     kinbenMonths: 2.45,
     meritRateJune: MERIT_RATE_CATEGORIES.general.grades.find((g) => g.key === "good").rate,
@@ -151,8 +152,54 @@ test("calculateSalary: 各手当と合計額が期待通り計算される", () 
   assert.equal(result.regionalAllowance, 20200); // 101000*0.2
   assert.equal(result.dependentAllowance, 37500); // 15歳以下の子1人13000 + 16-22歳の子1人18000 + 父母等1人6500
   assert.equal(result.housingAllowance, 20000); // 直接入力した値がそのまま使われる
-  assert.equal(result.monthlyTotal, 178700);
+  assert.equal(result.honshoAllowance, 10000); // 直接入力した値がそのまま使われる
+  assert.equal(result.monthlyTotal, 188700);
   assert.equal(result.overtimeAllowance, 0);
+});
+
+test("calculateSalary: 本省手当は月額支給額合計に算入されるが、超過勤務手当・期末勤勉手当の算定基礎には含まれない", () => {
+  const withoutHonsho = context.calculateSalary({
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1, // baseSalary=100000
+    regionalRate: 0,
+    childUnder15Count: 0,
+    child16to22Count: 0,
+    parentCount: 0,
+    housingAllowance: 0,
+    honshoAllowance: 0,
+    teishuMonths: 2.45,
+    kinbenMonths: 2.45,
+    meritRateJune: 1,
+    meritRateDecember: 1,
+    weekdayNormalHours: 10,
+    weekdayNightHours: 0,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+  const withHonsho = context.calculateSalary({
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1,
+    regionalRate: 0,
+    childUnder15Count: 0,
+    child16to22Count: 0,
+    parentCount: 0,
+    housingAllowance: 0,
+    honshoAllowance: 17500,
+    teishuMonths: 2.45,
+    kinbenMonths: 2.45,
+    meritRateJune: 1,
+    meritRateDecember: 1,
+    weekdayNormalHours: 10,
+    weekdayNightHours: 0,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+  assert.equal(withHonsho.monthlyTotal, withoutHonsho.monthlyTotal + 17500);
+  assert.equal(withHonsho.overtimeAllowance, withoutHonsho.overtimeAllowance); // 算定基礎に含まれないため残業代は不変
+  assert.equal(withHonsho.teishuJune, withoutHonsho.teishuJune); // 賞与算定基礎にも含まれない
+  assert.equal(withHonsho.kinbenJune, withoutHonsho.kinbenJune);
 });
 
 test("calculateSalary: 扶養手当は15歳以下と16〜22歳で額が異なる", () => {

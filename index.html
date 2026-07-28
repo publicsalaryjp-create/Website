@@ -113,6 +113,32 @@
     </fieldset>
 
     <fieldset>
+      <legend>本府省業務調整手当（本省手当）</legend>
+      <p class="hint">
+        本府省（霞が関）勤務の職員に支給される手当です（給与法10条の3、人事院規則9-123）。
+        正確な最新額を断定できないため、支給がある場合のみ実際の月額を直接入力してください（既定値は0円）。
+      </p>
+      <div class="field">
+        <label for="honsho-allowance">本省手当（月額・円）</label>
+        <input type="number" id="honsho-allowance" name="honsho-allowance" min="0" step="1000" value="0">
+      </div>
+      <details class="regional-rate-details">
+        <summary>級別の参考額を見る（要確認）</summary>
+        <table class="regional-rate-table">
+          <thead>
+            <tr><th>級</th><th>参考月額</th></tr>
+          </thead>
+          <tbody id="honsho-reference-table-body"></tbody>
+        </table>
+        <p class="hint">
+          複数の公開情報を集約した参考値で、令和8年度人事院勧告による増額改定（課長補佐級+10,000円・
+          係長級以下+2,000円、幹部・管理職員への新規適用51,800円等）は未反映です。実際の支給額は
+          所属官署の給与担当にご確認ください。
+        </p>
+      </details>
+    </fieldset>
+
+    <fieldset>
       <legend>期末・勤勉手当（賞与）</legend>
       <p class="hint">
         期末手当 = 算定基礎額（俸給+地域手当）×支給月数。
@@ -187,6 +213,7 @@
         <tr><th>地域手当</th><td id="r-regional">-</td></tr>
         <tr><th>扶養手当</th><td id="r-dependent">-</td></tr>
         <tr><th>住居手当</th><td id="r-housing">-</td></tr>
+        <tr><th>本省手当</th><td id="r-honsho">-</td></tr>
         <tr class="total-row"><th>月額支給額 合計（残業代除く）</th><td id="r-monthly-total">-</td></tr>
         <tr><th>時間外勤務の時間単価</th><td id="r-ot-hourly">-</td></tr>
         <tr><th>超過勤務手当</th><td id="r-ot-allowance">-</td></tr>

@@ -3,8 +3,9 @@
  * index.html / new-hire.html の両方で使う共通のフォーム制御・表示ロジック。
  * 両ページで一致しているDOM ID（salary-table, grade, grade-field, step,
  * regional-rate, regional-rate-table-body, child-under15-count, child-16to22-count,
- * parent-count, housing-allowance, table-source-note, r-base, r-regional, r-dependent,
- * r-housing, r-monthly-total）を前提にする。
+ * parent-count, housing-allowance, honsho-allowance, honsho-reference-table-body,
+ * table-source-note, r-base, r-regional, r-dependent, r-housing, r-honsho,
+ * r-monthly-total）を前提にする。
  * 期末・勤勉手当の入力（index.htmlは成績率区分、new-hire.htmlは在職期間率）は
  * ページごとに構成が異なるため、それぞれ js/app.js / js/new-hire.js 側で扱う。
  */
@@ -108,6 +109,23 @@ function populateRegionalRateTable() {
   });
 }
 
+/** 本府省業務調整手当（本省手当）の級別参考額を一覧表（折りたたみ）に描画する */
+function populateHonshoReferenceTable() {
+  const tbody = document.getElementById("honsho-reference-table-body");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  HONSHO_ALLOWANCE_REFERENCE.forEach((r) => {
+    const tr = document.createElement("tr");
+    const gradeTd = document.createElement("td");
+    gradeTd.textContent = r.grade;
+    const amountTd = document.createElement("td");
+    amountTd.textContent = yen.format(r.amount);
+    tr.appendChild(gradeTd);
+    tr.appendChild(amountTd);
+    tbody.appendChild(tr);
+  });
+}
+
 function updateVisibility() {
   document.getElementById("grade-field").hidden = currentTableType() !== "graded";
 }
@@ -205,6 +223,7 @@ function readCommonInput() {
     child16to22Count: Number(document.getElementById("child-16to22-count").value),
     parentCount: Number(document.getElementById("parent-count").value),
     housingAllowance: Number(document.getElementById("housing-allowance").value),
+    honshoAllowance: Number(document.getElementById("honsho-allowance").value),
   };
 }
 
@@ -214,6 +233,7 @@ function renderCommonResult(result) {
   document.getElementById("r-regional").textContent = yen.format(result.regionalAllowance);
   document.getElementById("r-dependent").textContent = yen.format(result.dependentAllowance);
   document.getElementById("r-housing").textContent = yen.format(result.housingAllowance);
+  document.getElementById("r-honsho").textContent = yen.format(result.honshoAllowance);
   document.getElementById("r-monthly-total").textContent = yen.format(result.monthlyTotal);
 }
 

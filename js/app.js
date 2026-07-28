@@ -303,6 +303,7 @@ function initForm() {
   populateStepOptions();
   populateRegionalRateOptions();
   populateRegionalRateTable();
+  populateHonshoReferenceTable();
   ["june", "december"].forEach((period) => {
     populateMeritStaffTypeOptions(period);
     const savedStaffType = saved && saved[`merit-staff-type-${period}`];
