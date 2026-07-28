@@ -3,7 +3,9 @@
 国家公務員（行政職俸給表(一)を想定）の給与を概算計算する静的Webサイトです。
 ビルド不要、HTML/CSS/バニラJavaScriptのみで動作します。
 
-詳細な仕様は [docs/requirements.md](docs/requirements.md)（要件定義書）を参照してください。
+詳細な仕様は [docs/requirements.md](docs/requirements.md)（要件定義書）を、
+開発の進め方（バックログ・スプリント記録など）は [docs/README.md](docs/README.md) を参照してください。
+変更履歴は [CHANGELOG.md](CHANGELOG.md) にあります。
 
 ## 使い方（ローカル確認）
 
@@ -59,4 +61,10 @@ js/calculator.js                   計算ロジック（純粋関数）
 js/app.js                          DOM配線
 data/salary-tables.json            俸給表データ本体（20表）
 scripts/extract-salary-tables.py   俸給表xlsxからJSONを再生成するスクリプト
+docs/requirements.md               要件定義書
+docs/product-backlog.md            プロダクトバックログ
+docs/definition-of-done.md         開発体制・Definition of Done / Ready
+docs/sprint-template.md            スプリント記録のテンプレート
+docs/sprints/                      過去のスプリント記録
+CHANGELOG.md                       変更履歴
 ```
