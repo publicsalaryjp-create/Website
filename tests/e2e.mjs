@@ -79,7 +79,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
   await page.selectOption("#grade", "1");
-  await page.fill("#step", "1");
+  await page.selectOption("#step", "1");
   await page.selectOption("#regional-rate", "0");
   await page.waitForTimeout(300);
   const baseSalaryText = await page.textContent("#r-base");
@@ -100,7 +100,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
   await page.selectOption("#grade", "1");
-  await page.fill("#step", "1");
+  await page.selectOption("#step", "1");
   await page.selectOption("#regional-rate", "0");
   await page.fill("#child-under15-count", "1");
   await page.fill("#child-16to22-count", "1");
@@ -163,7 +163,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.fill("#step", "10");
+  await page.selectOption("#step", "10");
   await page.click('.step-btn[data-delta="4"]');
   await page.waitForTimeout(150);
   const afterPlus4 = await page.inputValue("#step");
@@ -202,7 +202,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
   await page.selectOption("#grade", "1");
-  await page.fill("#step", "1");
+  await page.selectOption("#step", "1");
   await page.selectOption("#regional-rate", "0");
   await page.selectOption("#merit-staff-type", "general");
   await page.selectOption("#merit-grade", "good");

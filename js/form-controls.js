@@ -1,7 +1,7 @@
 /**
  * form-controls.js
  * index.html / new-hire.html の両方で使う共通のフォーム制御・表示ロジック。
- * 両ページで一致しているDOM ID（salary-table, grade, grade-field, step, step-max,
+ * 両ページで一致しているDOM ID（salary-table, grade, grade-field, step,
  * regional-rate, regional-rate-table-body, child-under15-count, child-16to22-count,
  * parent-count, housing-allowance, table-source-note, r-base, r-regional, r-dependent,
  * r-housing, r-monthly-total）を前提にする。
@@ -58,12 +58,18 @@ function populateGradeOptions(defaultGrade) {
 function populateStepOptions() {
   const tableKey = currentTableKey();
   const grade = document.getElementById("grade").value;
-  const stepInput = document.getElementById("step");
-  const currentValue = Number(stepInput.value) || 1;
+  const stepSelect = document.getElementById("step");
+  const currentValue = Number(stepSelect.value) || 1;
   const maxStep = getMaxStep(tableKey, grade);
-  stepInput.max = maxStep;
-  stepInput.value = Math.min(Math.max(currentValue, 1), maxStep);
-  document.getElementById("step-max").textContent = `/ ${maxStep}号俸`;
+  const newValue = Math.min(Math.max(currentValue, 1), maxStep);
+  stepSelect.innerHTML = "";
+  for (let s = 1; s <= maxStep; s++) {
+    const opt = document.createElement("option");
+    opt.value = s;
+    opt.textContent = `${s}号俸`;
+    stepSelect.appendChild(opt);
+  }
+  stepSelect.value = newValue;
 }
 
 function regionalRateLabel(r) {
@@ -207,8 +213,7 @@ function updateTableSourceNote() {
 }
 
 /**
- * 「俸給表を変えたら級・号俸を再構成する」「号俸の入力値を号俸数の範囲にクランプする」
- * という両ページ共通のイベント配線を行う。
+ * 「俸給表を変えたら級・号俸を再構成する」という両ページ共通のイベント配線を行う。
  * ページ固有の追加処理は onInputExtra / onChangeExtra（両方とも async 対応）で行う。
  *
  * @param {HTMLFormElement} form
@@ -232,11 +237,6 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
   });
 
   form.addEventListener("change", async (e) => {
-    if (e.target.id === "step") {
-      const stepInput = document.getElementById("step");
-      const maxStep = Number(stepInput.max) || 1;
-      stepInput.value = Math.min(Math.max(Number(stepInput.value) || 1, 1), maxStep);
-    }
     if (onChangeExtra) await onChangeExtra(e);
     onRecalculate();
   });

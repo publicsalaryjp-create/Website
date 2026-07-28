@@ -325,11 +325,11 @@ function initForm() {
 
   document.querySelectorAll(".step-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const stepInput = document.getElementById("step");
-      const maxStep = Number(stepInput.max) || 1;
+      const stepSelect = document.getElementById("step");
+      const maxStep = getMaxStep(currentTableKey(), document.getElementById("grade").value);
       const delta = Number(btn.dataset.delta);
-      const next = Math.min(Math.max((Number(stepInput.value) || 1) + delta, 1), maxStep);
-      stepInput.value = next;
+      const next = Math.min(Math.max((Number(stepSelect.value) || 1) + delta, 1), maxStep);
+      stepSelect.value = next;
       recalculate();
     });
   });

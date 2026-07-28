@@ -129,22 +129,6 @@ input[type="number"] {
   color: var(--color-text);
 }
 
-.step-input {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.step-input input[type="number"] {
-  flex: 1;
-}
-
-.step-max {
-  white-space: nowrap;
-  font-size: 0.85rem;
-  color: var(--color-muted);
-}
-
 .step-buttons {
   display: flex;
   gap: 6px;
