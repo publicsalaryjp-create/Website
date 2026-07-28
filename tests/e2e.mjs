@@ -120,6 +120,72 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
+// new-hire.html: 既定値が新規採用者の典型例（1級1号俸、1回目0.3・2回目1.0）になっている
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/new-hire.html`);
+  await page.waitForTimeout(500);
+  const grade = await page.$eval("#grade", (el) => el.value);
+  const firstRate = await page.$eval("#first-bonus-rate", (el) => el.value);
+  const secondRate = await page.$eval("#second-bonus-rate", (el) => el.value);
+  report(
+    "new-hire.html: 既定値が1級・1回目期間率0.3・2回目期間率1.0",
+    grade === "1" && firstRate === "0.3" && secondRate === "1",
+    `grade=${grade} first=${firstRate} second=${secondRate}`
+  );
+  await page.close();
+}
+
+// index.html: 号俸の昇給ボタン（+4/+6/+8, -4/-6/-8）が正しく増減する
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.fill("#step", "10");
+  await page.click('.step-btn[data-delta="4"]');
+  await page.waitForTimeout(150);
+  const afterPlus4 = await page.inputValue("#step");
+  await page.click('.step-btn[data-delta="-6"]');
+  await page.waitForTimeout(150);
+  const afterMinus6 = await page.inputValue("#step");
+  report(
+    "index.html: 号俸ボタンで10→+4→-6が正しく反映される(期待値: 14→8)",
+    afterPlus4 === "14" && afterMinus6 === "8",
+    `+4後=${afterPlus4} -6後=${afterMinus6}`
+  );
+  await page.close();
+}
+
+// index.html: 住居形態を「持ち家」にすると家賃入力欄が隠れる
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#housing-type", "owned");
+  await page.waitForTimeout(150);
+  const rentFieldHidden = await page.getAttribute("#rent-field", "hidden");
+  report("index.html: 持ち家を選ぶと家賃入力欄が非表示になる", rentFieldHidden === "", `hidden属性: ${rentFieldHidden}`);
+  await page.close();
+}
+
+// index.html: 俸給表バージョンのプルダウンで「現行」が選択可能・「人事院勧告後」は選択不可
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  const options = await page.$$eval("#salary-vintage option", (opts) =>
+    opts.map((o) => ({ value: o.value, disabled: o.disabled }))
+  );
+  const current = options.find((o) => o.value === "current");
+  const postRecommendation = options.find((o) => o.value === "post_recommendation");
+  report(
+    "index.html: 俸給表バージョンは現行のみ選択可能、人事院勧告後は選択不可",
+    current && !current.disabled && postRecommendation && postRecommendation.disabled,
+    JSON.stringify(options)
+  );
+  await page.close();
+}
+
 await browser.close();
 await new Promise((resolve) => server.close(resolve));
 

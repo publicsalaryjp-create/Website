@@ -76,8 +76,9 @@ new-hire.html                     新規採用職員向けの画面
 css/style.css                     スタイル（両画面共通）
 js/data.js                         俸給表カタログ・手当データ、読み込み処理
 js/calculator.js                   計算ロジック（純粋関数）
-js/app.js                          index.html のDOM配線（生涯賃金シミュレーション含む）
-js/new-hire.js                     new-hire.html のDOM配線
+js/form-controls.js                index.html・new-hire.html共通のフォーム制御・表示ロジック
+js/app.js                          index.html 固有のDOM配線（生涯賃金シミュレーション含む）
+js/new-hire.js                     new-hire.html 固有のDOM配線
 data/salary-tables.json            俸給表データ本体（20表、現行バージョン）
 data/vintages.json                 俸給表バージョン（現行／人事院勧告後）の一覧
 scripts/extract-salary-tables.py   俸給表xlsxからJSONを再生成するスクリプト

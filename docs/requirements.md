@@ -31,6 +31,7 @@
 | 想定ホスティング | 静的ホスティング（GitHub Pages等）。ローカル確認は簡易HTTPサーバー経由 |
 | 対応ブラウザ | `fetch` / `Intl.NumberFormat` 等のモダンAPIが使える最近のブラウザ |
 | レスポンシブ対応 | あり（760px以下でフォーム・結果を縦積みに切り替え） |
+| コード構成 | `js/data.js`（データ）・`js/calculator.js`（DOM非依存の計算ロジック）・`js/form-controls.js`（index.html/new-hire.html共通のフォーム制御・表示ロジック）・`js/app.js`/`js/new-hire.js`（各ページ固有のDOM配線）に分割 |
 
 ## 3. 機能要件
 
@@ -319,3 +320,4 @@
 | 2026-07-28 | 期末・勤勉手当の在職期間別割合（期間率）を追加 |
 | 2026-07-28 | 新規採用職員向け別ページ（new-hire.html）を追加 |
 | 2026-07-28 | CI（GitHub Actions）を追加。データ検証・ユニットテスト・E2Eスモークテストを自動実行 |
+| 2026-07-28 | app.js/new-hire.jsの重複DOM配線ロジックをjs/form-controls.jsに抽出するリファクタリングを実施 |
