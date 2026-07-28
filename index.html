@@ -10,6 +10,7 @@
 <header class="site-header">
   <h1>国家公務員給与計算シミュレーター</h1>
   <p class="subtitle">行政職俸給表(一)を想定した月給・賞与・年収の概算計算ツール</p>
+  <p class="subtitle"><a href="new-hire.html" class="header-link">新規採用職員向けシミュレーターはこちら →</a></p>
 </header>
 
 <div class="disclaimer" id="disclaimer">
@@ -27,6 +28,11 @@
   <form id="calc-form" class="panel form-panel">
     <fieldset>
       <legend>俸給</legend>
+      <div class="field">
+        <label for="salary-vintage">俸給表のバージョン</label>
+        <select id="salary-vintage" name="salary-vintage"></select>
+        <p class="hint" id="vintage-note"></p>
+      </div>
       <div class="field">
         <label for="salary-table">適用される俸給表</label>
         <select id="salary-table" name="salary-table"></select>
@@ -173,6 +179,55 @@
     <p class="hint">※ 税・社会保険料等控除前の額面金額です。単身赴任手当・寒冷地手当等は含まれていません。年収概算は毎月同じ時間外勤務が続くと仮定した概算値です。</p>
   </section>
 </main>
+
+<section class="panel lifetime-panel">
+  <h2>生涯賃金シミュレーション</h2>
+  <p class="hint">
+    左のフォームで選択した俸給表・扶養手当・住居手当・通勤手当・賞与支給月数・超過勤務の設定を全期間共通で使い、
+    年ごとに級・号俸・地域手当区分を設定して生涯賃金の概算を試算します。左のフォームを変更すると自動的に再計算されます。
+  </p>
+  <div class="lifetime-controls">
+    <div class="field">
+      <label for="lifetime-years">シミュレーション年数</label>
+      <input type="number" id="lifetime-years" min="1" max="35" value="35">
+    </div>
+    <div class="field">
+      <label for="lifetime-start-step">1年目の号俸</label>
+      <input type="number" id="lifetime-start-step" min="1" value="1">
+    </div>
+    <div class="field">
+      <label for="lifetime-increment">毎年の昇給号俸数</label>
+      <select id="lifetime-increment">
+        <option value="4">4号俸（標準）</option>
+        <option value="6">6号俸（良好）</option>
+        <option value="8">8号俸（特に良好）</option>
+      </select>
+    </div>
+    <button type="button" id="lifetime-autofill">自動生成する</button>
+  </div>
+  <p class="hint">
+    「自動生成する」を押すと、1年目は左のフォームで選択中の級・号俸・地域手当区分を引き継ぎ、
+    2年目以降は級・地域手当区分を変えずに号俸だけ毎年積み上げます。昇格（級変更）や転勤（地域手当区分変更）が
+    ある年は、生成後に該当する行を直接変更してください。
+  </p>
+  <div class="lifetime-table-wrap">
+    <table class="lifetime-table">
+      <thead>
+        <tr><th>年次</th><th>級</th><th>号俸</th><th>地域手当区分</th><th>年収概算</th></tr>
+      </thead>
+      <tbody id="lifetime-tbody">
+        <tr><td colspan="5" class="lifetime-empty">「自動生成する」を押すとシミュレーションが始まります。</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <table class="result-table lifetime-summary-table">
+    <tbody>
+      <tr class="total-row"><th>生涯賃金合計</th><td id="lifetime-total">-</td></tr>
+      <tr><th>年収の平均</th><td id="lifetime-average">-</td></tr>
+      <tr><th>最終年の年収</th><td id="lifetime-final">-</td></tr>
+    </tbody>
+  </table>
+</section>
 
 <footer class="site-footer">
   <h2 class="footer-heading">関連機関・法令リンク</h2>

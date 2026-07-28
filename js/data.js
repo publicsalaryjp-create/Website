@@ -63,11 +63,39 @@ let SALARY_CATALOG = FALLBACK_CATALOG;
 let SALARY_CATALOG_IS_OFFICIAL = false;
 let SALARY_CATALOG_SOURCE_NOTE = "";
 
+// 俸給表のバージョン（現行／人事院勧告後など）一覧。data/vintages.json から読み込む。
+const FALLBACK_VINTAGES = [
+  { key: "current", label: "現行", file: "salary-tables.json", effectiveDate: null, available: true },
+];
+let SALARY_VINTAGES = FALLBACK_VINTAGES;
+let CURRENT_VINTAGE_KEY = "current";
+
 /**
- * data/salary-tables.json を読み込んで SALARY_CATALOG を差し替える。
+ * data/vintages.json を読み込んで SALARY_VINTAGES を差し替える。読み込めない場合は
+ * 「現行」バージョンのみのフォールバック一覧を使う。
+ */
+async function loadVintages() {
+  try {
+    const res = await fetch("data/vintages.json", { cache: "no-store" });
+    if (!res.ok) return false;
+    const json = await res.json();
+    if (!json || !Array.isArray(json.vintages) || json.vintages.length === 0) return false;
+    SALARY_VINTAGES = json.vintages;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function getVintage(vintageKey) {
+  return SALARY_VINTAGES.find((v) => v.key === vintageKey);
+}
+
+/**
+ * data/salary-tables.json（またはバージョンごとのファイル）を読み込んで SALARY_CATALOG を差し替える。
  * 期待するJSON形式:
  * {
- *   "source": "...", "note": "...",
+ *   "source": "...", "note": "...", "effectiveDate": "YYYY-MM-DD",
  *   "order": ["administrative_1", ...],
  *   "tables": {
  *     "administrative_1": { "label": "行政職俸給表(一)", "type": "graded",
@@ -77,10 +105,12 @@ let SALARY_CATALOG_SOURCE_NOTE = "";
  *   }
  * }
  * file:// で開いている場合など fetch できない環境では黙ってフォールバックを使い続ける。
+ *
+ * @param {string} [file] 読み込むファイル名（省略時は "salary-tables.json"）
  */
-async function loadOfficialSalaryTable() {
+async function loadOfficialSalaryTable(file) {
   try {
-    const res = await fetch("data/salary-tables.json", { cache: "no-store" });
+    const res = await fetch(`data/${file || "salary-tables.json"}`, { cache: "no-store" });
     if (!res.ok) return false;
     const json = await res.json();
     if (!json || typeof json.tables !== "object") return false;
@@ -91,6 +121,18 @@ async function loadOfficialSalaryTable() {
   } catch (e) {
     return false;
   }
+}
+
+/**
+ * 俸給表バージョンを切り替える。指定バージョンにデータファイルが登録されていない
+ * (available: false または file: null) 場合は切り替えず false を返す。
+ */
+async function switchVintage(vintageKey) {
+  const vintage = getVintage(vintageKey);
+  if (!vintage || !vintage.available || !vintage.file) return false;
+  const ok = await loadOfficialSalaryTable(vintage.file);
+  if (ok) CURRENT_VINTAGE_KEY = vintageKey;
+  return ok;
 }
 
 function getTableKeys() {
@@ -188,3 +230,16 @@ const OVERTIME_RATES = {
 };
 
 const OVERTIME_MONTHLY_THRESHOLD_HOURS = 60; // これを超えた時間外勤務（休日勤務を除く）から割増率が上がる
+
+// ---------------------------------------------------------------------------
+// 7. 期末手当・勤勉手当の在職期間別割合（期間率、人事院規則9-83別表を参考にした一般的な区分）
+// ---------------------------------------------------------------------------
+
+// 基準日（6月1日・12月1日）までの在職期間に応じて支給割合が下がる。新規採用者の初回賞与などに使う。
+// 出典の確度: 中（Web検索の複数記事で一致した内容。法令原文とは未突合のため要確認）
+const BONUS_PERIOD_RATES = [
+  { value: 1.0, label: "6か月（全期間在職）" },
+  { value: 0.8, label: "5か月以上6か月未満" },
+  { value: 0.6, label: "3か月以上5か月未満" },
+  { value: 0.3, label: "3か月未満" },
+];
