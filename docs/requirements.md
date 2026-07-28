@@ -179,6 +179,19 @@
 - **アクセシビリティ**: 結果パネルに `aria-live="polite"` を付与し、再計算結果が
   スクリーンリーダーに通知されるようにする。
 - **パフォーマンス**: ビルドプロセスを持たず、静的ファイルの配信のみで完結すること。
+- **テスト容易性**: 計算ロジック（`js/data.js` / `js/calculator.js`）はDOMに依存しない
+  純粋関数として実装し、Node上でユニットテストできるようにする。
+
+## 4.1 テスト・CI
+
+| 種別 | ファイル | 内容 |
+|---|---|---|
+| データ検証 | `tests/validate-data.mjs` | `data/salary-tables.json` / `data/vintages.json` の構造・号俸配列の単調増加を検証 |
+| ユニットテスト | `tests/run-tests.mjs` | `js/data.js` / `js/calculator.js` の計算関数を、固定のテスト用俸給表データで検証 |
+| E2Eスモークテスト | `tests/e2e.mjs` | Node組み込みhttpサーバー上でPlaywrightを使い、`index.html` / `new-hire.html` を実際に開いてコンソールエラーの有無と代表的な計算結果を確認 |
+
+`npm test` でローカル実行可能。GitHub Actions（`.github/workflows/ci.yml`）で `push`（main）と
+`pull_request` を契機に上記3種類を自動実行する。
 
 ## 5. データ仕様
 
@@ -305,3 +318,4 @@
 | 2026-07-28 | 生涯賃金シミュレーション機能（1〜35年、年ごとの級・号俸・地域手当区分）を追加 |
 | 2026-07-28 | 期末・勤勉手当の在職期間別割合（期間率）を追加 |
 | 2026-07-28 | 新規採用職員向け別ページ（new-hire.html）を追加 |
+| 2026-07-28 | CI（GitHub Actions）を追加。データ検証・ユニットテスト・E2Eスモークテストを自動実行 |

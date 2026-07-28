@@ -1,5 +1,7 @@
 # salary-calculator
 
+[![CI](https://github.com/MTMR-code/salary-calculator/actions/workflows/ci.yml/badge.svg)](https://github.com/MTMR-code/salary-calculator/actions/workflows/ci.yml)
+
 国家公務員（行政職俸給表(一)を想定）の給与を概算計算する静的Webサイトです。
 ビルド不要、HTML/CSS/バニラJavaScriptのみで動作します。
 
@@ -15,6 +17,18 @@
 python3 -m http.server 8000
 # ブラウザで http://localhost:8000 を開く
 ```
+
+## テスト
+
+```bash
+npm install
+npx playwright install --with-deps chromium  # 初回のみ
+npm test
+```
+
+`npm test` は「俸給表データの検証」「計算ロジックのユニットテスト」「ブラウザでのE2Eスモークテスト」を
+順に実行します。個別に実行する場合は `npm run test:data` / `npm run test:unit` / `npm run test:e2e`。
+GitHub Actions（`.github/workflows/ci.yml`）で `main` へのpushとPull Requestのたびに自動実行されます。
 
 ## 計算している項目
 
@@ -67,6 +81,10 @@ js/new-hire.js                     new-hire.html のDOM配線
 data/salary-tables.json            俸給表データ本体（20表、現行バージョン）
 data/vintages.json                 俸給表バージョン（現行／人事院勧告後）の一覧
 scripts/extract-salary-tables.py   俸給表xlsxからJSONを再生成するスクリプト
+tests/validate-data.mjs            俸給表データの構造検証
+tests/run-tests.mjs                計算ロジックのユニットテスト
+tests/e2e.mjs                      ブラウザでのE2Eスモークテスト
+.github/workflows/ci.yml           GitHub Actions CI設定
 docs/requirements.md               要件定義書
 docs/product-backlog.md            プロダクトバックログ
 docs/definition-of-done.md         開発体制・Definition of Done / Ready
