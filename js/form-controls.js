@@ -3,9 +3,9 @@
  * index.html / new-hire.html の両方で使う共通のフォーム制御・表示ロジック。
  * 両ページで一致しているDOM ID（salary-table, grade, grade-field, step,
  * regional-rate, regional-rate-table-body, child-under15-count, child-16to22-count,
- * parent-count, housing-allowance, honsho-allowance, honsho-reference-table-body,
- * table-source-note, r-base, r-regional, r-dependent, r-housing, r-honsho,
- * r-monthly-total）を前提にする。
+ * parent-count, housing-allowance, honsho-eligible, honsho-amount-hint,
+ * honsho-reference-table-body, table-source-note, r-base, r-regional,
+ * r-dependent, r-housing, r-honsho, r-monthly-total）を前提にする。
  * 期末・勤勉手当の入力（index.htmlは成績率区分、new-hire.htmlは在職期間率）は
  * ページごとに構成が異なるため、それぞれ js/app.js / js/new-hire.js 側で扱う。
  */
@@ -126,6 +126,25 @@ function populateHonshoReferenceTable() {
   });
 }
 
+/** 本省手当の「支給あり」選択時に、現在の級から自動計算される参考額をヒント表示する */
+function updateHonshoAmountHint() {
+  const hint = document.getElementById("honsho-amount-hint");
+  const eligibleSelect = document.getElementById("honsho-eligible");
+  if (!hint || !eligibleSelect) return;
+  if (eligibleSelect.value !== "1") {
+    hint.textContent = "";
+    return;
+  }
+  const grade = Number(document.getElementById("grade").value);
+  const amount = getHonshoAllowanceAmount(grade);
+  if (amount > 0) {
+    const gradeLabel = grade >= 7 ? `${grade}級（7級以上）` : `${grade}級`;
+    hint.textContent = `${gradeLabel}の参考額: ${yen.format(amount)}（要確認）`;
+  } else {
+    hint.textContent = "職務の級が取得できないため自動計算できません（¥0として扱われます）。";
+  }
+}
+
 function updateVisibility() {
   document.getElementById("grade-field").hidden = currentTableType() !== "graded";
 }
@@ -214,16 +233,18 @@ function applySavedFormValues(form, saved) {
 
 /** 両ページ共通の入力項目（期末・勤勉手当や超過勤務時間などページ固有の項目は含まない） */
 function readCommonInput() {
+  const grade = Number(document.getElementById("grade").value);
+  const honshoEligible = document.getElementById("honsho-eligible").value === "1";
   return {
     tableKey: currentTableKey(),
-    grade: Number(document.getElementById("grade").value),
+    grade,
     step: Number(document.getElementById("step").value),
     regionalRate: Number(document.getElementById("regional-rate").value),
     childUnder15Count: Number(document.getElementById("child-under15-count").value),
     child16to22Count: Number(document.getElementById("child-16to22-count").value),
     parentCount: Number(document.getElementById("parent-count").value),
     housingAllowance: Number(document.getElementById("housing-allowance").value),
-    honshoAllowance: Number(document.getElementById("honsho-allowance").value),
+    honshoAllowance: honshoEligible ? getHonshoAllowanceAmount(grade) : 0,
   };
 }
 
@@ -271,11 +292,13 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
     if (e.target.id === "grade") {
       populateStepOptions();
     }
+    updateHonshoAmountHint();
     if (onInputExtra) await onInputExtra(e);
     onRecalculate();
   });
 
   form.addEventListener("change", async (e) => {
+    updateHonshoAmountHint();
     if (onChangeExtra) await onChangeExtra(e);
     onRecalculate();
   });

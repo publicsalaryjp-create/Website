@@ -101,11 +101,15 @@
       <legend>本府省業務調整手当（本省手当）</legend>
       <p class="hint">
         本府省（霞が関）勤務の職員に支給される手当です（給与法10条の3、人事院規則9-123）。
-        正確な最新額を断定できないため、支給がある場合のみ実際の月額を直接入力してください（既定値は0円）。
+        支給の有無を選択すると、左で選択した職務の級から参考額を自動計算します。
       </p>
       <div class="field">
-        <label for="honsho-allowance">本省手当（月額・円）</label>
-        <input type="number" id="honsho-allowance" name="honsho-allowance" min="0" step="1000" value="0">
+        <label for="honsho-eligible">支給の有無</label>
+        <select id="honsho-eligible" name="honsho-eligible">
+          <option value="0">支給なし</option>
+          <option value="1">支給あり</option>
+        </select>
+        <p class="hint" id="honsho-amount-hint"></p>
       </div>
       <details class="regional-rate-details">
         <summary>級別の参考額を見る（要確認）</summary>

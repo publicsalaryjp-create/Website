@@ -182,8 +182,9 @@ const DEPENDENT_ALLOWANCE_RATES = {
 // 4b. 本府省業務調整手当（本省手当）
 // ---------------------------------------------------------------------------
 // 本府省（霞が関）勤務の職員に支給される手当（給与法10条の3、人事院規則9-123）。
-// 住居手当と同様、正確な最新額を断定できないため、利用者が実際の支給額を
-// 直接入力する方式とする（既定値0円）。計算ロジックはinput.honshoAllowanceを
+// 利用者は「支給の有無」のみを選び、金額は選択中の職務の級から自動計算する
+// （級が7以上は「7級以上」の額を一律適用。級のない俸給表(flat型)を選んでいる
+// 等で級が取得できない場合は0円）。計算ロジックはinput.honshoAllowanceを
 // そのまま月額支給額の合計に算入する（超過勤務手当・期末勤勉手当の算定基礎額には
 // 含めない簡略化。他の未算入の手当と合わせてPBI-008/PBI-009参照）。
 //
@@ -193,14 +194,22 @@ const DEPENDENT_ALLOWANCE_RATES = {
 // 報じられている一方、級ごとの正確な改定後金額は本ツールでは確認できていないため、
 // 以下の表には反映していない（PBI-035参照）。
 const HONSHO_ALLOWANCE_REFERENCE = [
-  { grade: "1級", amount: 7200 },
-  { grade: "2級", amount: 8800 },
-  { grade: "3級", amount: 17500 },
-  { grade: "4級", amount: 22100 },
-  { grade: "5級", amount: 37400 },
-  { grade: "6級", amount: 39100 },
-  { grade: "7級以上", amount: 41800 },
+  { grade: "1級", gradeNumber: 1, amount: 7200 },
+  { grade: "2級", gradeNumber: 2, amount: 8800 },
+  { grade: "3級", gradeNumber: 3, amount: 17500 },
+  { grade: "4級", gradeNumber: 4, amount: 22100 },
+  { grade: "5級", gradeNumber: 5, amount: 37400 },
+  { grade: "6級", gradeNumber: 6, amount: 39100 },
+  { grade: "7級以上", gradeNumber: 7, amount: 41800 },
 ];
+
+/** 職務の級から本省手当の参考額を求める。7級以上は一律「7級以上」の額。級が取得できない場合は0円 */
+function getHonshoAllowanceAmount(grade) {
+  const g = Number(grade);
+  if (!g || g < 1) return 0;
+  const entry = HONSHO_ALLOWANCE_REFERENCE.find((r) => r.gradeNumber === Math.min(g, 7));
+  return entry ? entry.amount : 0;
+}
 
 // ---------------------------------------------------------------------------
 // 5. 超過勤務手当（給与法第16条・人事院規則15-14に基づく割増率）

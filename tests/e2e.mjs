@@ -233,20 +233,28 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
-// index.html: 本省手当は既定値0円で、入力した金額がそのまま反映され、参考表も描画される
+// index.html: 本省手当は既定「支給なし」で0円、「支給あり」にすると級から自動計算される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  const defaultValue = await page.inputValue("#honsho-allowance");
-  await page.fill("#honsho-allowance", "17500");
+  const defaultEligible = await page.inputValue("#honsho-eligible");
+  const defaultHonshoText = await page.textContent("#r-honsho");
+  await page.selectOption("#salary-table", "administrative_1");
+  await page.selectOption("#grade", "3");
+  await page.selectOption("#honsho-eligible", "1");
   await page.waitForTimeout(200);
   const honshoText = await page.textContent("#r-honsho");
+  const hintText = await page.textContent("#honsho-amount-hint");
   const rowCount = await page.$$eval("#honsho-reference-table-body tr", (trs) => trs.length);
   report(
-    "index.html: 本省手当の既定値は0円で、入力額(17,500円)がそのまま反映され、参考表が7行描画される",
-    defaultValue === "0" && honshoText.includes("17,500") && rowCount === 7,
-    `既定値=${defaultValue} 表示=${honshoText} 行数=${rowCount}`
+    "index.html: 本省手当は既定で支給なし(0円)、支給ありにすると3級の参考額(17,500円)が自動反映され、ヒントと参考表(7行)も表示される",
+    defaultEligible === "0" &&
+      defaultHonshoText.includes("0") &&
+      honshoText.includes("17,500") &&
+      hintText.includes("17,500") &&
+      rowCount === 7,
+    `既定=${defaultEligible}/${defaultHonshoText} 支給あり=${honshoText} ヒント=${hintText} 行数=${rowCount}`
   );
   await page.close();
 }
