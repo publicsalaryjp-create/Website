@@ -216,19 +216,45 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
-// index.html: 住居手当は既定値0円で、入力した金額がそのまま反映される
+// index.html: 住居手当は既定「支給なし」で0円、「支給あり」にすると入力額が反映される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  const defaultValue = await page.inputValue("#housing-allowance");
+  const defaultEligible = await page.inputValue("#housing-eligible");
+  const defaultHousingText = await page.textContent("#r-housing");
+  const amountFieldHiddenByDefault = await page.isHidden("#housing-amount-field");
+  await page.selectOption("#housing-eligible", "1");
   await page.fill("#housing-allowance", "15000");
   await page.waitForTimeout(200);
   const housingText = await page.textContent("#r-housing");
   report(
-    "index.html: 住居手当の既定値は0円で、入力額(15,000円)がそのまま反映される",
-    defaultValue === "0" && housingText.includes("15,000"),
-    `既定値=${defaultValue} 表示=${housingText}`
+    "index.html: 住居手当は既定で支給なし(0円、金額欄は非表示)、支給ありにすると入力額(15,000円)が反映される",
+    defaultEligible === "0" &&
+      defaultHousingText.includes("0") &&
+      amountFieldHiddenByDefault &&
+      housingText.includes("15,000"),
+    `既定=${defaultEligible}/${defaultHousingText}/非表示=${amountFieldHiddenByDefault} 支給あり後=${housingText}`
+  );
+  await page.close();
+}
+
+// index.html: 住居手当を「支給あり」にして金額を入れても、「支給なし」に戻すと0円になる（持ち家扱い）
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#housing-eligible", "1");
+  await page.fill("#housing-allowance", "20000");
+  await page.waitForTimeout(200);
+  await page.selectOption("#housing-eligible", "0");
+  await page.waitForTimeout(200);
+  const housingText = await page.textContent("#r-housing");
+  const amountFieldHidden = await page.isHidden("#housing-amount-field");
+  report(
+    "index.html: 住居手当を支給ありから支給なしに戻すと、入力額が残っていても0円になる",
+    housingText.includes("0") && !housingText.includes("20,000") && amountFieldHidden,
+    `表示=${housingText} 非表示=${amountFieldHidden}`
   );
   await page.close();
 }
@@ -388,17 +414,19 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await page.selectOption("#housing-eligible", "1");
   await page.fill("#housing-allowance", "23000");
   await page.selectOption("#regional-rate", "0.12");
   await page.waitForTimeout(200);
   await page.reload();
   await page.waitForTimeout(500);
+  const housingEligibleValue = await page.inputValue("#housing-eligible");
   const housingValue = await page.inputValue("#housing-allowance");
   const regionalValue = await page.inputValue("#regional-rate");
   report(
     "index.html: 入力内容がリロード後も復元される",
-    housingValue === "23000" && regionalValue === "0.12",
-    `housing=${housingValue} regional=${regionalValue}`
+    housingEligibleValue === "1" && housingValue === "23000" && regionalValue === "0.12",
+    `housing-eligible=${housingEligibleValue} housing=${housingValue} regional=${regionalValue}`
   );
   await page.close();
 }
@@ -408,15 +436,16 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await page.selectOption("#housing-eligible", "1");
   await page.fill("#housing-allowance", "23000");
   await page.waitForTimeout(200);
   await page.click("#reset-saved-input");
   await page.waitForTimeout(500);
-  const housingValue = await page.inputValue("#housing-allowance");
+  const housingEligibleValue = await page.inputValue("#housing-eligible");
   report(
-    "index.html: 保存データ削除ボタンで住居手当が初期値0に戻る",
-    housingValue === "0",
-    `housing=${housingValue}`
+    "index.html: 保存データ削除ボタンで住居手当が初期値（支給なし）に戻る",
+    housingEligibleValue === "0",
+    `housing-eligible=${housingEligibleValue}`
   );
   await page.close();
 }
@@ -426,6 +455,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/new-hire.html`);
   await page.waitForTimeout(500);
+  await page.selectOption("#housing-eligible", "1");
   await page.fill("#housing-allowance", "8000");
   await page.waitForTimeout(200);
   await page.reload();

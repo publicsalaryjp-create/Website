@@ -90,8 +90,18 @@
 
     <fieldset>
       <legend>住居手当</legend>
-      <p class="hint">支給がある場合のみ、実際の支給月額を入力してください（既定値は0円）。</p>
+      <p class="hint">
+        借家・借間に住み、実際に家賃を支払っている場合のみ支給されます。
+        持ち家の場合は支給されません（持家世帯向けの住居手当は廃止済み）。
+      </p>
       <div class="field">
+        <label for="housing-eligible">支給の有無</label>
+        <select id="housing-eligible" name="housing-eligible">
+          <option value="0">支給なし（持ち家など）</option>
+          <option value="1">支給あり（借家・借間など）</option>
+        </select>
+      </div>
+      <div class="field" id="housing-amount-field">
         <label for="housing-allowance">住居手当（月額・円）</label>
         <input type="number" id="housing-allowance" name="housing-allowance" min="0" step="1000" value="0">
       </div>

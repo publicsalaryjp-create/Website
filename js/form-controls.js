@@ -3,9 +3,10 @@
  * index.html / new-hire.html の両方で使う共通のフォーム制御・表示ロジック。
  * 両ページで一致しているDOM ID（salary-table, grade, grade-field, step,
  * regional-rate, regional-rate-table-body, child-under15-count, child-16to22-count,
- * parent-count, housing-allowance, honsho-eligible, honsho-amount-hint,
- * honsho-reference-table-body, table-source-note, r-base, r-regional,
- * r-dependent, r-housing, r-honsho, r-monthly-total）を前提にする。
+ * parent-count, housing-eligible, housing-amount-field, housing-allowance,
+ * honsho-eligible, honsho-amount-hint, honsho-reference-table-body,
+ * table-source-note, r-base, r-regional, r-dependent, r-housing, r-honsho,
+ * r-monthly-total）を前提にする。
  * 期末・勤勉手当の入力（index.htmlは成績率区分、new-hire.htmlは在職期間率）は
  * ページごとに構成が異なるため、それぞれ js/app.js / js/new-hire.js 側で扱う。
  */
@@ -147,6 +148,8 @@ function updateHonshoAmountHint() {
 
 function updateVisibility() {
   document.getElementById("grade-field").hidden = currentTableType() !== "graded";
+  document.getElementById("housing-amount-field").hidden =
+    document.getElementById("housing-eligible").value !== "1";
 }
 
 /**
@@ -235,6 +238,7 @@ function applySavedFormValues(form, saved) {
 function readCommonInput() {
   const grade = Number(document.getElementById("grade").value);
   const honshoEligible = document.getElementById("honsho-eligible").value === "1";
+  const housingEligible = document.getElementById("housing-eligible").value === "1";
   return {
     tableKey: currentTableKey(),
     grade,
@@ -243,7 +247,7 @@ function readCommonInput() {
     childUnder15Count: Number(document.getElementById("child-under15-count").value),
     child16to22Count: Number(document.getElementById("child-16to22-count").value),
     parentCount: Number(document.getElementById("parent-count").value),
-    housingAllowance: Number(document.getElementById("housing-allowance").value),
+    housingAllowance: housingEligible ? Number(document.getElementById("housing-allowance").value) : 0,
     honshoAllowance: honshoEligible ? getHonshoAllowanceAmount(grade) : 0,
   };
 }
@@ -287,11 +291,11 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
     if (e.target.id === "salary-table") {
       populateGradeOptions();
       populateStepOptions();
-      updateVisibility();
     }
     if (e.target.id === "grade") {
       populateStepOptions();
     }
+    updateVisibility();
     updateHonshoAmountHint();
     if (onInputExtra) await onInputExtra(e);
     onRecalculate();

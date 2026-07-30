@@ -319,6 +319,7 @@ function initForm() {
   updateVisibility();
   applySavedFormValues(form, saved);
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
+  updateVisibility(); // 復元したhousing-eligible等の値を反映し直す
   updateHonshoAmountHint();
   wireCounterButtons(form);
 
