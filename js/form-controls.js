@@ -140,7 +140,7 @@ function updateHonshoAmountHint() {
   const amount = getHonshoAllowanceAmount(grade);
   if (amount > 0) {
     const gradeLabel = grade >= 7 ? `${grade}級（7級以上）` : `${grade}級`;
-    hint.textContent = `${gradeLabel}の参考額: ${yen.format(amount)}（要確認）`;
+    hint.textContent = `${gradeLabel}の参考額: ${yen.format(amount)}`;
   } else {
     hint.textContent = "職務の級が取得できないため自動計算できません（¥0として扱われます）。";
   }

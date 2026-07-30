@@ -274,11 +274,11 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const hintText = await page.textContent("#honsho-amount-hint");
   const rowCount = await page.$$eval("#honsho-reference-table-body tr", (trs) => trs.length);
   report(
-    "index.html: 本省手当は既定で支給なし(0円)、支給ありにすると3級の参考額(17,500円)が自動反映され、ヒントと参考表(7行)も表示される",
+    "index.html: 本省手当は既定で支給なし(0円)、支給ありにすると3級の参考額(19,500円)が自動反映され、ヒントと参考表(7行)も表示される",
     defaultEligible === "0" &&
       defaultHonshoText.includes("0") &&
-      honshoText.includes("17,500") &&
-      hintText.includes("17,500") &&
+      honshoText.includes("19,500") &&
+      hintText.includes("19,500") &&
       rowCount === 7,
     `既定=${defaultEligible}/${defaultHonshoText} 支給あり=${honshoText} ヒント=${hintText} 行数=${rowCount}`
   );
