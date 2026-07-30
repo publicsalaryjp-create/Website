@@ -1,7 +1,7 @@
 # data/salary-tables.json について
 
 このアプリが読み込む俸給表データ本体です。ユーザーから提供された公式の俸給表xlsx
-（行政職・公安職・教育職・医療職など20表を含む）から `scripts/extract-salary-tables.py`
+（行政職・公安職・教育職・医療職など19表を含む）から `scripts/extract-salary-tables.py`
 で抽出しました。
 
 読み込みには `fetch` を使うため、簡易HTTPサーバー経由（例: `python3 -m http.server`）で
@@ -15,7 +15,7 @@
   "source": "ユーザー提供の公式俸給表データ（...）",
   "note": "提供時点（2026-07-28）で有効な俸給表として掲載。実際の施行日は前年度分の可能性があるため、最新の人事院公表資料と照合してください。",
   "effectiveDate": "2026-07-28",
-  "order": ["administrative_1", "administrative_2", "...", "designated"],
+  "order": ["administrative_1", "specialized_administrative", "...", "designated"],
   "tables": {
     "administrative_1": {
       "label": "行政職俸給表(一)　― 一般行政事務など、他の表の適用を受けない職員",

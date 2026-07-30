@@ -3,28 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="国家公務員の俸給・地域手当・扶養手当・住居手当・本省手当・期末勤勉手当・超過勤務手当から月給と年収を概算するシミュレーターです。">
-<title>国家公務員給与計算シミュレーター</title>
+<meta name="description" content="国家公務員の新規採用職員向けに、初任給と採用初年度の期末・勤勉手当、年収を概算するシミュレーターです。">
+<title>新規採用職員向け給与シミュレーター</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header class="site-header">
-  <h1>国家公務員給与計算シミュレーター</h1>
-  <p class="subtitle">行政職俸給表(一)を想定した月給・賞与・年収の概算計算ツール</p>
-  <p class="subtitle"><a href="new-hire.html" class="header-link">新規採用職員向けシミュレーターはこちら →</a></p>
+  <h1>新規採用職員向け給与シミュレーター</h1>
+  <p class="subtitle">初任給と、採用初年度の賞与（期末・勤勉手当）の概算計算ツール</p>
 </header>
 
 <div class="disclaimer" id="disclaimer">
   <strong>⚠️ ご利用にあたって：</strong>
-  このツールは国家公務員の給与制度への理解を助けるための<strong>概算シミュレーター</strong>です。
+  このツールは<strong>概算シミュレーター</strong>です。
   <span id="table-source-note">俸給表データを読み込み中です…</span>
-  地域手当・扶養手当・賞与支給月数は公表情報をもとにした概算です。
   所得税・住民税・共済組合掛金（社会保険料相当）等は控除していない<strong>額面（支給額）ベース</strong>の金額です。
+  超過勤務手当・単身赴任手当・寒冷地手当等は含まれていません（通常版は
+  <a href="index.html">給与計算シミュレーター</a>をご利用ください）。
   入力内容はこの端末のブラウザ内に保存され、次回アクセス時に自動的に復元されます（サーバーには送信されません）。
-  正確な金額は必ず
-  <a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">人事院公表の俸給表</a>
-  等の一次情報をご確認ください。
 </div>
 
 <main class="layout">
@@ -32,16 +29,11 @@
     <fieldset>
       <legend>俸給</legend>
       <div class="field">
-        <label for="salary-vintage">俸給表のバージョン</label>
-        <select id="salary-vintage" name="salary-vintage"></select>
-        <p class="hint" id="vintage-note"></p>
-      </div>
-      <div class="field">
         <label for="salary-table">適用される俸給表</label>
         <select id="salary-table" name="salary-table"></select>
       </div>
       <div class="field" id="grade-field">
-        <label for="grade">職務の級</label>
+        <label for="grade">職務の級（初任は1級が一般的）</label>
         <div class="counter-input">
           <button type="button" class="counter-btn" data-target="grade" data-delta="-1" aria-label="級を下げる">−</button>
           <input type="number" id="grade" name="grade" min="1" value="1" readonly>
@@ -50,22 +42,13 @@
         <p class="hint" id="grade-max">/ 1級</p>
       </div>
       <div class="field">
-        <label for="step">号俸</label>
+        <label for="step">号俸（初任は1号俸が一般的）</label>
         <div class="counter-input">
           <button type="button" class="counter-btn" data-target="step" data-delta="-1" aria-label="号俸を下げる">−</button>
           <input type="number" id="step" name="step" min="1" value="1" readonly>
           <button type="button" class="counter-btn" data-target="step" data-delta="1" aria-label="号俸を上げる">＋</button>
         </div>
         <p class="hint" id="step-max">/ 1号俸</p>
-        <div class="step-buttons" role="group" aria-label="昇給シミュレーション">
-          <button type="button" class="step-btn" data-delta="-8">-8</button>
-          <button type="button" class="step-btn" data-delta="-6">-6</button>
-          <button type="button" class="step-btn" data-delta="-4">-4</button>
-          <button type="button" class="step-btn" data-delta="4">+4</button>
-          <button type="button" class="step-btn" data-delta="6">+6</button>
-          <button type="button" class="step-btn" data-delta="8">+8</button>
-        </div>
-        <p class="hint">昇給の号俸数の目安（標準4、良好6、特に良好8）で号俸を上下できます。</p>
       </div>
     </fieldset>
 
@@ -176,58 +159,22 @@
     </fieldset>
 
     <fieldset>
-      <legend>期末・勤勉手当（賞与）</legend>
+      <legend>採用初年度の賞与（期末・勤勉手当）</legend>
       <p class="hint">
-        期末手当 = 算定基礎額（俸給+地域手当）×支給月数（6月期・12月期はその半分）。
-        勤勉手当 = 算定基礎額×成績率（成績率が1回あたりの支給割合そのものを表すため、
-        月数は別途掛けません）（出典: 人事院「国家公務員の諸手当の概要」令和8年度）。
-        勤務成績は6月期・12月期でそれぞれ別に評価されるため、職員区分・成績区分も期別に設定します。
+        期末・勤勉手当は、6月1日・12月1日を基準とした在職期間に応じて割合（期間率）が下がります。
+        採用日が浅いほど割合は小さくなります（出典の確度は中：法令原文と未突合の参考値）。
       </p>
       <div class="field">
-        <label for="teishu-months">期末手当の年間支給月数</label>
-        <input type="number" id="teishu-months" name="teishu-months" min="0" step="0.05" value="2.45">
+        <label for="bonus-months">年間支給月数（満額の場合）</label>
+        <input type="number" id="bonus-months" name="bonus-months" min="0" step="0.05" value="4.9">
       </div>
       <div class="field">
-        <label for="merit-staff-type-june">職員区分（6月期）</label>
-        <select id="merit-staff-type-june" name="merit-staff-type-june"></select>
+        <label for="first-bonus-rate">1回目の賞与の在職期間別割合（期間率）</label>
+        <select id="first-bonus-rate" name="first-bonus-rate"></select>
       </div>
       <div class="field">
-        <label for="merit-grade-june">勤務成績区分（6月期）</label>
-        <select id="merit-grade-june" name="merit-grade-june"></select>
-      </div>
-      <div class="field">
-        <label for="merit-staff-type-december">職員区分（12月期）</label>
-        <select id="merit-staff-type-december" name="merit-staff-type-december"></select>
-      </div>
-      <div class="field">
-        <label for="merit-grade-december">勤務成績区分（12月期）</label>
-        <select id="merit-grade-december" name="merit-grade-december"></select>
-        <p class="hint">成績率に幅がある区分は下限値を採用しています。</p>
-      </div>
-    </fieldset>
-
-    <fieldset>
-      <legend>超過勤務手当（残業代）</legend>
-      <p class="hint">
-        時間単価 = （俸給+地域手当+扶養手当）×12か月 ÷ 年間所定勤務時間（週38時間45分×52週）。
-        平日時間外は125%、深夜(22時〜翌5時)は150%、休日勤務は135%、休日深夜は160%。
-        月60時間を超える時間外勤務（休日を除く）は150%／深夜175%に切り替わります。
-      </p>
-      <div class="field">
-        <label for="ot-weekday-normal">平日の時間外勤務（深夜を除く・月間合計時間）</label>
-        <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="1" value="0">
-      </div>
-      <div class="field">
-        <label for="ot-weekday-night">深夜(22時〜翌5時)の時間外勤務時間</label>
-        <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="1" value="0">
-      </div>
-      <div class="field">
-        <label for="ot-holiday-normal">休日勤務（深夜を除く・月間合計時間）</label>
-        <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="1" value="0">
-      </div>
-      <div class="field">
-        <label for="ot-holiday-night">深夜(22時〜翌5時)の休日勤務時間</label>
-        <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="1" value="0">
+        <label for="second-bonus-rate">2回目の賞与の在職期間別割合（期間率）</label>
+        <select id="second-bonus-rate" name="second-bonus-rate"></select>
       </div>
     </fieldset>
 
@@ -240,7 +187,7 @@
   <section class="panel result-panel" aria-live="polite">
     <h2 class="result-panel-heading">計算結果</h2>
     <div class="result-hero">
-      <span class="result-hero-label">年収 概算</span>
+      <span class="result-hero-label">採用初年度の年収 概算</span>
       <span class="result-hero-value" id="r-annual-hero">-</span>
     </div>
     <h3 class="result-detail-heading">内訳</h3>
@@ -251,92 +198,30 @@
         <tr><th>扶養手当</th><td id="r-dependent">-</td></tr>
         <tr><th>住居手当</th><td id="r-housing">-</td></tr>
         <tr><th>本省手当</th><td id="r-honsho">-</td></tr>
-        <tr class="total-row"><th>月額支給額 合計（残業代除く）</th><td id="r-monthly-total">-</td></tr>
-        <tr><th>時間外勤務の時間単価</th><td id="r-ot-hourly">-</td></tr>
-        <tr><th>超過勤務手当</th><td id="r-ot-allowance">-</td></tr>
-        <tr class="total-row"><th>月額支給額 合計（残業代込み）</th><td id="r-monthly-total-ot">-</td></tr>
-        <tr><th>期末手当（6月期）</th><td id="r-teishu-june">-</td></tr>
-        <tr><th>勤勉手当（6月期）</th><td id="r-kinben-june">-</td></tr>
-        <tr><th>期末手当（12月期）</th><td id="r-teishu-december">-</td></tr>
-        <tr><th>勤勉手当（12月期）</th><td id="r-kinben-december">-</td></tr>
-        <tr><th>賞与（年間合計）</th><td id="r-bonus-annual">-</td></tr>
-        <tr class="total-row grand-total"><th>年収 概算</th><td id="r-annual">-</td></tr>
+        <tr class="total-row"><th>月額支給額 合計</th><td id="r-monthly-total">-</td></tr>
+        <tr><th>1回目の賞与</th><td id="r-bonus-first">-</td></tr>
+        <tr><th>2回目の賞与</th><td id="r-bonus-second">-</td></tr>
+        <tr class="total-row grand-total"><th>採用初年度の年収 概算</th><td id="r-annual">-</td></tr>
       </tbody>
     </table>
-    <p class="hint" id="ot-warning" hidden>※ 入力された時間外勤務時間（休日を除く）が月60時間を超えています。超過分は割増率150%／深夜175%で計算しています。</p>
-    <p class="hint">※ 税・社会保険料等控除前の額面金額です。単身赴任手当・寒冷地手当等は含まれていません。年収概算は毎月同じ時間外勤務が続くと仮定した概算値です。</p>
+    <p class="hint">※ 採用初年度（月額×12か月＋1回目の賞与＋2回目の賞与）の概算です。翌年度以降は満額の賞与が支給される前提です。</p>
+    <p class="hint">※ 税・社会保険料等控除前の額面金額です。超過勤務手当は含まれていません。</p>
   </section>
 </main>
-
-<section class="panel lifetime-panel">
-  <h2>生涯賃金シミュレーション</h2>
-  <p class="hint">
-    左のフォームで選択した俸給表・扶養手当・住居手当・賞与支給月数・超過勤務の設定を全期間共通で使い、
-    年ごとに級・号俸・地域手当区分を設定して生涯賃金の概算を試算します。左のフォームを変更すると自動的に再計算されます。
-  </p>
-  <div class="lifetime-controls">
-    <div class="field">
-      <label for="lifetime-years">シミュレーション年数</label>
-      <input type="number" id="lifetime-years" min="1" max="35" value="35">
-    </div>
-    <div class="field">
-      <label for="lifetime-start-step">1年目の号俸</label>
-      <input type="number" id="lifetime-start-step" min="1" value="1">
-    </div>
-    <div class="field">
-      <label for="lifetime-increment">毎年の昇給号俸数</label>
-      <select id="lifetime-increment">
-        <option value="4">4号俸（標準）</option>
-        <option value="6">6号俸（良好）</option>
-        <option value="8">8号俸（特に良好）</option>
-      </select>
-    </div>
-    <button type="button" id="lifetime-autofill">自動生成する</button>
-  </div>
-  <p class="hint">
-    「自動生成する」を押すと、1年目は左のフォームで選択中の級・号俸・地域手当区分を引き継ぎ、
-    2年目以降は級・地域手当区分を変えずに号俸だけ毎年積み上げます。昇格（級変更）や転勤（地域手当区分変更）が
-    ある年は、生成後に該当する行を直接変更してください。
-  </p>
-  <div class="lifetime-table-wrap">
-    <table class="lifetime-table">
-      <thead>
-        <tr><th>年次</th><th>級</th><th>号俸</th><th>地域手当区分</th><th>年収概算</th></tr>
-      </thead>
-      <tbody id="lifetime-tbody">
-        <tr><td colspan="5" class="lifetime-empty">「自動生成する」を押すとシミュレーションが始まります。</td></tr>
-      </tbody>
-    </table>
-  </div>
-  <table class="result-table lifetime-summary-table">
-    <tbody>
-      <tr class="total-row"><th>生涯賃金合計</th><td id="lifetime-total">-</td></tr>
-      <tr><th>年収の平均</th><td id="lifetime-average">-</td></tr>
-      <tr><th>最終年の年収</th><td id="lifetime-final">-</td></tr>
-    </tbody>
-  </table>
-</section>
 
 <footer class="site-footer">
   <h2 class="footer-heading">関連機関・法令リンク</h2>
   <ul class="link-list">
     <li><a href="https://www.jinji.go.jp/" target="_blank" rel="noopener">人事院</a></li>
-    <li><a href="https://www.jinji.go.jp/seisaku/kankoku/archive/r7/r7_top.html" target="_blank" rel="noopener">人事院 令和7年人事院勧告</a></li>
     <li><a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">俸給表（別表第一）PDF - 人事院</a></li>
     <li><a href="https://www.jinji.go.jp/content/000013374.pdf" target="_blank" rel="noopener">国家公務員の諸手当の概要 PDF - 人事院</a></li>
-    <li><a href="https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r08_kyuyo.pdf" target="_blank" rel="noopener">内閣人事局 国家公務員の給与（令和8年版）</a></li>
-    <li><a href="https://laws.e-gov.go.jp/" target="_blank" rel="noopener">e-Gov法令検索</a></li>
-    <li><a href="https://laws.e-gov.go.jp/law/325AC1000000095" target="_blank" rel="noopener">一般職の職員の給与に関する法律（e-Gov法令検索）</a></li>
+    <li><a href="index.html">通常版の給与計算シミュレーター</a></li>
   </ul>
-  <p class="footer-note">
-    俸給表・諸手当の制度は毎年の人事院勧告により改定されます。本ツールの計算結果と実際の給与が異なる場合は、
-    上記リンク先の最新の法令・公表資料をご確認ください。
-  </p>
 </footer>
 
 <script src="js/data.js"></script>
 <script src="js/calculator.js"></script>
 <script src="js/form-controls.js"></script>
-<script src="js/app.js"></script>
+<script src="js/new-hire.js"></script>
 </body>
 </html>
