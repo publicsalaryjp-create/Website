@@ -49,7 +49,6 @@ GitHub Actions（`.github/workflows/ci.yml`）で `main` へのpushとPull Reque
 - 超過勤務手当（残業代）: 平日時間外125%・深夜150%・休日135%・休日深夜160%、月60時間超は150%／深夜175%に切替
 - 上記を合算した月額給与・年収の概算
 - 俸給表バージョンの切替（現行／人事院勧告後。勧告後は現時点でデータ未登録）
-- 生涯賃金シミュレーション（1〜35年目の級・号俸・地域手当区分を年ごとに設定）
 - 新規採用職員向け別ページ（`new-hire.html`）: 在職期間別割合（期間率）を適用した初年度賞与・年収
 - 入力内容の自動保存・復元（この端末のブラウザ内のlocalStorageのみ。サーバーには送信しない）
 
@@ -95,7 +94,7 @@ css/style.css                     スタイル（両画面共通）
 js/data.js                         俸給表カタログ・手当データ、読み込み処理
 js/calculator.js                   計算ロジック（純粋関数）
 js/form-controls.js                index.html・new-hire.html共通のフォーム制御・表示ロジック
-js/app.js                          index.html 固有のDOM配線（生涯賃金シミュレーション含む）
+js/app.js                          index.html 固有のDOM配線
 js/new-hire.js                     new-hire.html 固有のDOM配線
 data/salary-tables.json            俸給表データ本体（19表、現行バージョン）
 data/vintages.json                 俸給表バージョン（現行／人事院勧告後）の一覧

@@ -159,19 +159,6 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
-// index.html: 生涯賃金シミュレーションの自動生成が動く
-{
-  const page = await browser.newPage();
-  await page.goto(`${base}/index.html`);
-  await page.waitForTimeout(500);
-  await page.fill("#lifetime-years", "3");
-  await page.click("#lifetime-autofill");
-  await page.waitForTimeout(300);
-  const rowCount = await page.$$eval("#lifetime-tbody tr", (trs) => trs.length);
-  report("index.html: 生涯賃金シミュレーションが3行生成される", rowCount === 3, `実際の行数: ${rowCount}`);
-  await page.close();
-}
-
 // new-hire.html: 期間率を反映した賞与が計算される
 {
   const page = await browser.newPage();
