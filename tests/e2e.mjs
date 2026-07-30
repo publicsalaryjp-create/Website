@@ -1,5 +1,5 @@
 /**
- * index.html / new-hire.html を実際にブラウザで開き、コンソールエラーが出ないことと
+ * index.html を実際にブラウザで開き、コンソールエラーが出ないことと
  * 代表的な計算結果が期待通りであることを確認するスモークテスト。
  * python等に依存しないよう、Node組み込みのhttpサーバーを内部で起動する。
  */
@@ -83,7 +83,6 @@ async function checkNoConsoleErrors(pathName, label) {
 }
 
 await checkNoConsoleErrors("/index.html", "index.html: コンソールエラーなしで読み込める");
-await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエラーなしで読み込める");
 
 // index.html: 代表的な計算結果の妥当性
 {
@@ -155,36 +154,6 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
     "index.html: 扶養手当が15歳以下13,000+16〜22歳18,000+父母等6,500=37,500円",
     dependentText.includes("37,500"),
     `実際の表示: ${dependentText}`
-  );
-  await page.close();
-}
-
-// new-hire.html: 期間率を反映した賞与が計算される
-{
-  const page = await browser.newPage();
-  await page.goto(`${base}/new-hire.html`);
-  await page.waitForTimeout(500);
-  await page.selectOption("#first-bonus-rate", "1");
-  await page.selectOption("#second-bonus-rate", "1");
-  await page.waitForTimeout(300);
-  const first = await page.textContent("#r-bonus-first");
-  const second = await page.textContent("#r-bonus-second");
-  report("new-hire.html: 期間率1.0のとき1回目と2回目の賞与が一致する", first === second, `${first} vs ${second}`);
-  await page.close();
-}
-
-// new-hire.html: 既定値が新規採用者の典型例（1級1号俸、1回目0.3・2回目1.0）になっている
-{
-  const page = await browser.newPage();
-  await page.goto(`${base}/new-hire.html`);
-  await page.waitForTimeout(500);
-  const grade = await page.$eval("#grade", (el) => el.value);
-  const firstRate = await page.$eval("#first-bonus-rate", (el) => el.value);
-  const secondRate = await page.$eval("#second-bonus-rate", (el) => el.value);
-  report(
-    "new-hire.html: 既定値が1級・1回目期間率0.3・2回目期間率1.0",
-    grade === "1" && firstRate === "0.3" && secondRate === "1",
-    `grade=${grade} first=${firstRate} second=${secondRate}`
   );
   await page.close();
 }
@@ -471,25 +440,6 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
     "index.html: 保存データ削除ボタンで住居手当が初期値（支給なし）に戻る",
     housingEligibleNoChecked,
     `housing-eligible-no=${housingEligibleNoChecked}`
-  );
-  await page.close();
-}
-
-// new-hire.html: 入力内容がリロード後も復元される
-{
-  const page = await browser.newPage();
-  await page.goto(`${base}/new-hire.html`);
-  await page.waitForTimeout(500);
-  await page.check("#housing-eligible-yes");
-  await page.fill("#housing-rent", "8000");
-  await page.waitForTimeout(200);
-  await page.reload();
-  await page.waitForTimeout(500);
-  const housingValue = await page.inputValue("#housing-rent");
-  report(
-    "new-hire.html: 入力内容がリロード後も復元される",
-    housingValue === "8000",
-    `housing=${housingValue}`
   );
   await page.close();
 }

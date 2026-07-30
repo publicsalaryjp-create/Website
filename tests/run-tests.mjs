@@ -154,16 +154,6 @@ test("calculateOvertimeAllowance: 「単価×割増率」を区分ごとに四�
   assert.equal(r.totalAllowance, 7140);
 });
 
-// --- calculateBonusWithPeriodRate ---------------------------------------------------
-
-test("calculateBonusWithPeriodRate: 期間率1.0は満額の半分", () => {
-  assert.equal(context.calculateBonusWithPeriodRate(300000, 4.9, 1.0), 735000);
-});
-
-test("calculateBonusWithPeriodRate: 期間率0.3は満額の0.3倍", () => {
-  assert.equal(context.calculateBonusWithPeriodRate(300000, 4.9, 0.3), 220500);
-});
-
 // --- calculateSalary (統合テスト) ---------------------------------------------------
 
 test("calculateSalary: 各手当と合計額が期待通り計算される", () => {

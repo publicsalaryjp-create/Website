@@ -172,16 +172,3 @@ function calculateSalary(input) {
     annualIncome,
   };
 }
-
-/**
- * 在職期間別割合（期間率）を反映した1回分の期末・勤勉手当を計算する。
- * 新規採用者のように基準期間（6か月）の一部しか在職していない場合の初回賞与などに使う。
- *
- * @param {number} bonusBase 算定基礎額（俸給月額+地域手当）
- * @param {number} bonusMonths 年間支給月数（6月期・12月期の合計）
- * @param {number} periodRate 在職期間別割合（1.0 / 0.8 / 0.6 / 0.3 など）
- */
-function calculateBonusWithPeriodRate(bonusBase, bonusMonths, periodRate) {
-  const monthsPerOccasion = (bonusMonths || 0) / 2;
-  return Math.floor(bonusBase * monthsPerOccasion * (periodRate == null ? 1 : periodRate));
-}

@@ -1,15 +1,13 @@
 /**
  * form-controls.js
- * index.html / new-hire.html の両方で使う共通のフォーム制御・表示ロジック。
- * 両ページで一致しているDOM ID（salary-table, grade, grade-field, grade-max, step,
+ * index.html で使うフォーム制御・表示ロジック。
+ * 前提にするDOM ID: salary-table, grade, grade-field, grade-max, step,
  * step-max, regional-rate, regional-rate-region, regional-rate-table-body,
  * child-under15-count, child-16to22-count, parent-count, housing-eligible,
  * housing-amount-field, housing-rent, housing-amount-hint, honsho-eligible-no,
  * honsho-eligible-yes, honsho-amount-hint, table-source-note,
- * r-base, r-regional, r-dependent, r-housing, r-honsho, r-monthly-total）を
- * 前提にする。
- * 期末・勤勉手当の入力（index.htmlは成績率区分、new-hire.htmlは在職期間率）は
- * ページごとに構成が異なるため、それぞれ js/app.js / js/new-hire.js 側で扱う。
+ * r-base, r-regional, r-dependent, r-housing, r-honsho, r-monthly-total。
+ * 期末・勤勉手当の入力は js/app.js 側で扱う。
  */
 
 const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" });
@@ -245,7 +243,7 @@ function clearFormState(pageKey) {
  * select要素は、保存値が現在の選択肢に存在し、かつ無効化されていない場合のみ反映する
  * （俸給表の切替などで選択肢の構成が変わっている場合があるため）。
  * 俸給表・級・号俸・成績区分など他の項目の選択肢に影響する項目は、
- * 呼び出し側（app.js / new-hire.js）で先にpopulate*Options()へ渡して復元してから、
+ * 呼び出し側（app.js）で先にpopulate*Options()へ渡して復元してから、
  * この関数で残りの項目をまとめて復元する想定。
  */
 function applySavedFormValues(form, saved) {
@@ -267,7 +265,7 @@ function applySavedFormValues(form, saved) {
   });
 }
 
-/** 両ページ共通の入力項目（期末・勤勉手当や超過勤務時間などページ固有の項目は含まない） */
+/** 共通の入力項目（期末・勤勉手当や超過勤務時間など固有の項目は含まない） */
 function readCommonInput() {
   const grade = Number(document.getElementById("grade").value);
   const honshoEligible = radioValue("honsho-eligible") === "1";
@@ -285,7 +283,7 @@ function readCommonInput() {
   };
 }
 
-/** calculateSalary() の結果のうち両ページ共通で表示する項目（俸給〜月額支給額合計）を描画する */
+/** calculateSalary() の結果のうち共通で表示する項目（俸給〜月額支給額合計）を描画する */
 function renderCommonResult(result) {
   document.getElementById("r-base").textContent = yen.format(result.baseSalary);
   document.getElementById("r-regional").textContent = yen.format(result.regionalAllowance);
@@ -310,7 +308,7 @@ function updateTableSourceNote() {
 }
 
 /**
- * 「俸給表を変えたら級・号俸を再構成する」という両ページ共通のイベント配線を行う。
+ * 「俸給表を変えたら級・号俸を再構成する」という共通のイベント配線を行う。
  * ページ固有の追加処理は onInputExtra / onChangeExtra（両方とも async 対応）で行う。
  *
  * @param {HTMLFormElement} form
