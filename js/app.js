@@ -44,10 +44,11 @@ function readInput() {
     kinbenMonths: Number(document.getElementById("kinben-months").value),
     meritRateJune: currentMeritRate("june"),
     meritRateDecember: currentMeritRate("december"),
-    weekdayNormalHours: Number(document.getElementById("ot-weekday-normal").value),
-    weekdayNightHours: Number(document.getElementById("ot-weekday-night").value),
-    holidayNormalHours: Number(document.getElementById("ot-holiday-normal").value),
-    holidayNightHours: Number(document.getElementById("ot-holiday-night").value),
+    // 超過勤務時間は1時間単位で扱う（小数で入力されても四捨五入する）
+    weekdayNormalHours: Math.round(Number(document.getElementById("ot-weekday-normal").value)),
+    weekdayNightHours: Math.round(Number(document.getElementById("ot-weekday-night").value)),
+    holidayNormalHours: Math.round(Number(document.getElementById("ot-holiday-normal").value)),
+    holidayNightHours: Math.round(Number(document.getElementById("ot-holiday-night").value)),
   };
 }
 

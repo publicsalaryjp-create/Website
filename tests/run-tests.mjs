@@ -139,6 +139,20 @@ test("calculateOvertimeAllowance: 休日勤務は60時間判定に含まれな�
   assert.equal(r.totalAllowance, 14000);
 });
 
+test("calculateOvertimeAllowance: 手当額は区分ごとに四捨五入してから合算する", () => {
+  // 端数のある時間単価で、区分ごとの四捨五入と合計後の一括端数処理で結果が変わることを確認する
+  const r = context.calculateOvertimeAllowance(1399.7, {
+    weekdayNormalHours: 1,
+    weekdayNightHours: 0,
+    holidayNormalHours: 1,
+    holidayNightHours: 0,
+  });
+  // 平日: 1399.7*1.25=1749.625 -> 四捨五入1750 / 休日: 1399.7*1.35=1889.595 -> 四捨五入1890
+  // 区分ごとに四捨五入してから合算: 1750+1890=3640
+  // （合計してから一括で端数処理する方式だと floor(1399.7*(1.25+1.35))=floor(3639.22)=3639 になり結果が異なる）
+  assert.equal(r.totalAllowance, 3640);
+});
+
 // --- calculateBonusWithPeriodRate ---------------------------------------------------
 
 test("calculateBonusWithPeriodRate: 期間率1.0は満額の半分", () => {

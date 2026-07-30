@@ -36,6 +36,9 @@ function calcHourlyWage(overtimeBase) {
  * 月60時間の判定対象は休日勤務を除く時間外勤務（深夜時間帯を含む）の合計時間。
  * 60時間を超えた分は、平日の通常時間から優先的に充当し、それでも足りなければ深夜時間に充当する
  * （実際の勤務順序までは把握できないための簡便な割当てであることに留意）。
+ * 手当額は区分（平日通常／平日超過／平日深夜／平日深夜超過／休日／休日深夜）ごとに
+ * 「時間単価 × 時間数 × 割増率」を計算し、区分ごとに四捨五入したうえで合算する
+ * （合算してから一括で端数処理するのではなく、区分ごとに端数処理する）。
  *
  * @param {number} hourlyWage 勤務1時間当たりの給与額
  * @param {Object} hours
@@ -58,17 +61,17 @@ function calculateOvertimeAllowance(hourlyWage, hours) {
   const weekdayNormalRegularHours = weekdayNormalHours - excessFromNormal;
   const weekdayNightRegularHours = weekdayNightHours - excessFromNight;
 
-  const weekdayPay =
-    weekdayNormalRegularHours * OVERTIME_RATES.weekdayNormal +
-    excessFromNormal * OVERTIME_RATES.weekdayNormalOver60 +
-    weekdayNightRegularHours * OVERTIME_RATES.weekdayNight +
-    excessFromNight * OVERTIME_RATES.weekdayNightOver60;
-
-  const holidayPay =
-    holidayNormalHours * OVERTIME_RATES.holidayNormal + holidayNightHours * OVERTIME_RATES.holidayNight;
+  const categoryHours = [
+    weekdayNormalRegularHours * OVERTIME_RATES.weekdayNormal,
+    excessFromNormal * OVERTIME_RATES.weekdayNormalOver60,
+    weekdayNightRegularHours * OVERTIME_RATES.weekdayNight,
+    excessFromNight * OVERTIME_RATES.weekdayNightOver60,
+    holidayNormalHours * OVERTIME_RATES.holidayNormal,
+    holidayNightHours * OVERTIME_RATES.holidayNight,
+  ];
+  const totalAllowance = categoryHours.reduce((sum, weightedHours) => sum + Math.round(hourlyWage * weightedHours), 0);
 
   const totalHours = weekdayTotalHours + holidayNormalHours + holidayNightHours;
-  const totalAllowance = Math.floor(hourlyWage * (weekdayPay + holidayPay));
 
   return {
     hourlyWage: Math.floor(hourlyWage),
