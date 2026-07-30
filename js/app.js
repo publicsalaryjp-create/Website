@@ -304,8 +304,8 @@ function initForm() {
   populateGradeOptions(saved && saved.grade);
   populateStepOptions();
   populateRegionalRateOptions();
+  populateRegionalRateRegionOptions();
   populateRegionalRateTable();
-  populateHonshoReferenceTable();
   ["june", "december"].forEach((period) => {
     populateMeritStaffTypeOptions(period);
     const savedStaffType = saved && saved[`merit-staff-type-${period}`];
@@ -322,6 +322,7 @@ function initForm() {
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
   updateVisibility(); // 復元したhousing-eligible等の値を反映し直す
   updateHonshoAmountHint();
+  updateHousingAmountHint();
   wireCounterButtons(form);
 
   wireCommonFormEvents(form, {
@@ -336,11 +337,11 @@ function initForm() {
 
   document.querySelectorAll(".step-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const stepSelect = document.getElementById("step");
+      const stepInput = document.getElementById("step");
       const maxStep = getMaxStep(currentTableKey(), document.getElementById("grade").value);
       const delta = Number(btn.dataset.delta);
-      const next = Math.min(Math.max((Number(stepSelect.value) || 1) + delta, 1), maxStep);
-      stepSelect.value = next;
+      const next = Math.min(Math.max((Number(stepInput.value) || 1) + delta, 1), maxStep);
+      stepInput.value = next;
       recalculate();
     });
   });

@@ -1,17 +1,24 @@
 /**
  * form-controls.js
  * index.html / new-hire.html の両方で使う共通のフォーム制御・表示ロジック。
- * 両ページで一致しているDOM ID（salary-table, grade, grade-field, step,
- * regional-rate, regional-rate-table-body, child-under15-count, child-16to22-count,
- * parent-count, housing-eligible, housing-amount-field, housing-allowance,
- * honsho-eligible, honsho-amount-hint, honsho-reference-table-body,
- * table-source-note, r-base, r-regional, r-dependent, r-housing, r-honsho,
- * r-monthly-total）を前提にする。
+ * 両ページで一致しているDOM ID（salary-table, grade, grade-field, grade-max, step,
+ * step-max, regional-rate, regional-rate-region, regional-rate-table-body,
+ * child-under15-count, child-16to22-count, parent-count, housing-eligible,
+ * housing-amount-field, housing-rent, housing-amount-hint, honsho-eligible-no,
+ * honsho-eligible-yes, honsho-amount-hint, table-source-note,
+ * r-base, r-regional, r-dependent, r-housing, r-honsho, r-monthly-total）を
+ * 前提にする。
  * 期末・勤勉手当の入力（index.htmlは成績率区分、new-hire.htmlは在職期間率）は
  * ページごとに構成が異なるため、それぞれ js/app.js / js/new-hire.js 側で扱う。
  */
 
 const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" });
+
+/** name属性で指定したラジオボタングループの、チェック済み要素のvalueを返す（未チェック時はnull） */
+function radioValue(name) {
+  const checked = document.querySelector(`input[name="${name}"]:checked`);
+  return checked ? checked.value : null;
+}
 
 function currentTableKey() {
   return document.getElementById("salary-table").value;
@@ -39,39 +46,32 @@ function populateSalaryTableOptions(defaultKey) {
 }
 
 function populateGradeOptions(defaultGrade) {
-  const gradeSelect = document.getElementById("grade");
+  const gradeInput = document.getElementById("grade");
   const table = getTable(currentTableKey());
-  gradeSelect.innerHTML = "";
   if (!table || table.type !== "graded") return;
-  Object.keys(table.grades)
+  const grades = Object.keys(table.grades)
     .map(Number)
-    .sort((a, b) => a - b)
-    .forEach((grade) => {
-      const opt = document.createElement("option");
-      opt.value = grade;
-      opt.textContent = `${grade}級`;
-      gradeSelect.appendChild(opt);
-    });
-  if (defaultGrade != null && gradeSelect.querySelector(`option[value="${defaultGrade}"]`)) {
-    gradeSelect.value = String(defaultGrade);
-  }
+    .sort((a, b) => a - b);
+  const minGrade = grades[0];
+  const maxGrade = grades[grades.length - 1];
+  gradeInput.min = minGrade;
+  gradeInput.max = maxGrade;
+  const candidate = defaultGrade != null ? Number(defaultGrade) : Number(gradeInput.value) || minGrade;
+  gradeInput.value = Math.min(Math.max(candidate, minGrade), maxGrade);
+  const gradeMax = document.getElementById("grade-max");
+  if (gradeMax) gradeMax.textContent = `/ ${maxGrade}級`;
 }
 
 function populateStepOptions() {
   const tableKey = currentTableKey();
   const grade = document.getElementById("grade").value;
-  const stepSelect = document.getElementById("step");
-  const currentValue = Number(stepSelect.value) || 1;
+  const stepInput = document.getElementById("step");
+  const currentValue = Number(stepInput.value) || 1;
   const maxStep = getMaxStep(tableKey, grade);
-  const newValue = Math.min(Math.max(currentValue, 1), maxStep);
-  stepSelect.innerHTML = "";
-  for (let s = 1; s <= maxStep; s++) {
-    const opt = document.createElement("option");
-    opt.value = s;
-    opt.textContent = `${s}号俸`;
-    stepSelect.appendChild(opt);
-  }
-  stepSelect.value = newValue;
+  stepInput.min = 1;
+  stepInput.max = maxStep;
+  stepInput.value = Math.min(Math.max(currentValue, 1), maxStep);
+  document.getElementById("step-max").textContent = `/ ${maxStep}号俸`;
 }
 
 function regionalRateLabel(r) {
@@ -88,6 +88,34 @@ function populateRegionalRateOptions() {
     opt.textContent = regionalRateLabel(r);
     select.appendChild(opt);
   });
+}
+
+/** 地域名から級地区分を選ぶための補助プルダウンを描画する（代表例のみ・網羅的ではない） */
+function populateRegionalRateRegionOptions() {
+  const select = document.getElementById("regional-rate-region");
+  if (!select) return;
+  select.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "地域名から選ぶ（任意・代表例のみ）";
+  select.appendChild(placeholder);
+  REGIONAL_ALLOWANCE_REGION_EXAMPLES.forEach((r) => {
+    const opt = document.createElement("option");
+    opt.value = r.name;
+    opt.textContent = `${r.name}（${(r.rate * 100).toFixed(0)}%相当）`;
+    select.appendChild(opt);
+  });
+}
+
+/** 地域名プルダウンで選ばれた地域の級地区分を、本体の regional-rate セレクトに反映する */
+function applyRegionalRateRegionSelection() {
+  const regionSelect = document.getElementById("regional-rate-region");
+  const rateSelect = document.getElementById("regional-rate");
+  if (!regionSelect || !regionSelect.value) return;
+  const region = REGIONAL_ALLOWANCE_REGION_EXAMPLES.find((r) => r.name === regionSelect.value);
+  if (!region) return;
+  rateSelect.value = region.rate;
+  rateSelect.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 /** 地域手当の級地区分ごとの支給割合を一覧表（折りたたみ）に描画する */
@@ -110,29 +138,11 @@ function populateRegionalRateTable() {
   });
 }
 
-/** 本府省業務調整手当（本省手当）の級別参考額を一覧表（折りたたみ）に描画する */
-function populateHonshoReferenceTable() {
-  const tbody = document.getElementById("honsho-reference-table-body");
-  if (!tbody) return;
-  tbody.innerHTML = "";
-  HONSHO_ALLOWANCE_REFERENCE.forEach((r) => {
-    const tr = document.createElement("tr");
-    const gradeTd = document.createElement("td");
-    gradeTd.textContent = r.grade;
-    const amountTd = document.createElement("td");
-    amountTd.textContent = yen.format(r.amount);
-    tr.appendChild(gradeTd);
-    tr.appendChild(amountTd);
-    tbody.appendChild(tr);
-  });
-}
-
 /** 本省手当の「支給あり」選択時に、現在の級から自動計算される参考額をヒント表示する */
 function updateHonshoAmountHint() {
   const hint = document.getElementById("honsho-amount-hint");
-  const eligibleSelect = document.getElementById("honsho-eligible");
-  if (!hint || !eligibleSelect) return;
-  if (eligibleSelect.value !== "1") {
+  if (!hint) return;
+  if (radioValue("honsho-eligible") !== "1") {
     hint.textContent = "";
     return;
   }
@@ -146,6 +156,19 @@ function updateHonshoAmountHint() {
   }
 }
 
+/** 住居手当の「支給あり」選択時に、入力中の家賃から自動計算される金額をヒント表示する */
+function updateHousingAmountHint() {
+  const hint = document.getElementById("housing-amount-hint");
+  const eligibleSelect = document.getElementById("housing-eligible");
+  if (!hint || !eligibleSelect) return;
+  if (eligibleSelect.value !== "1") {
+    hint.textContent = "";
+    return;
+  }
+  const rent = Number(document.getElementById("housing-rent").value);
+  hint.textContent = `住居手当: ${yen.format(calcHousingAllowance(rent))}（家賃の半額と28,000円のいずれか低い方）`;
+}
+
 function updateVisibility() {
   document.getElementById("grade-field").hidden = currentTableType() !== "graded";
   document.getElementById("housing-amount-field").hidden =
@@ -153,9 +176,10 @@ function updateVisibility() {
 }
 
 /**
- * 扶養親族数などのボタン選択式カウンター（.counter-btn）を配線する。
+ * 扶養親族数・職務の級・号俸などのボタン選択式カウンター（.counter-btn）を配線する。
  * ボタンは data-target（対象inputのid）とdata-delta（増減量）を持つ。
- * 値の変更は対象inputへの"input"イベント発火で通知するため、
+ * 対象inputに max 属性がある場合はその値も上限としてクランプする（扶養親族数のように
+ * max未設定の場合は上限なし）。値の変更は対象inputへの"input"イベント発火で通知するため、
  * wireCommonFormEvents()側の再計算・保存ロジックがそのまま動く。
  */
 function wireCounterButtons(form) {
@@ -164,8 +188,9 @@ function wireCounterButtons(form) {
       const target = document.getElementById(btn.dataset.target);
       if (!target) return;
       const min = Number(target.min) || 0;
+      const max = target.max !== "" ? Number(target.max) : Infinity;
       const delta = Number(btn.dataset.delta);
-      target.value = Math.max((Number(target.value) || 0) + delta, min);
+      target.value = Math.min(Math.max((Number(target.value) || 0) + delta, min), max);
       target.dispatchEvent(new Event("input", { bubbles: true }));
     });
   });
@@ -185,6 +210,11 @@ function saveFormState(pageKey, form) {
   try {
     const data = {};
     form.querySelectorAll("input[id], select[id]").forEach((el) => {
+      // ラジオボタンはグループ内で複数のidを持つため、name をキーにチェック済みの値だけ保存する
+      if (el.type === "radio") {
+        if (el.checked) data[el.name] = el.value;
+        return;
+      }
       data[el.id] = el.value;
     });
     localStorage.setItem(formStorageKey(pageKey), JSON.stringify(data));
@@ -223,6 +253,11 @@ function clearFormState(pageKey) {
 function applySavedFormValues(form, saved) {
   if (!saved) return;
   form.querySelectorAll("input[id], select[id]").forEach((el) => {
+    if (el.type === "radio") {
+      const value = saved[el.name];
+      if (value !== undefined) el.checked = el.value === value;
+      return;
+    }
     const value = saved[el.id];
     if (value === undefined) return;
     if (el.tagName === "SELECT") {
@@ -237,7 +272,7 @@ function applySavedFormValues(form, saved) {
 /** 両ページ共通の入力項目（期末・勤勉手当や超過勤務時間などページ固有の項目は含まない） */
 function readCommonInput() {
   const grade = Number(document.getElementById("grade").value);
-  const honshoEligible = document.getElementById("honsho-eligible").value === "1";
+  const honshoEligible = radioValue("honsho-eligible") === "1";
   const housingEligible = document.getElementById("housing-eligible").value === "1";
   return {
     tableKey: currentTableKey(),
@@ -247,7 +282,7 @@ function readCommonInput() {
     childUnder15Count: Number(document.getElementById("child-under15-count").value),
     child16to22Count: Number(document.getElementById("child-16to22-count").value),
     parentCount: Number(document.getElementById("parent-count").value),
-    housingAllowance: housingEligible ? Number(document.getElementById("housing-allowance").value) : 0,
+    housingAllowance: housingEligible ? calcHousingAllowance(document.getElementById("housing-rent").value) : 0,
     honshoAllowance: honshoEligible ? getHonshoAllowanceAmount(grade) : 0,
   };
 }
@@ -295,14 +330,26 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
     if (e.target.id === "grade") {
       populateStepOptions();
     }
+    if (e.target.id === "regional-rate") {
+      const regionSelect = document.getElementById("regional-rate-region");
+      if (regionSelect && regionSelect.value) {
+        const region = REGIONAL_ALLOWANCE_REGION_EXAMPLES.find((r) => r.name === regionSelect.value);
+        if (!region || String(region.rate) !== e.target.value) regionSelect.value = "";
+      }
+    }
     updateVisibility();
     updateHonshoAmountHint();
+    updateHousingAmountHint();
     if (onInputExtra) await onInputExtra(e);
     onRecalculate();
   });
 
   form.addEventListener("change", async (e) => {
+    if (e.target.id === "regional-rate-region") {
+      applyRegionalRateRegionSelection();
+    }
     updateHonshoAmountHint();
+    updateHousingAmountHint();
     if (onChangeExtra) await onChangeExtra(e);
     onRecalculate();
   });

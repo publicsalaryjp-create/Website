@@ -34,16 +34,34 @@
       </div>
       <div class="field" id="grade-field">
         <label for="grade">職務の級（初任は1級が一般的）</label>
-        <select id="grade" name="grade"></select>
+        <div class="counter-input">
+          <button type="button" class="counter-btn" data-target="grade" data-delta="-1" aria-label="級を下げる">−</button>
+          <input type="number" id="grade" name="grade" min="1" value="1" readonly>
+          <button type="button" class="counter-btn" data-target="grade" data-delta="1" aria-label="級を上げる">＋</button>
+        </div>
+        <p class="hint" id="grade-max">/ 1級</p>
       </div>
       <div class="field">
         <label for="step">号俸（初任は1号俸が一般的）</label>
-        <select id="step" name="step"></select>
+        <div class="counter-input">
+          <button type="button" class="counter-btn" data-target="step" data-delta="-1" aria-label="号俸を下げる">−</button>
+          <input type="number" id="step" name="step" min="1" value="1" readonly>
+          <button type="button" class="counter-btn" data-target="step" data-delta="1" aria-label="号俸を上げる">＋</button>
+        </div>
+        <p class="hint" id="step-max">/ 1号俸</p>
       </div>
     </fieldset>
 
     <fieldset>
       <legend>地域手当</legend>
+      <div class="field">
+        <label for="regional-rate-region">地域名から選ぶ（任意）</label>
+        <select id="regional-rate-region" name="regional-rate-region"></select>
+        <p class="hint">
+          代表的な市区町村のみを掲載した参考用の一覧です（網羅的ではありません、出典の確度は中）。
+          掲載のない地域は、下の級地区分から直接選択してください。
+        </p>
+      </div>
       <div class="field">
         <label for="regional-rate">勤務地の級地区分</label>
         <select id="regional-rate" name="regional-rate"></select>
@@ -61,7 +79,6 @@
 
     <fieldset>
       <legend>扶養手当</legend>
-      <p class="hint">令和8年4月現在の額です（配偶者に係る手当は廃止済みのため対象外）。</p>
       <div class="field">
         <label for="child-under15-count">扶養する子の数（15歳以下）</label>
         <div class="counter-input">
@@ -93,6 +110,7 @@
       <p class="hint">
         借家・借間に住み、実際に家賃を支払っている場合のみ支給されます。
         持ち家の場合は支給されません（持家世帯向けの住居手当は廃止済み）。
+        住居手当額 = 家賃月額の半額と28,000円のいずれか低い方です。
       </p>
       <div class="field">
         <label for="housing-eligible">支給の有無</label>
@@ -102,8 +120,9 @@
         </select>
       </div>
       <div class="field" id="housing-amount-field">
-        <label for="housing-allowance">住居手当（月額・円）</label>
-        <input type="number" id="housing-allowance" name="housing-allowance" min="0" step="1000" value="0">
+        <label for="housing-rent">家賃（月額・円）</label>
+        <input type="number" id="housing-rent" name="housing-rent" min="0" step="1000" value="0">
+        <p class="hint" id="housing-amount-hint"></p>
       </div>
     </fieldset>
 
@@ -111,31 +130,26 @@
       <legend>本府省業務調整手当（本省手当）</legend>
       <p class="hint">
         本府省（霞が関）勤務の職員に支給される手当です（給与法10条の3、人事院規則9-123）。
-        支給の有無を選択すると、左で選択した職務の級から参考額を自動計算します。
+        支給の有無を選択すると、左で選択した職務の級から参考額（令和8年度人事院公表資料に
+        基づく）を自動計算します。行政職俸給表(一)以外の俸給表を選んでいる場合は、
+        本来「相当する職務の級」への読み替えが必要な場合がありますが、本ツールでは
+        選択中の級番号をそのまま適用する簡略化としています。実際の支給額は所属官署の
+        給与担当にご確認ください。
       </p>
       <div class="field">
-        <label for="honsho-eligible">支給の有無</label>
-        <select id="honsho-eligible" name="honsho-eligible">
-          <option value="0">支給なし</option>
-          <option value="1">支給あり</option>
-        </select>
+        <span class="field-label-text">支給の有無</span>
+        <div class="radio-group" role="radiogroup" aria-label="本省手当の支給の有無">
+          <label class="radio-option">
+            <input type="radio" id="honsho-eligible-no" name="honsho-eligible" value="0" checked>
+            支給なし
+          </label>
+          <label class="radio-option">
+            <input type="radio" id="honsho-eligible-yes" name="honsho-eligible" value="1">
+            支給あり
+          </label>
+        </div>
         <p class="hint" id="honsho-amount-hint"></p>
       </div>
-      <details class="regional-rate-details">
-        <summary>級別の参考額を見る</summary>
-        <table class="regional-rate-table">
-          <thead>
-            <tr><th>級</th><th>参考月額</th></tr>
-          </thead>
-          <tbody id="honsho-reference-table-body"></tbody>
-        </table>
-        <p class="hint">
-          令和8年度人事院公表資料（行政職俸給表(一)の級別月額表）に基づく金額です。
-          行政職俸給表(一)以外の俸給表を選んでいる場合は、本来「相当する職務の級」への
-          読み替えが必要な場合がありますが、本ツールでは選択中の級番号をそのまま適用する
-          簡略化としています。実際の支給額は所属官署の給与担当にご確認ください。
-        </p>
-      </details>
     </fieldset>
 
     <fieldset>

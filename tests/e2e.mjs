@@ -54,6 +54,19 @@ const { port } = server.address();
 const base = `http://127.0.0.1:${port}`;
 const browser = await chromium.launch();
 
+// 職務の級・号俸はボタン選択式のreadonly数値入力になっているため、
+// page.fill()の代わりにこの関数で値を直接設定する（実際のボタン操作の検証は別テストで行う）。
+async function setReadonlyNumber(page, selector, value) {
+  await page.evaluate(
+    ({ selector, value }) => {
+      const el = document.querySelector(selector);
+      el.value = value;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+    },
+    { selector, value }
+  );
+}
+
 async function checkNoConsoleErrors(pathName, label) {
   const page = await browser.newPage();
   const errors = [];
@@ -78,8 +91,6 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#grade", "1");
-  await page.selectOption("#step", "1");
   await page.selectOption("#regional-rate", "0");
   await page.waitForTimeout(300);
   const baseSalaryText = await page.textContent("#r-base");
@@ -99,7 +110,6 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "designated");
-  await page.selectOption("#step", "1");
   await page.waitForTimeout(300);
   const gradeFieldHidden = await page.isHidden("#grade-field");
   const baseSalaryText = await page.textContent("#r-base");
@@ -118,8 +128,6 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "medical_1");
-  await page.selectOption("#grade", "1");
-  await page.selectOption("#step", "1");
   await page.waitForTimeout(300);
   const baseSalaryText = await page.textContent("#r-base");
   const baseSalary = Number(baseSalaryText.replace(/[^\d]/g, ""));
@@ -137,8 +145,6 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#grade", "1");
-  await page.selectOption("#step", "1");
   await page.selectOption("#regional-rate", "0");
   await page.click('.counter-btn[data-target="child-under15-count"][data-delta="1"]');
   await page.click('.counter-btn[data-target="child-16to22-count"][data-delta="1"]');
@@ -201,7 +207,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#step", "10");
+  await setReadonlyNumber(page, "#step", "10");
   await page.click('.step-btn[data-delta="4"]');
   await page.waitForTimeout(150);
   const afterPlus4 = await page.inputValue("#step");
@@ -216,7 +222,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
-// index.html: 住居手当は既定「支給なし」で0円、「支給あり」にすると入力額が反映される
+// index.html: 住居手当は既定「支給なし」で0円、「支給あり」にすると家賃の半額(28,000円未満)が反映される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
@@ -225,35 +231,54 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const defaultHousingText = await page.textContent("#r-housing");
   const amountFieldHiddenByDefault = await page.isHidden("#housing-amount-field");
   await page.selectOption("#housing-eligible", "1");
-  await page.fill("#housing-allowance", "15000");
+  await page.fill("#housing-rent", "15000");
   await page.waitForTimeout(200);
   const housingText = await page.textContent("#r-housing");
+  const hintText = await page.textContent("#housing-amount-hint");
   report(
-    "index.html: 住居手当は既定で支給なし(0円、金額欄は非表示)、支給ありにすると入力額(15,000円)が反映される",
+    "index.html: 住居手当は既定で支給なし(0円、金額欄は非表示)、支給ありで家賃15,000円なら半額の7,500円が反映される",
     defaultEligible === "0" &&
       defaultHousingText.includes("0") &&
       amountFieldHiddenByDefault &&
-      housingText.includes("15,000"),
-    `既定=${defaultEligible}/${defaultHousingText}/非表示=${amountFieldHiddenByDefault} 支給あり後=${housingText}`
+      housingText.includes("7,500") &&
+      hintText.includes("7,500"),
+    `既定=${defaultEligible}/${defaultHousingText}/非表示=${amountFieldHiddenByDefault} 支給あり後=${housingText} ヒント=${hintText}`
   );
   await page.close();
 }
 
-// index.html: 住居手当を「支給あり」にして金額を入れても、「支給なし」に戻すと0円になる（持ち家扱い）
+// index.html: 家賃が高額でも住居手当は28,000円が上限になる
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#housing-eligible", "1");
-  await page.fill("#housing-allowance", "20000");
+  await page.fill("#housing-rent", "100000");
+  await page.waitForTimeout(200);
+  const housingText = await page.textContent("#r-housing");
+  report(
+    "index.html: 家賃100,000円（半額50,000円）でも住居手当は上限の28,000円になる",
+    housingText.includes("28,000"),
+    `表示=${housingText}`
+  );
+  await page.close();
+}
+
+// index.html: 住居手当を「支給あり」にして家賃を入れても、「支給なし」に戻すと0円になる（持ち家扱い）
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#housing-eligible", "1");
+  await page.fill("#housing-rent", "20000");
   await page.waitForTimeout(200);
   await page.selectOption("#housing-eligible", "0");
   await page.waitForTimeout(200);
   const housingText = await page.textContent("#r-housing");
   const amountFieldHidden = await page.isHidden("#housing-amount-field");
   report(
-    "index.html: 住居手当を支給ありから支給なしに戻すと、入力額が残っていても0円になる",
-    housingText.includes("0") && !housingText.includes("20,000") && amountFieldHidden,
+    "index.html: 住居手当を支給ありから支給なしに戻すと、家賃を入力していても0円になる",
+    housingText.includes("0") && !housingText.includes("10,000") && amountFieldHidden,
     `表示=${housingText} 非表示=${amountFieldHidden}`
   );
   await page.close();
@@ -264,23 +289,21 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  const defaultEligible = await page.inputValue("#honsho-eligible");
+  const defaultChecked = await page.isChecked("#honsho-eligible-no");
   const defaultHonshoText = await page.textContent("#r-honsho");
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#grade", "3");
-  await page.selectOption("#honsho-eligible", "1");
+  await setReadonlyNumber(page, "#grade", "3");
+  await page.check("#honsho-eligible-yes");
   await page.waitForTimeout(200);
   const honshoText = await page.textContent("#r-honsho");
   const hintText = await page.textContent("#honsho-amount-hint");
-  const rowCount = await page.$$eval("#honsho-reference-table-body tr", (trs) => trs.length);
   report(
-    "index.html: 本省手当は既定で支給なし(0円)、支給ありにすると3級の参考額(19,500円)が自動反映され、ヒントと参考表(7行)も表示される",
-    defaultEligible === "0" &&
+    "index.html: 本省手当は既定で支給なし(0円)、支給ありにすると3級の参考額(19,500円)が自動反映され、ヒントも表示される",
+    defaultChecked &&
       defaultHonshoText.includes("0") &&
       honshoText.includes("19,500") &&
-      hintText.includes("19,500") &&
-      rowCount === 7,
-    `既定=${defaultEligible}/${defaultHonshoText} 支給あり=${honshoText} ヒント=${hintText} 行数=${rowCount}`
+      hintText.includes("19,500"),
+    `既定チェック=${defaultChecked}/${defaultHonshoText} 支給あり=${honshoText} ヒント=${hintText}`
   );
   await page.close();
 }
@@ -291,8 +314,6 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#grade", "1");
-  await page.selectOption("#step", "1");
   await page.selectOption("#regional-rate", "0");
   await page.selectOption("#merit-staff-type-june", "general");
   await page.selectOption("#merit-grade-june", "good");
@@ -333,8 +354,6 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#grade", "1");
-  await page.selectOption("#step", "1");
   await page.selectOption("#regional-rate", "0");
   await page.selectOption("#merit-staff-type-june", "general");
   await page.selectOption("#merit-grade-june", "excellent_plus");
@@ -409,19 +428,38 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.close();
 }
 
+// index.html: 地域名から選ぶと級地区分プルダウンに反映され、直接変更すると地域名選択が解除される
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#regional-rate-region", "東京都特別区（23区）");
+  await page.waitForTimeout(150);
+  const rateAfterRegion = await page.inputValue("#regional-rate");
+  await page.selectOption("#regional-rate", "0");
+  await page.waitForTimeout(150);
+  const regionAfterManualChange = await page.inputValue("#regional-rate-region");
+  report(
+    "index.html: 地域名から選ぶと級地区分(1級地=0.2)に反映され、直接変更すると地域名選択が解除される",
+    rateAfterRegion === "0.2" && regionAfterManualChange === "",
+    `regional-rate(選択後)=${rateAfterRegion} regional-rate-region(手動変更後)=${regionAfterManualChange}`
+  );
+  await page.close();
+}
+
 // index.html: 入力内容がlocalStorageに保存され、リロード後も復元される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#housing-eligible", "1");
-  await page.fill("#housing-allowance", "23000");
+  await page.fill("#housing-rent", "23000");
   await page.selectOption("#regional-rate", "0.12");
   await page.waitForTimeout(200);
   await page.reload();
   await page.waitForTimeout(500);
   const housingEligibleValue = await page.inputValue("#housing-eligible");
-  const housingValue = await page.inputValue("#housing-allowance");
+  const housingValue = await page.inputValue("#housing-rent");
   const regionalValue = await page.inputValue("#regional-rate");
   report(
     "index.html: 入力内容がリロード後も復元される",
@@ -437,7 +475,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#housing-eligible", "1");
-  await page.fill("#housing-allowance", "23000");
+  await page.fill("#housing-rent", "23000");
   await page.waitForTimeout(200);
   await page.click("#reset-saved-input");
   await page.waitForTimeout(500);
@@ -456,11 +494,11 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   await page.goto(`${base}/new-hire.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#housing-eligible", "1");
-  await page.fill("#housing-allowance", "8000");
+  await page.fill("#housing-rent", "8000");
   await page.waitForTimeout(200);
   await page.reload();
   await page.waitForTimeout(500);
-  const housingValue = await page.inputValue("#housing-allowance");
+  const housingValue = await page.inputValue("#housing-rent");
   report(
     "new-hire.html: 入力内容がリロード後も復元される",
     housingValue === "8000",

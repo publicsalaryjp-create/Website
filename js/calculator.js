@@ -37,8 +37,9 @@ function calcHourlyWage(overtimeBase) {
  * 60時間を超えた分は、平日の通常時間から優先的に充当し、それでも足りなければ深夜時間に充当する
  * （実際の勤務順序までは把握できないための簡便な割当てであることに留意）。
  * 手当額は区分（平日通常／平日超過／平日深夜／平日深夜超過／休日／休日深夜）ごとに
- * 「時間単価 × 時間数 × 割増率」を計算し、区分ごとに四捨五入したうえで合算する
- * （合算してから一括で端数処理するのではなく、区分ごとに端数処理する）。
+ * 「時間単価 × 割増率」をまず四捨五入して1時間あたりの単価を求め、それに時間数を
+ * 掛けたものを区分ごとに合算する（時間単価そのものは端数処理しない。丸めるのは
+ * 「単価×割増率」の段階のみで、時間数を掛けた後や合計後には丸めない）。
  *
  * @param {number} hourlyWage 勤務1時間当たりの給与額
  * @param {Object} hours
@@ -61,20 +62,23 @@ function calculateOvertimeAllowance(hourlyWage, hours) {
   const weekdayNormalRegularHours = weekdayNormalHours - excessFromNormal;
   const weekdayNightRegularHours = weekdayNightHours - excessFromNight;
 
-  const categoryHours = [
-    weekdayNormalRegularHours * OVERTIME_RATES.weekdayNormal,
-    excessFromNormal * OVERTIME_RATES.weekdayNormalOver60,
-    weekdayNightRegularHours * OVERTIME_RATES.weekdayNight,
-    excessFromNight * OVERTIME_RATES.weekdayNightOver60,
-    holidayNormalHours * OVERTIME_RATES.holidayNormal,
-    holidayNightHours * OVERTIME_RATES.holidayNight,
+  const categories = [
+    { hours: weekdayNormalRegularHours, rate: OVERTIME_RATES.weekdayNormal },
+    { hours: excessFromNormal, rate: OVERTIME_RATES.weekdayNormalOver60 },
+    { hours: weekdayNightRegularHours, rate: OVERTIME_RATES.weekdayNight },
+    { hours: excessFromNight, rate: OVERTIME_RATES.weekdayNightOver60 },
+    { hours: holidayNormalHours, rate: OVERTIME_RATES.holidayNormal },
+    { hours: holidayNightHours, rate: OVERTIME_RATES.holidayNight },
   ];
-  const totalAllowance = categoryHours.reduce((sum, weightedHours) => sum + Math.round(hourlyWage * weightedHours), 0);
+  const totalAllowance = categories.reduce(
+    (sum, c) => sum + Math.round(hourlyWage * c.rate) * c.hours,
+    0
+  );
 
   const totalHours = weekdayTotalHours + holidayNormalHours + holidayNightHours;
 
   return {
-    hourlyWage: Math.floor(hourlyWage),
+    hourlyWage, // 端数処理はしない（丸めは各区分の手当額を算出する段階でのみ行う）
     totalHours,
     excessHours,
     totalAllowance,
