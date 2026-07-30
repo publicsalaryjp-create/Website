@@ -113,11 +113,17 @@
         住居手当額 = 家賃月額の半額と28,000円のいずれか低い方です。
       </p>
       <div class="field">
-        <label for="housing-eligible">支給の有無</label>
-        <select id="housing-eligible" name="housing-eligible">
-          <option value="0">支給なし（持ち家など）</option>
-          <option value="1">支給あり（借家・借間など）</option>
-        </select>
+        <span class="field-label-text">支給の有無</span>
+        <div class="radio-group" role="radiogroup" aria-label="住居手当の支給の有無">
+          <label class="radio-option">
+            <input type="radio" id="housing-eligible-no" name="housing-eligible" value="0" checked>
+            支給なし
+          </label>
+          <label class="radio-option">
+            <input type="radio" id="housing-eligible-yes" name="housing-eligible" value="1">
+            支給あり
+          </label>
+        </div>
       </div>
       <div class="field" id="housing-amount-field">
         <label for="housing-rent">家賃（月額・円）</label>

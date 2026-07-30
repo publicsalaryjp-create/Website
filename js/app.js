@@ -41,7 +41,6 @@ function readInput() {
   return {
     ...readCommonInput(),
     teishuMonths: Number(document.getElementById("teishu-months").value),
-    kinbenMonths: Number(document.getElementById("kinben-months").value),
     meritRateJune: currentMeritRate("june"),
     meritRateDecember: currentMeritRate("december"),
     // 超過勤務時間は1時間単位で扱う（小数で入力されても四捨五入する）

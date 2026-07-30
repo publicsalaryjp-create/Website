@@ -227,22 +227,22 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  const defaultEligible = await page.inputValue("#housing-eligible");
+  const defaultChecked = await page.isChecked("#housing-eligible-no");
   const defaultHousingText = await page.textContent("#r-housing");
   const amountFieldHiddenByDefault = await page.isHidden("#housing-amount-field");
-  await page.selectOption("#housing-eligible", "1");
+  await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "15000");
   await page.waitForTimeout(200);
   const housingText = await page.textContent("#r-housing");
   const hintText = await page.textContent("#housing-amount-hint");
   report(
     "index.html: 住居手当は既定で支給なし(0円、金額欄は非表示)、支給ありで家賃15,000円なら半額の7,500円が反映される",
-    defaultEligible === "0" &&
+    defaultChecked &&
       defaultHousingText.includes("0") &&
       amountFieldHiddenByDefault &&
       housingText.includes("7,500") &&
       hintText.includes("7,500"),
-    `既定=${defaultEligible}/${defaultHousingText}/非表示=${amountFieldHiddenByDefault} 支給あり後=${housingText} ヒント=${hintText}`
+    `既定チェック=${defaultChecked}/${defaultHousingText}/非表示=${amountFieldHiddenByDefault} 支給あり後=${housingText} ヒント=${hintText}`
   );
   await page.close();
 }
@@ -252,7 +252,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#housing-eligible", "1");
+  await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "100000");
   await page.waitForTimeout(200);
   const housingText = await page.textContent("#r-housing");
@@ -269,10 +269,10 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#housing-eligible", "1");
+  await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "20000");
   await page.waitForTimeout(200);
-  await page.selectOption("#housing-eligible", "0");
+  await page.check("#housing-eligible-no");
   await page.waitForTimeout(200);
   const housingText = await page.textContent("#r-housing");
   const amountFieldHidden = await page.isHidden("#housing-amount-field");
@@ -452,19 +452,19 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#housing-eligible", "1");
+  await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "23000");
   await page.selectOption("#regional-rate", "0.12");
   await page.waitForTimeout(200);
   await page.reload();
   await page.waitForTimeout(500);
-  const housingEligibleValue = await page.inputValue("#housing-eligible");
+  const housingEligibleChecked = await page.isChecked("#housing-eligible-yes");
   const housingValue = await page.inputValue("#housing-rent");
   const regionalValue = await page.inputValue("#regional-rate");
   report(
     "index.html: 入力内容がリロード後も復元される",
-    housingEligibleValue === "1" && housingValue === "23000" && regionalValue === "0.12",
-    `housing-eligible=${housingEligibleValue} housing=${housingValue} regional=${regionalValue}`
+    housingEligibleChecked && housingValue === "23000" && regionalValue === "0.12",
+    `housing-eligible-yes=${housingEligibleChecked} housing=${housingValue} regional=${regionalValue}`
   );
   await page.close();
 }
@@ -474,16 +474,16 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#housing-eligible", "1");
+  await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "23000");
   await page.waitForTimeout(200);
   await page.click("#reset-saved-input");
   await page.waitForTimeout(500);
-  const housingEligibleValue = await page.inputValue("#housing-eligible");
+  const housingEligibleNoChecked = await page.isChecked("#housing-eligible-no");
   report(
     "index.html: 保存データ削除ボタンで住居手当が初期値（支給なし）に戻る",
-    housingEligibleValue === "0",
-    `housing-eligible=${housingEligibleValue}`
+    housingEligibleNoChecked,
+    `housing-eligible-no=${housingEligibleNoChecked}`
   );
   await page.close();
 }
@@ -493,7 +493,7 @@ await checkNoConsoleErrors("/new-hire.html", "new-hire.html: コンソールエ�
   const page = await browser.newPage();
   await page.goto(`${base}/new-hire.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#housing-eligible", "1");
+  await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "8000");
   await page.waitForTimeout(200);
   await page.reload();

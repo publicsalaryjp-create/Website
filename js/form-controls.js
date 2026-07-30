@@ -159,9 +159,8 @@ function updateHonshoAmountHint() {
 /** 住居手当の「支給あり」選択時に、入力中の家賃から自動計算される金額をヒント表示する */
 function updateHousingAmountHint() {
   const hint = document.getElementById("housing-amount-hint");
-  const eligibleSelect = document.getElementById("housing-eligible");
-  if (!hint || !eligibleSelect) return;
-  if (eligibleSelect.value !== "1") {
+  if (!hint) return;
+  if (radioValue("housing-eligible") !== "1") {
     hint.textContent = "";
     return;
   }
@@ -171,8 +170,7 @@ function updateHousingAmountHint() {
 
 function updateVisibility() {
   document.getElementById("grade-field").hidden = currentTableType() !== "graded";
-  document.getElementById("housing-amount-field").hidden =
-    document.getElementById("housing-eligible").value !== "1";
+  document.getElementById("housing-amount-field").hidden = radioValue("housing-eligible") !== "1";
 }
 
 /**
@@ -273,7 +271,7 @@ function applySavedFormValues(form, saved) {
 function readCommonInput() {
   const grade = Number(document.getElementById("grade").value);
   const honshoEligible = radioValue("honsho-eligible") === "1";
-  const housingEligible = document.getElementById("housing-eligible").value === "1";
+  const housingEligible = radioValue("housing-eligible") === "1";
   return {
     tableKey: currentTableKey(),
     grade,
