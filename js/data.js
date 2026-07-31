@@ -145,6 +145,14 @@ function getTable(tableKey) {
   return SALARY_CATALOG.tables[tableKey];
 }
 
+// 選択肢に表示する俸給表を一旦、行政職俸給表(一)・指定職俸給表の2表に絞る
+// （ユーザー指示。data/salary-tables.json自体は全19表を保持したまま）。
+const VISIBLE_TABLE_KEYS = ["administrative_1", "designated"];
+
+function getVisibleTableKeys() {
+  return getTableKeys().filter((key) => VISIBLE_TABLE_KEYS.includes(key));
+}
+
 // ---------------------------------------------------------------------------
 // 2. 地域手当（令和6年人事院勧告後の5区分制度）
 // ---------------------------------------------------------------------------

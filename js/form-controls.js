@@ -1,8 +1,8 @@
 /**
  * form-controls.js
  * index.html で使うフォーム制御・表示ロジック。
- * 前提にするDOM ID: salary-table, grade, grade-field, grade-max, step,
- * step-max, regional-rate, regional-rate-region, regional-rate-table-body,
+ * 前提にするDOM ID: salary-table, grade, grade-field, step,
+ * regional-rate, regional-rate-region, regional-rate-table-body,
  * child-under15-count, child-16to22-count, parent-count, housing-eligible,
  * housing-amount-field, housing-rent, housing-amount-hint, honsho-eligible-no,
  * honsho-eligible-yes, honsho-amount-hint, table-source-note,
@@ -30,7 +30,7 @@ function currentTableType() {
 function populateSalaryTableOptions(defaultKey) {
   const select = document.getElementById("salary-table");
   select.innerHTML = "";
-  getTableKeys().forEach((key) => {
+  getVisibleTableKeys().forEach((key) => {
     const table = getTable(key);
     if (!table) return;
     const opt = document.createElement("option");
@@ -38,7 +38,7 @@ function populateSalaryTableOptions(defaultKey) {
     opt.textContent = table.label;
     select.appendChild(opt);
   });
-  if (defaultKey && getTableKeys().includes(defaultKey)) {
+  if (defaultKey && getVisibleTableKeys().includes(defaultKey)) {
     select.value = defaultKey;
   }
 }
@@ -56,8 +56,6 @@ function populateGradeOptions(defaultGrade) {
   gradeInput.max = maxGrade;
   const candidate = defaultGrade != null ? Number(defaultGrade) : Number(gradeInput.value) || minGrade;
   gradeInput.value = Math.min(Math.max(candidate, minGrade), maxGrade);
-  const gradeMax = document.getElementById("grade-max");
-  if (gradeMax) gradeMax.textContent = `/ ${maxGrade}級`;
 }
 
 function populateStepOptions() {
@@ -69,7 +67,6 @@ function populateStepOptions() {
   stepInput.min = 1;
   stepInput.max = maxStep;
   stepInput.value = Math.min(Math.max(currentValue, 1), maxStep);
-  document.getElementById("step-max").textContent = `/ ${maxStep}号俸`;
 }
 
 function regionalRateLabel(r) {

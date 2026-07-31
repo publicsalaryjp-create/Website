@@ -37,17 +37,23 @@ function currentMeritRate(period) {
   return grade && grade.rate != null ? grade.rate : 1;
 }
 
+// 管理職（特定管理職員・指定職職員）は超過勤務手当の支給対象外のため、時間を0として扱う。
+function isOvertimeExempt() {
+  return document.getElementById("current-staff-type").value !== "general";
+}
+
 function readInput() {
+  const overtimeExempt = isOvertimeExempt();
   return {
     ...readCommonInput(),
     teishuMonths: Number(document.getElementById("teishu-months").value),
     meritRateJune: currentMeritRate("june"),
     meritRateDecember: currentMeritRate("december"),
     // 超過勤務時間は1時間単位で扱う（小数で入力されても四捨五入する）
-    weekdayNormalHours: Math.round(Number(document.getElementById("ot-weekday-normal").value)),
-    weekdayNightHours: Math.round(Number(document.getElementById("ot-weekday-night").value)),
-    holidayNormalHours: Math.round(Number(document.getElementById("ot-holiday-normal").value)),
-    holidayNightHours: Math.round(Number(document.getElementById("ot-holiday-night").value)),
+    weekdayNormalHours: overtimeExempt ? 0 : Math.round(Number(document.getElementById("ot-weekday-normal").value)),
+    weekdayNightHours: overtimeExempt ? 0 : Math.round(Number(document.getElementById("ot-weekday-night").value)),
+    holidayNormalHours: overtimeExempt ? 0 : Math.round(Number(document.getElementById("ot-holiday-normal").value)),
+    holidayNightHours: overtimeExempt ? 0 : Math.round(Number(document.getElementById("ot-holiday-night").value)),
   };
 }
 
@@ -64,6 +70,24 @@ function renderResult(result) {
   document.getElementById("r-annual").textContent = yen.format(result.annualIncome);
   document.getElementById("r-annual-hero").textContent = yen.format(result.annualIncome);
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
+}
+
+function populateCurrentStaffTypeOptions() {
+  const select = document.getElementById("current-staff-type");
+  select.innerHTML = "";
+  Object.entries(MERIT_RATE_CATEGORIES).forEach(([key, category]) => {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = category.label;
+    select.appendChild(opt);
+  });
+  select.value = "general";
+}
+
+function updateOvertimeVisibility() {
+  const exempt = isOvertimeExempt();
+  document.getElementById("ot-hours-fields").hidden = exempt;
+  document.getElementById("ot-management-note").hidden = !exempt;
 }
 
 function populateMeritStaffTypeOptions(period) {
@@ -96,6 +120,7 @@ function populateMeritGradeOptions(period) {
 
 function recalculate() {
   saveFormState("index", document.getElementById("calc-form"));
+  updateOvertimeVisibility();
   const input = readInput();
   const result = calculateSalary(input);
   renderResult(result);
@@ -131,6 +156,7 @@ function initForm() {
   populateRegionalRateOptions();
   populateRegionalRateRegionOptions();
   populateRegionalRateTable();
+  populateCurrentStaffTypeOptions();
   ["june", "december"].forEach((period) => {
     populateMeritStaffTypeOptions(period);
     const savedStaffType = saved && saved[`merit-staff-type-${period}`];
@@ -146,6 +172,7 @@ function initForm() {
   applySavedFormValues(form, saved);
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
   updateVisibility(); // 復元したhousing-eligible等の値を反映し直す
+  updateOvertimeVisibility(); // 復元したcurrent-staff-typeの値を反映し直す
   updateHonshoAmountHint();
   updateHousingAmountHint();
   wireCounterButtons(form);

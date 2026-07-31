@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-NDJ339KS');</script>
+<!-- End Google Tag Manager -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="国家公務員の俸給・地域手当・扶養手当・住居手当・本省手当・期末勤勉手当・超過勤務手当から月給と年収を概算するシミュレーターです。">
@@ -9,6 +16,10 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NDJ339KS"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 <header class="site-header">
   <h1>国家公務員給与計算シミュレーター</h1>
   <p class="subtitle">行政職俸給表(一)を想定した月給・賞与・年収の概算計算ツール</p>
@@ -34,7 +45,6 @@
           <input type="number" id="grade" name="grade" min="1" value="1" readonly>
           <button type="button" class="counter-btn" data-target="grade" data-delta="1" aria-label="級を上げる">＋</button>
         </div>
-        <p class="hint" id="grade-max">/ 1級</p>
       </div>
       <div class="field">
         <label for="step">号俸</label>
@@ -43,7 +53,6 @@
           <input type="number" id="step" name="step" min="1" value="1" readonly>
           <button type="button" class="counter-btn" data-target="step" data-delta="1" aria-label="号俸を上げる">＋</button>
         </div>
-        <p class="hint" id="step-max">/ 1号俸</p>
         <div class="step-buttons" role="group" aria-label="昇給シミュレーション">
           <button type="button" class="step-btn" data-delta="-8">-8</button>
           <button type="button" class="step-btn" data-delta="-6">-6</button>
@@ -201,20 +210,29 @@
         月60時間を超える時間外勤務（休日を除く）は150%／深夜175%に切り替わります。
       </p>
       <div class="field">
-        <label for="ot-weekday-normal">平日の時間外勤務（深夜を除く・月間合計時間）</label>
-        <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="1" value="0">
+        <label for="current-staff-type">職員区分（現在）</label>
+        <select id="current-staff-type" name="current-staff-type"></select>
+        <p class="hint" id="ot-management-note" hidden>
+          管理職（特定管理職員・指定職職員）は超過勤務手当の支給対象外のため、0円で計算します。
+        </p>
       </div>
-      <div class="field">
-        <label for="ot-weekday-night">深夜(22時〜翌5時)の時間外勤務時間</label>
-        <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="1" value="0">
-      </div>
-      <div class="field">
-        <label for="ot-holiday-normal">休日勤務（深夜を除く・月間合計時間）</label>
-        <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="1" value="0">
-      </div>
-      <div class="field">
-        <label for="ot-holiday-night">深夜(22時〜翌5時)の休日勤務時間</label>
-        <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="1" value="0">
+      <div id="ot-hours-fields">
+        <div class="field">
+          <label for="ot-weekday-normal">平日の時間外勤務（深夜を除く・月間合計時間）</label>
+          <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="1" value="0">
+        </div>
+        <div class="field">
+          <label for="ot-weekday-night">深夜(22時〜翌5時)の時間外勤務時間</label>
+          <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="1" value="0">
+        </div>
+        <div class="field">
+          <label for="ot-holiday-normal">休日勤務（深夜を除く・月間合計時間）</label>
+          <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="1" value="0">
+        </div>
+        <div class="field">
+          <label for="ot-holiday-night">深夜(22時〜翌5時)の休日勤務時間</label>
+          <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="1" value="0">
+        </div>
       </div>
     </fieldset>
 
