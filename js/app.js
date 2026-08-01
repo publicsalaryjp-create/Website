@@ -22,8 +22,6 @@ function updateVintageNote() {
   const vintage = getVintage(CURRENT_VINTAGE_KEY);
   if (vintage && !vintage.available) {
     note.textContent = "このバージョンのデータはまだ登録されていません。現行の俸給表で計算しています。";
-  } else if (vintage && vintage.effectiveDate) {
-    note.textContent = `${vintage.effectiveDate} 施行の俸給表を使用しています。`;
   } else {
     note.textContent = "";
   }
@@ -69,6 +67,7 @@ function renderResult(result) {
   document.getElementById("r-bonus-annual").textContent = yen.format(result.bonusAnnual);
   document.getElementById("r-annual").textContent = yen.format(result.annualIncome);
   document.getElementById("r-annual-hero").textContent = yen.format(result.annualIncome);
+  document.getElementById("r-annual-floating").textContent = yen.format(result.annualIncome);
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
 }
 

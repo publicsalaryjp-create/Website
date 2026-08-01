@@ -20,6 +20,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NDJ339KS"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
+<div class="mobile-floating-result" id="mobile-floating-result" aria-live="polite">
+  <span class="mobile-floating-result-label">年収 概算</span>
+  <span class="mobile-floating-result-value" id="r-annual-floating">-</span>
+</div>
 <header class="site-header">
   <h1>国家公務員給与計算シミュレーター</h1>
   <p class="subtitle">行政職俸給表(一)を想定した月給・賞与・年収の概算計算ツール</p>
@@ -37,12 +41,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="field">
         <label for="salary-table">適用される俸給表</label>
         <select id="salary-table" name="salary-table"></select>
+        <p class="hint" id="table-note"></p>
       </div>
       <div class="field" id="grade-field">
         <label for="grade">職務の級</label>
         <div class="counter-input">
           <button type="button" class="counter-btn" data-target="grade" data-delta="-1" aria-label="級を下げる">−</button>
-          <input type="number" id="grade" name="grade" min="1" value="1" readonly>
+          <select id="grade" name="grade"></select>
           <button type="button" class="counter-btn" data-target="grade" data-delta="1" aria-label="級を上げる">＋</button>
         </div>
       </div>
@@ -50,7 +55,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <label for="step">号俸</label>
         <div class="counter-input">
           <button type="button" class="counter-btn" data-target="step" data-delta="-1" aria-label="号俸を下げる">−</button>
-          <input type="number" id="step" name="step" min="1" value="1" readonly>
+          <select id="step" name="step"></select>
           <button type="button" class="counter-btn" data-target="step" data-delta="1" aria-label="号俸を上げる">＋</button>
         </div>
         <div class="step-buttons" role="group" aria-label="昇給シミュレーション">

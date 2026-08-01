@@ -27,6 +27,29 @@ function currentTableType() {
   return table ? table.type : "graded";
 }
 
+/**
+ * 俸給表のlabel（例:「行政職俸給表(一)　― 一般行政事務など、他の表の適用を受けない職員」）を
+ * 表名と説明に分割する。プルダウンの選択肢は幅が狭く説明部分が読み切れないため、
+ * 説明は別途ヒントテキストとして表示する（updateTableNote参照）。
+ */
+function splitTableLabel(label) {
+  const separator = "　―";
+  const idx = label.indexOf(separator);
+  if (idx === -1) return { name: label, description: "" };
+  return {
+    name: label.slice(0, idx),
+    description: label.slice(idx + separator.length).trim(),
+  };
+}
+
+/** 現在選択中の俸給表の説明文を、選択欄の下のヒントテキストに表示する */
+function updateTableNote() {
+  const note = document.getElementById("table-note");
+  if (!note) return;
+  const table = getTable(currentTableKey());
+  note.textContent = table ? splitTableLabel(table.label).description : "";
+}
+
 function populateSalaryTableOptions(defaultKey) {
   const select = document.getElementById("salary-table");
   select.innerHTML = "";
@@ -35,16 +58,17 @@ function populateSalaryTableOptions(defaultKey) {
     if (!table) return;
     const opt = document.createElement("option");
     opt.value = key;
-    opt.textContent = table.label;
+    opt.textContent = splitTableLabel(table.label).name;
     select.appendChild(opt);
   });
   if (defaultKey && getVisibleTableKeys().includes(defaultKey)) {
     select.value = defaultKey;
   }
+  updateTableNote();
 }
 
 function populateGradeOptions(defaultGrade) {
-  const gradeInput = document.getElementById("grade");
+  const gradeSelect = document.getElementById("grade");
   const table = getTable(currentTableKey());
   if (!table || table.type !== "graded") return;
   const grades = Object.keys(table.grades)
@@ -52,21 +76,31 @@ function populateGradeOptions(defaultGrade) {
     .sort((a, b) => a - b);
   const minGrade = grades[0];
   const maxGrade = grades[grades.length - 1];
-  gradeInput.min = minGrade;
-  gradeInput.max = maxGrade;
-  const candidate = defaultGrade != null ? Number(defaultGrade) : Number(gradeInput.value) || minGrade;
-  gradeInput.value = Math.min(Math.max(candidate, minGrade), maxGrade);
+  const candidate = defaultGrade != null ? Number(defaultGrade) : Number(gradeSelect.value) || minGrade;
+  gradeSelect.innerHTML = "";
+  grades.forEach((g) => {
+    const opt = document.createElement("option");
+    opt.value = g;
+    opt.textContent = `${g}級`;
+    gradeSelect.appendChild(opt);
+  });
+  gradeSelect.value = Math.min(Math.max(candidate, minGrade), maxGrade);
 }
 
 function populateStepOptions() {
   const tableKey = currentTableKey();
   const grade = document.getElementById("grade").value;
-  const stepInput = document.getElementById("step");
-  const currentValue = Number(stepInput.value) || 1;
+  const stepSelect = document.getElementById("step");
+  const currentValue = Number(stepSelect.value) || 1;
   const maxStep = getMaxStep(tableKey, grade);
-  stepInput.min = 1;
-  stepInput.max = maxStep;
-  stepInput.value = Math.min(Math.max(currentValue, 1), maxStep);
+  stepSelect.innerHTML = "";
+  for (let step = 1; step <= maxStep; step++) {
+    const opt = document.createElement("option");
+    opt.value = step;
+    opt.textContent = `${step}号`;
+    stepSelect.appendChild(opt);
+  }
+  stepSelect.value = Math.min(Math.max(currentValue, 1), maxStep);
 }
 
 function regionalRateLabel(r) {
@@ -170,9 +204,10 @@ function updateVisibility() {
 
 /**
  * 扶養親族数・職務の級・号俸などのボタン選択式カウンター（.counter-btn）を配線する。
- * ボタンは data-target（対象inputのid）とdata-delta（増減量）を持つ。
- * 対象inputに max 属性がある場合はその値も上限としてクランプする（扶養親族数のように
- * max未設定の場合は上限なし）。値の変更は対象inputへの"input"イベント発火で通知するため、
+ * ボタンは data-target（対象input/selectのid）とdata-delta（増減量）を持つ。
+ * 対象がinputでmax属性がある場合はその値を上限としてクランプする（扶養親族数のように
+ * max未設定の場合は上限なし）。対象がselect（号俸など）の場合は選択肢の値の最小・最大値を
+ * 上限・下限とする。値の変更は対象への"input"イベント発火で通知するため、
  * wireCommonFormEvents()側の再計算・保存ロジックがそのまま動く。
  */
 function wireCounterButtons(form) {
@@ -180,8 +215,16 @@ function wireCounterButtons(form) {
     btn.addEventListener("click", () => {
       const target = document.getElementById(btn.dataset.target);
       if (!target) return;
-      const min = Number(target.min) || 0;
-      const max = target.max !== "" ? Number(target.max) : Infinity;
+      let min;
+      let max;
+      if (target.tagName === "SELECT") {
+        const values = Array.from(target.options).map((o) => Number(o.value));
+        min = Math.min(...values);
+        max = Math.max(...values);
+      } else {
+        min = Number(target.min) || 0;
+        max = target.max !== "" ? Number(target.max) : Infinity;
+      }
       const delta = Number(btn.dataset.delta);
       target.value = Math.min(Math.max((Number(target.value) || 0) + delta, min), max);
       target.dispatchEvent(new Event("input", { bubbles: true }));
@@ -319,6 +362,7 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
     if (e.target.id === "salary-table") {
       populateGradeOptions();
       populateStepOptions();
+      updateTableNote();
     }
     if (e.target.id === "grade") {
       populateStepOptions();

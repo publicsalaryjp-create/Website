@@ -326,6 +326,15 @@ input:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+.counter-input select {
+  flex: 1;
+  padding-left: 34px;
+  text-align: center;
+  text-align-last: center;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .counter-btn {
   flex: 0 0 auto;
   width: 38px;
@@ -517,6 +526,52 @@ input:focus-visible {
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+}
+
+/* ---------------------------------------------------------------------- */
+/* スマホ版: 年収概算のフローティング表示                                 */
+/* 画面幅760px以下ではフォームと計算結果が縦積みになり、結果を確認するには */
+/* フォーム全体をスクロールする必要があるため、入力の変更が即座に見える   */
+/* よう年収概算だけを画面下部に固定表示する。                             */
+/* ---------------------------------------------------------------------- */
+
+.mobile-floating-result {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .mobile-floating-result {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    box-shadow: 0 -4px 16px rgba(19, 55, 88, 0.25);
+    color: #fff;
+  }
+
+  .mobile-floating-result-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    opacity: 0.88;
+  }
+
+  .mobile-floating-result-value {
+    font-size: 1.3rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  body {
+    padding-bottom: calc(52px + env(safe-area-inset-bottom));
+  }
 }
 
 .result-detail-heading {
