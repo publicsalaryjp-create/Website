@@ -35,18 +35,26 @@ function updateVintageNote() {
   }
 }
 
+// 職員区分は「職員区分」ラジオボタン（一般職員／特定管理職員）で、俸給の特別調整額・
+// 期末勤勉手当の両方に共通して使用する。指定職俸給表を選んでいる場合はラジオボタンを
+// 表示せず、常に指定職職員の区分を適用する。
+function currentMeritStaffTypeKey() {
+  if (currentTableKey() === "designated") return "designated";
+  return isSpecialAdjustmentManager() ? "senior_manager" : "general";
+}
+
 function currentMeritRate(period) {
-  const staffType = document.getElementById(`merit-staff-type-${period}`).value;
+  const staffType = currentMeritStaffTypeKey();
   const gradeKey = document.getElementById(`merit-grade-${period}`).value;
   const category = MERIT_RATE_CATEGORIES[staffType];
   const grade = category && category.grades.find((g) => g.key === gradeKey);
   return grade && grade.rate != null ? grade.rate : 1;
 }
 
-// 管理職（特定管理職員・指定職職員）は超過勤務手当の支給対象外のため、時間を0として扱う。
-// 指定職俸給表を適用している場合は職員区分の選択にかかわらず常に対象外とする。
+// 管理職（俸給の特別調整額の対象・指定職職員）は超過勤務手当の支給対象外のため、時間を0として扱う。
+// 指定職俸給表を適用している場合は常に対象外、行政職俸給表(一)等では「特定管理職員」選択時に対象外とする。
 function isOvertimeExempt() {
-  return currentTableKey() === "designated" || document.getElementById("current-staff-type").value !== "general";
+  return currentTableKey() === "designated" || isSpecialAdjustmentManager();
 }
 
 function readInput() {
@@ -64,9 +72,25 @@ function readInput() {
   };
 }
 
+/** 平日125%・深夜150%・休日135%・休日深夜160%の各時間単価（月60時間超の割増分は別途注記で案内） */
+function renderOvertimeRateHints(overtimeHourlyWage) {
+  const rateHints = [
+    ["ot-weekday-normal-rate-hint", OVERTIME_RATES.weekdayNormal],
+    ["ot-weekday-night-rate-hint", OVERTIME_RATES.weekdayNight],
+    ["ot-holiday-normal-rate-hint", OVERTIME_RATES.holidayNormal],
+    ["ot-holiday-night-rate-hint", OVERTIME_RATES.holidayNight],
+  ];
+  rateHints.forEach(([id, rate]) => {
+    const hint = document.getElementById(id);
+    if (!hint) return;
+    const percent = Math.round(rate * 100);
+    hint.textContent = `時間単価: ${yen.format(Math.round(overtimeHourlyWage * rate))} /時間（${percent}%）`;
+  });
+}
+
 function renderResult(result) {
   renderCommonResult(result);
-  document.getElementById("r-ot-hourly").textContent = `${yen.format(result.overtimeHourlyWage)} /時間`;
+  renderOvertimeRateHints(result.overtimeHourlyWage);
   document.getElementById("r-ot-allowance").textContent = yen.format(result.overtimeAllowance);
   document.getElementById("r-monthly-total-ot").textContent = yen.format(result.monthlyTotalWithOvertime);
   document.getElementById("r-teishu-june").textContent = yen.format(result.teishuJune);
@@ -80,44 +104,59 @@ function renderResult(result) {
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
 }
 
-function populateCurrentStaffTypeOptions() {
-  const select = document.getElementById("current-staff-type");
+/** 職務の級で選択可能な俸給の特別調整額の区分（一種〜五種等）をプルダウンに反映する */
+function populateSpecialAdjustmentCategoryOptions() {
+  const select = document.getElementById("special-adjustment-category");
+  const grade = Number(document.getElementById("grade").value);
+  const options = getSpecialAdjustmentOptions(currentTableKey(), grade);
   select.innerHTML = "";
-  Object.entries(MERIT_RATE_CATEGORIES).forEach(([key, category]) => {
-    const opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = category.label;
-    select.appendChild(opt);
+  options.forEach((opt) => {
+    const el = document.createElement("option");
+    el.value = opt.key;
+    el.textContent = opt.label;
+    select.appendChild(el);
   });
-  select.value = "general";
+  if (options.length) select.value = options[0].key;
+}
+
+/** 選択中の俸給の特別調整額の区分に対応する定額をヒント表示する */
+function updateSpecialAdjustmentAmountHint() {
+  const hint = document.getElementById("special-adjustment-amount-hint");
+  if (!hint) return;
+  if (!isSpecialAdjustmentManager()) {
+    hint.textContent = "";
+    return;
+  }
+  const grade = Number(document.getElementById("grade").value);
+  const categoryKey = document.getElementById("special-adjustment-category").value;
+  const amount = getSpecialAdjustmentAmount(currentTableKey(), grade, categoryKey);
+  hint.textContent = amount > 0 ? `${grade}級の特別調整額: ${yen.format(amount)}` : "";
+}
+
+/**
+ * 俸給の特別調整額は対象区分（一種〜五種）が定められている級（行政職俸給表(一)の4〜10級）でのみ
+ * 選択できる。対象区分がない級（1〜3級等）や他の俸給表では項目自体を隠し、
+ * 「特定管理職員」が選ばれたままにならないよう一般職員に戻す。
+ */
+function updateSpecialAdjustmentVisibility() {
+  const grade = Number(document.getElementById("grade").value);
+  const options = getSpecialAdjustmentOptions(currentTableKey(), grade);
+  const field = document.getElementById("special-adjustment-field");
+  if (field) field.hidden = options.length === 0;
+
+  if (options.length === 0 && isSpecialAdjustmentManager()) {
+    const generalRadio = document.getElementById("special-adjustment-type-general");
+    if (generalRadio) generalRadio.checked = true;
+  }
+
+  const categoryField = document.getElementById("special-adjustment-category-field");
+  if (categoryField) categoryField.hidden = !isSpecialAdjustmentManager();
 }
 
 function updateOvertimeVisibility() {
   const exempt = isOvertimeExempt();
   document.getElementById("ot-hours-fields").hidden = exempt;
   document.getElementById("ot-management-note").hidden = !exempt;
-}
-
-// 指定職俸給表を選んでいる場合は勤勉手当の職員区分も「指定職職員」で固定し、選択させない。
-// それ以外（行政職俸給表(一)）の場合は指定職職員を選ばせない（一般職員・特定管理職員のみ）。
-function populateMeritStaffTypeOptions(period) {
-  const select = document.getElementById(`merit-staff-type-${period}`);
-  const isDesignatedTable = currentTableKey() === "designated";
-  select.innerHTML = "";
-  Object.entries(MERIT_RATE_CATEGORIES).forEach(([key, category]) => {
-    if (isDesignatedTable !== (key === "designated")) return;
-    const opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = category.label;
-    select.appendChild(opt);
-  });
-  select.value = isDesignatedTable ? "designated" : "general";
-}
-
-function updateMeritStaffTypeVisibility() {
-  const hide = currentTableKey() === "designated";
-  document.getElementById("merit-staff-type-field-june").hidden = hide;
-  document.getElementById("merit-staff-type-field-december").hidden = hide;
 }
 
 /**
@@ -136,7 +175,7 @@ function splitGradeLabel(label) {
 
 function populateMeritGradeOptions(period) {
   const select = document.getElementById(`merit-grade-${period}`);
-  const staffType = document.getElementById(`merit-staff-type-${period}`).value;
+  const staffType = currentMeritStaffTypeKey();
   const category = MERIT_RATE_CATEGORIES[staffType];
   select.innerHTML = "";
   category.grades
@@ -155,7 +194,7 @@ function populateMeritGradeOptions(period) {
 function updateMeritGradeNote(period) {
   const note = document.getElementById(`merit-grade-${period}-note`);
   if (!note) return;
-  const staffType = document.getElementById(`merit-staff-type-${period}`).value;
+  const staffType = currentMeritStaffTypeKey();
   const gradeKey = document.getElementById(`merit-grade-${period}`).value;
   const category = MERIT_RATE_CATEGORIES[staffType];
   const grade = category && category.grades.find((g) => g.key === gradeKey);
@@ -189,11 +228,12 @@ async function handleVintageChange(e) {
   populateGradeOptions();
   populateStepOptions();
   updateVisibility();
+  populateSpecialAdjustmentCategoryOptions();
+  updateSpecialAdjustmentVisibility();
   ["june", "december"].forEach((period) => {
-    populateMeritStaffTypeOptions(period);
     populateMeritGradeOptions(period);
   });
-  updateMeritStaffTypeVisibility();
+  updateSpecialAdjustmentAmountHint();
 }
 
 function initForm() {
@@ -207,27 +247,32 @@ function initForm() {
   populateRegionalRateOptions();
   populateRegionalRateRegionOptions();
   populateRegionalRateTable();
-  populateCurrentStaffTypeOptions();
   ["child-under15-count", "child-16to22-count", "parent-count"].forEach(populateDependentCountOptions);
+
+  // 職員区分（ラジオボタン）は勤勉手当の成績率区分にも影響するため、
+  // 成績率区分の選択肢を正しいカテゴリで生成できるよう先に復元しておく。
+  const savedSpecialAdjustmentType = saved && saved["special-adjustment-type"];
+  if (savedSpecialAdjustmentType === "manager" || savedSpecialAdjustmentType === "general") {
+    const radio = document.getElementById(
+      savedSpecialAdjustmentType === "manager" ? "special-adjustment-type-manager" : "special-adjustment-type-general"
+    );
+    if (radio) radio.checked = true;
+  }
+  populateSpecialAdjustmentCategoryOptions();
+  updateSpecialAdjustmentVisibility(); // 復元した級・区分の組み合わせが無効なら一般職員に戻す
   ["june", "december"].forEach((period) => {
-    populateMeritStaffTypeOptions(period);
-    const savedStaffType = saved && saved[`merit-staff-type-${period}`];
-    if (savedStaffType) {
-      const staffTypeSelect = document.getElementById(`merit-staff-type-${period}`);
-      if (Array.from(staffTypeSelect.options).some((o) => o.value === savedStaffType)) {
-        staffTypeSelect.value = savedStaffType;
-      }
-    }
     populateMeritGradeOptions(period);
   });
   updateVisibility();
-  updateMeritStaffTypeVisibility();
   applySavedFormValues(form, saved);
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
   updateVisibility(); // 復元したhousing-eligible等の値を反映し直す
-  updateOvertimeVisibility(); // 復元したcurrent-staff-typeの値を反映し直す
+  updateSpecialAdjustmentVisibility(); // 復元したspecial-adjustment-typeの値を反映し直す
+  updateOvertimeVisibility(); // 復元した職員区分の値を反映し直す
   updateHonshoAmountHint();
   updateHousingAmountHint();
+  updateParentAllowanceHint();
+  updateSpecialAdjustmentAmountHint();
   updateMeritGradeNote("june"); // 復元した勤務成績区分の値を反映し直す
   updateMeritGradeNote("december");
   wireCounterButtons(form);
@@ -235,15 +280,26 @@ function initForm() {
 
   wireCommonFormEvents(form, {
     onInputExtra: (e) => {
+      const wasManager = isSpecialAdjustmentManager();
+
       if (e.target.id === "salary-table") {
-        ["june", "december"].forEach((period) => {
-          populateMeritStaffTypeOptions(period);
-          populateMeritGradeOptions(period);
-        });
-        updateMeritStaffTypeVisibility();
+        populateSpecialAdjustmentCategoryOptions();
       }
-      if (e.target.id === "merit-staff-type-june") populateMeritGradeOptions("june");
-      if (e.target.id === "merit-staff-type-december") populateMeritGradeOptions("december");
+      if (e.target.id === "grade") {
+        populateSpecialAdjustmentCategoryOptions();
+      }
+      updateSpecialAdjustmentVisibility(); // 級変更等で対象外になった場合はここで一般職員に自動リセットされる
+      updateSpecialAdjustmentAmountHint();
+
+      // 職員区分（一般職員／特定管理職員）が実際に変わった場合のみ、勤勉手当の成績率区分を
+      // 作り直す（毎回作り直すと号俸変更のたびに選択中の成績区分がリセットされてしまうため）。
+      const categoryMayHaveChanged =
+        e.target.id === "salary-table" ||
+        e.target.name === "special-adjustment-type" ||
+        wasManager !== isSpecialAdjustmentManager();
+      if (categoryMayHaveChanged) {
+        ["june", "december"].forEach((period) => populateMeritGradeOptions(period));
+      }
       if (e.target.id === "merit-grade-june") updateMeritGradeNote("june");
       if (e.target.id === "merit-grade-december") updateMeritGradeNote("december");
     },

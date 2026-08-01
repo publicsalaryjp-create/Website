@@ -68,6 +68,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <p class="hint" id="step-buttons-hint">昇給の号俸数の目安（標準4、良好6、特に良好8）で号俸を上下できます。</p>
       </div>
+      <div class="field" id="special-adjustment-field">
+        <span class="field-label-text">職員区分</span>
+        <div class="radio-group" role="radiogroup" aria-label="職員区分">
+          <label class="radio-option">
+            <input type="radio" id="special-adjustment-type-general" name="special-adjustment-type" value="general" checked>
+            一般職員
+          </label>
+          <label class="radio-option">
+            <input type="radio" id="special-adjustment-type-manager" name="special-adjustment-type" value="manager">
+            特定管理職員
+          </label>
+        </div>
+        <div class="hint-toggle">
+          <p class="hint hint-short">特定管理職員は俸給の特別調整額（管理職手当）が支給され超過勤務手当は対象外に、期末・勤勉手当も特定管理職員の区分で計算します。</p>
+          <button type="button" class="hint-toggle-btn" data-target="detail-special-adjustment" aria-expanded="false" aria-controls="detail-special-adjustment" aria-label="詳しい説明を表示">？</button>
+        </div>
+        <p class="hint hint-detail" id="detail-special-adjustment" hidden>
+          俸給の特別調整額は、本府省課長・室長級以上等の管理監督職員に、超過勤務手当に代えて支給される
+          定額の手当です（人事院規則9-17）。行政職俸給表(一)の職務の級ごとに定められた区分
+          （一種〜五種）に応じた定額で計算します。この職員区分は期末・勤勉手当（6月期・12月期とも）の
+          区分にも共通して使用します。
+        </p>
+        <div class="field" id="special-adjustment-category-field" hidden>
+          <label for="special-adjustment-category">区分</label>
+          <select id="special-adjustment-category" name="special-adjustment-category"></select>
+          <p class="hint" id="special-adjustment-amount-hint"></p>
+        </div>
+      </div>
     </fieldset>
 
     <fieldset>
@@ -100,61 +128,81 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </fieldset>
 
     <fieldset>
-      <legend>扶養手当</legend>
-      <div class="field">
-        <label for="child-under15-count">扶養する子の数（15歳以下）</label>
-        <div class="counter-input">
-          <button type="button" class="counter-btn" data-target="child-under15-count" data-delta="-1" aria-label="減らす">−</button>
-          <select id="child-under15-count" name="child-under15-count" class="select-center"></select>
-          <button type="button" class="counter-btn" data-target="child-under15-count" data-delta="1" aria-label="増やす">＋</button>
+      <legend>
+        扶養手当
+        <button type="button" class="hint-toggle-btn" data-target="detail-parent-allowance" aria-expanded="false" aria-controls="detail-parent-allowance" aria-label="扶養する父母等の数の詳しい説明を表示">？</button>
+      </legend>
+      <p class="hint hint-detail" id="detail-parent-allowance" hidden>
+        扶養する父母等の数の手当額について: 行政職俸給表(一)8級職員等は3,500円に減額され、
+        9級以上職員等は支給されません。
+      </p>
+      <p class="hint" id="dependent-exempt-note" hidden>
+        指定職職員は扶養手当の支給対象外のため、0円で計算します。
+      </p>
+      <div id="dependent-fields">
+        <div class="field">
+          <label for="child-under15-count">扶養する子の数（15歳以下）</label>
+          <div class="counter-input">
+            <button type="button" class="counter-btn" data-target="child-under15-count" data-delta="-1" aria-label="減らす">−</button>
+            <select id="child-under15-count" name="child-under15-count" class="select-center"></select>
+            <button type="button" class="counter-btn" data-target="child-under15-count" data-delta="1" aria-label="増やす">＋</button>
+          </div>
+          <p class="hint">1人あたり13,000円</p>
         </div>
-      </div>
-      <div class="field">
-        <label for="child-16to22-count">扶養する子の数（16歳以上22歳以下）</label>
-        <div class="counter-input">
-          <button type="button" class="counter-btn" data-target="child-16to22-count" data-delta="-1" aria-label="減らす">−</button>
-          <select id="child-16to22-count" name="child-16to22-count" class="select-center"></select>
-          <button type="button" class="counter-btn" data-target="child-16to22-count" data-delta="1" aria-label="増やす">＋</button>
+        <div class="field">
+          <label for="child-16to22-count">扶養する子の数（16歳以上22歳以下）</label>
+          <div class="counter-input">
+            <button type="button" class="counter-btn" data-target="child-16to22-count" data-delta="-1" aria-label="減らす">−</button>
+            <select id="child-16to22-count" name="child-16to22-count" class="select-center"></select>
+            <button type="button" class="counter-btn" data-target="child-16to22-count" data-delta="1" aria-label="増やす">＋</button>
+          </div>
+          <p class="hint">1人あたり18,000円</p>
         </div>
-      </div>
-      <div class="field">
-        <label for="parent-count">扶養する父母等の数</label>
-        <div class="counter-input">
-          <button type="button" class="counter-btn" data-target="parent-count" data-delta="-1" aria-label="減らす">−</button>
-          <select id="parent-count" name="parent-count" class="select-center"></select>
-          <button type="button" class="counter-btn" data-target="parent-count" data-delta="1" aria-label="増やす">＋</button>
+        <div class="field" id="parent-count-field">
+          <label for="parent-count">扶養する父母等の数</label>
+          <div class="counter-input">
+            <button type="button" class="counter-btn" data-target="parent-count" data-delta="-1" aria-label="減らす">−</button>
+            <select id="parent-count" name="parent-count" class="select-center"></select>
+            <button type="button" class="counter-btn" data-target="parent-count" data-delta="1" aria-label="増やす">＋</button>
+          </div>
+          <p class="hint" id="parent-allowance-hint"></p>
         </div>
       </div>
     </fieldset>
 
     <fieldset>
       <legend>住居手当</legend>
-      <div class="hint-toggle">
-        <p class="hint hint-short">借家・借間のみ対象。家賃の半額と28,000円の低い方が支給額です。</p>
-        <button type="button" class="hint-toggle-btn" data-target="detail-housing" aria-expanded="false" aria-controls="detail-housing" aria-label="詳しい説明を表示">？</button>
-      </div>
-      <p class="hint hint-detail" id="detail-housing" hidden>
-        借家・借間に住み、実際に家賃を支払っている場合のみ支給されます。
-        持ち家の場合は支給されません（持家世帯向けの住居手当は廃止済み）。
-        住居手当額 = 家賃月額の半額と28,000円のいずれか低い方です。
+      <p class="hint" id="housing-exempt-note" hidden>
+        指定職職員は住居手当の支給対象外です。
       </p>
-      <div class="field">
-        <span class="field-label-text">支給の有無</span>
-        <div class="radio-group" role="radiogroup" aria-label="住居手当の支給の有無">
-          <label class="radio-option">
-            <input type="radio" id="housing-eligible-no" name="housing-eligible" value="0" checked>
-            支給なし
-          </label>
-          <label class="radio-option">
-            <input type="radio" id="housing-eligible-yes" name="housing-eligible" value="1">
-            支給あり
-          </label>
+      <div id="housing-fields">
+        <div class="hint-toggle">
+          <p class="hint hint-short">借家・借間のみ対象。家賃の半額と28,000円の低い方が支給額です。</p>
+          <button type="button" class="hint-toggle-btn" data-target="detail-housing" aria-expanded="false" aria-controls="detail-housing" aria-label="詳しい説明を表示">？</button>
         </div>
-      </div>
-      <div class="field" id="housing-amount-field">
-        <label for="housing-rent">家賃（月額・円）</label>
-        <input type="number" id="housing-rent" name="housing-rent" min="0" step="1000" value="0">
-        <p class="hint" id="housing-amount-hint"></p>
+        <p class="hint hint-detail" id="detail-housing" hidden>
+          借家・借間に住み、実際に家賃を支払っている場合のみ支給されます。
+          持ち家の場合は支給されません（持家世帯向けの住居手当は廃止済み）。
+          住居手当額 = 家賃月額の半額と28,000円のいずれか低い方です。
+        </p>
+        <div class="field">
+          <span class="field-label-text">支給の有無</span>
+          <div class="radio-group" role="radiogroup" aria-label="住居手当の支給の有無">
+            <label class="radio-option">
+              <input type="radio" id="housing-eligible-no" name="housing-eligible" value="0" checked>
+              支給なし
+            </label>
+            <label class="radio-option">
+              <input type="radio" id="housing-eligible-yes" name="housing-eligible" value="1">
+              支給あり
+            </label>
+          </div>
+        </div>
+        <div class="field" id="housing-amount-field">
+          <label for="housing-rent">家賃（月額・円）</label>
+          <input type="number" id="housing-rent" name="housing-rent" min="0" step="1000" value="0">
+          <p class="hint" id="housing-amount-hint"></p>
+        </div>
       </div>
     </fieldset>
 
@@ -189,42 +237,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     </fieldset>
 
     <fieldset>
-      <legend>期末・勤勉手当（賞与）</legend>
-      <div class="hint-toggle">
-        <p class="hint hint-short">期末手当は支給月数、勤勉手当は成績率で計算します（6月期・12月期で別々に設定）。</p>
-        <button type="button" class="hint-toggle-btn" data-target="detail-bonus" aria-expanded="false" aria-controls="detail-bonus" aria-label="詳しい説明を表示">？</button>
-      </div>
-      <p class="hint hint-detail" id="detail-bonus" hidden>
-        期末手当 = 算定基礎額（俸給+地域手当）×支給月数（6月期・12月期はその半分）。
-        勤勉手当 = 算定基礎額×成績率（成績率が1回あたりの支給割合そのものを表すため、
-        月数は別途掛けません）（出典: 人事院「国家公務員の諸手当の概要」令和8年度）。
-        勤務成績は6月期・12月期でそれぞれ別に評価されるため、職員区分・成績区分も期別に設定します。
-      </p>
-      <div class="field">
-        <span class="field-label-text">期末手当の支給月数（参考値）</span>
-        <p class="hint">6月期 1.225月分／12月期 1.225月分（年間2.45月分）</p>
-      </div>
-      <div class="field" id="merit-staff-type-field-june">
-        <label for="merit-staff-type-june">職員区分（6月期）</label>
-        <select id="merit-staff-type-june" name="merit-staff-type-june"></select>
-      </div>
-      <div class="field">
-        <label for="merit-grade-june">勤務成績区分（6月期）</label>
-        <select id="merit-grade-june" name="merit-grade-june"></select>
-        <p class="hint" id="merit-grade-june-note"></p>
-      </div>
-      <div class="field" id="merit-staff-type-field-december">
-        <label for="merit-staff-type-december">職員区分（12月期）</label>
-        <select id="merit-staff-type-december" name="merit-staff-type-december"></select>
-      </div>
-      <div class="field">
-        <label for="merit-grade-december">勤務成績区分（12月期）</label>
-        <select id="merit-grade-december" name="merit-grade-december"></select>
-        <p class="hint" id="merit-grade-december-note"></p>
-      </div>
-    </fieldset>
-
-    <fieldset>
       <legend>超過勤務手当（残業代）</legend>
       <div class="hint-toggle">
         <p class="hint hint-short">平日125%・深夜150%・休日135%・休日深夜160%（月60時間超は割増）</p>
@@ -235,30 +247,76 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         平日時間外は125%、深夜(22時〜翌5時)は150%、休日勤務は135%、休日深夜は160%。
         月60時間を超える時間外勤務（休日を除く）は150%／深夜175%に切り替わります。
       </p>
-      <div class="field">
-        <label for="current-staff-type">職員区分（現在）</label>
-        <select id="current-staff-type" name="current-staff-type"></select>
-        <p class="hint" id="ot-management-note" hidden>
-          管理職（特定管理職員・指定職職員）は超過勤務手当の支給対象外のため、0円で計算します。
-        </p>
-      </div>
+      <p class="hint" id="ot-management-note" hidden>
+        管理職（俸給の特別調整額の対象・指定職職員）は超過勤務手当の支給対象外のため、0円で計算します。
+        上の「俸給」欄の職員区分、または俸給表の選択で判定します。
+      </p>
       <div id="ot-hours-fields">
         <div class="field">
-          <label for="ot-weekday-normal">平日の時間外勤務（深夜を除く・月間合計時間）</label>
-          <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="1" value="0">
+          <label for="ot-weekday-normal">平日の時間外勤務（22時〜翌5時を除く）</label>
+          <div class="counter-input">
+            <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="-1" aria-label="減らす">−</button>
+            <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="1" value="0">
+            <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="1" aria-label="増やす">＋</button>
+          </div>
+          <p class="hint" id="ot-weekday-normal-rate-hint"></p>
         </div>
         <div class="field">
-          <label for="ot-weekday-night">深夜(22時〜翌5時)の時間外勤務時間</label>
-          <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="1" value="0">
+          <label for="ot-weekday-night">平日の時間外勤務（22時〜翌5時）</label>
+          <div class="counter-input">
+            <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="-1" aria-label="減らす">−</button>
+            <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="1" value="0">
+            <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="1" aria-label="増やす">＋</button>
+          </div>
+          <p class="hint" id="ot-weekday-night-rate-hint"></p>
         </div>
         <div class="field">
-          <label for="ot-holiday-normal">休日勤務（深夜を除く・月間合計時間）</label>
-          <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="1" value="0">
+          <label for="ot-holiday-normal">休日の時間外勤務（22時〜翌5時を除く）</label>
+          <div class="counter-input">
+            <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="-1" aria-label="減らす">−</button>
+            <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="1" value="0">
+            <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="1" aria-label="増やす">＋</button>
+          </div>
+          <p class="hint" id="ot-holiday-normal-rate-hint"></p>
         </div>
         <div class="field">
-          <label for="ot-holiday-night">深夜(22時〜翌5時)の休日勤務時間</label>
-          <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="1" value="0">
+          <label for="ot-holiday-night">休日の時間外勤務（22時〜翌5時）</label>
+          <div class="counter-input">
+            <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="-1" aria-label="減らす">−</button>
+            <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="1" value="0">
+            <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="1" aria-label="増やす">＋</button>
+          </div>
+          <p class="hint" id="ot-holiday-night-rate-hint"></p>
         </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>期末・勤勉手当（賞与）</legend>
+      <div class="hint-toggle">
+        <p class="hint hint-short">期末手当は支給月数、勤勉手当は成績率で計算します（成績区分は6月期・12月期で別々に設定）。</p>
+        <button type="button" class="hint-toggle-btn" data-target="detail-bonus" aria-expanded="false" aria-controls="detail-bonus" aria-label="詳しい説明を表示">？</button>
+      </div>
+      <p class="hint hint-detail" id="detail-bonus" hidden>
+        期末手当 = 算定基礎額（俸給+地域手当）×支給月数（6月期・12月期はその半分）。
+        勤勉手当 = 算定基礎額×成績率（成績率が1回あたりの支給割合そのものを表すため、
+        月数は別途掛けません）（出典: 人事院「国家公務員の諸手当の概要」令和8年度）。
+        勤務成績は6月期・12月期でそれぞれ別に評価されるため、成績区分は期別に設定します
+        （職員区分は上の俸給欄で設定したものを6月期・12月期共通で使用します）。
+      </p>
+      <div class="field">
+        <span class="field-label-text">期末手当の支給月数（参考値）</span>
+        <p class="hint">6月期 1.225月分／12月期 1.225月分（年間2.45月分）</p>
+      </div>
+      <div class="field">
+        <label for="merit-grade-june">勤務成績区分（6月期）</label>
+        <select id="merit-grade-june" name="merit-grade-june" class="select-center"></select>
+        <p class="hint" id="merit-grade-june-note"></p>
+      </div>
+      <div class="field">
+        <label for="merit-grade-december">勤務成績区分（12月期）</label>
+        <select id="merit-grade-december" name="merit-grade-december" class="select-center"></select>
+        <p class="hint" id="merit-grade-december-note"></p>
       </div>
     </fieldset>
 
@@ -282,8 +340,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <tr><th>扶養手当</th><td id="r-dependent">-</td></tr>
         <tr><th>住居手当</th><td id="r-housing">-</td></tr>
         <tr><th>本省手当</th><td id="r-honsho">-</td></tr>
+        <tr><th>俸給の特別調整額</th><td id="r-special-adjustment">-</td></tr>
         <tr class="total-row"><th>月額支給額 合計（残業代除く）</th><td id="r-monthly-total">-</td></tr>
-        <tr><th>時間外勤務の時間単価</th><td id="r-ot-hourly">-</td></tr>
         <tr><th>超過勤務手当</th><td id="r-ot-allowance">-</td></tr>
         <tr class="total-row"><th>月額支給額 合計（残業代込み）</th><td id="r-monthly-total-ot">-</td></tr>
         <tr><th>期末手当（6月期）</th><td id="r-teishu-june">-</td></tr>

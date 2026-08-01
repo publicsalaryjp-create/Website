@@ -134,6 +134,7 @@ function populateRegionalRateOptions() {
     opt.textContent = regionalRateLabel(r);
     select.appendChild(opt);
   });
+  select.value = "0"; // デフォルトは非支給地（0%）
 }
 
 /** 地域名から級地区分を選ぶための補助プルダウンを描画する（代表例のみ・網羅的ではない） */
@@ -202,6 +203,31 @@ function updateHonshoAmountHint() {
   }
 }
 
+/** 父母等の扶養手当の1人あたり金額をヒント表示する（減額・不支給の詳細は？ボタンの説明文を参照） */
+function updateParentAllowanceHint() {
+  const hint = document.getElementById("parent-allowance-hint");
+  if (!hint) return;
+  const grade = Number(document.getElementById("grade").value);
+  const rate = getParentAllowanceRate(currentTableKey(), grade);
+  hint.textContent = `1人あたり${yen.format(rate)}`;
+}
+
+/**
+ * 父母等の扶養手当は、行政職俸給表(一)の9級以上職員等では支給されないため、
+ * 「扶養する父母等の数」の入力欄自体を隠し、値も0にリセットする。
+ */
+function updateParentCountVisibility() {
+  const field = document.getElementById("parent-count-field");
+  if (!field) return;
+  const grade = Number(document.getElementById("grade").value);
+  const hide = currentTableKey() === "administrative_1" && grade >= 9;
+  field.hidden = hide;
+  if (hide) {
+    const select = document.getElementById("parent-count");
+    if (select && select.value !== "0") select.value = "0";
+  }
+}
+
 /** 住居手当の「支給あり」選択時に、入力中の家賃から自動計算される金額をヒント表示する */
 function updateHousingAmountHint() {
   const hint = document.getElementById("housing-amount-hint");
@@ -224,6 +250,19 @@ function updateVisibility() {
   const stepButtonsHint = document.getElementById("step-buttons-hint");
   if (stepButtons) stepButtons.hidden = !isGraded;
   if (stepButtonsHint) stepButtonsHint.hidden = !isGraded;
+
+  // 指定職職員は扶養手当・住居手当の支給対象外のため、入力欄を隠して代わりに注記を表示する。
+  const isDesignated = currentTableKey() === "designated";
+  const dependentFields = document.getElementById("dependent-fields");
+  const dependentExemptNote = document.getElementById("dependent-exempt-note");
+  if (dependentFields) dependentFields.hidden = isDesignated;
+  if (dependentExemptNote) dependentExemptNote.hidden = !isDesignated;
+  const housingFields = document.getElementById("housing-fields");
+  const housingExemptNote = document.getElementById("housing-exempt-note");
+  if (housingFields) housingFields.hidden = isDesignated;
+  if (housingExemptNote) housingExemptNote.hidden = !isDesignated;
+
+  updateParentCountVisibility();
 }
 
 /**
@@ -342,13 +381,20 @@ function applySavedFormValues(form, saved) {
   });
 }
 
+/** 俸給の特別調整額の対象（特定管理職員）かどうか */
+function isSpecialAdjustmentManager() {
+  return radioValue("special-adjustment-type") === "manager";
+}
+
 /** 共通の入力項目（期末・勤勉手当や超過勤務時間など固有の項目は含まない） */
 function readCommonInput() {
   const grade = Number(document.getElementById("grade").value);
+  const tableKey = currentTableKey();
   const honshoEligible = radioValue("honsho-eligible") === "1";
   const housingEligible = radioValue("housing-eligible") === "1";
+  const specialAdjustmentCategory = document.getElementById("special-adjustment-category").value;
   return {
-    tableKey: currentTableKey(),
+    tableKey,
     grade,
     step: Number(document.getElementById("step").value),
     regionalRate: Number(document.getElementById("regional-rate").value),
@@ -357,6 +403,9 @@ function readCommonInput() {
     parentCount: Number(document.getElementById("parent-count").value),
     housingAllowance: housingEligible ? calcHousingAllowance(document.getElementById("housing-rent").value) : 0,
     honshoAllowance: honshoEligible ? getHonshoAllowanceAmount(grade) : 0,
+    specialAdjustmentAllowance: isSpecialAdjustmentManager()
+      ? getSpecialAdjustmentAmount(tableKey, grade, specialAdjustmentCategory)
+      : 0,
   };
 }
 
@@ -367,6 +416,7 @@ function renderCommonResult(result) {
   document.getElementById("r-dependent").textContent = yen.format(result.dependentAllowance);
   document.getElementById("r-housing").textContent = yen.format(result.housingAllowance);
   document.getElementById("r-honsho").textContent = yen.format(result.honshoAllowance);
+  document.getElementById("r-special-adjustment").textContent = yen.format(result.specialAdjustmentAllowance);
   document.getElementById("r-monthly-total").textContent = yen.format(result.monthlyTotal);
 }
 
@@ -416,6 +466,7 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
     updateVisibility();
     updateHonshoAmountHint();
     updateHousingAmountHint();
+    updateParentAllowanceHint();
     if (onInputExtra) await onInputExtra(e);
     onRecalculate();
   });
@@ -426,6 +477,7 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
     }
     updateHonshoAmountHint();
     updateHousingAmountHint();
+    updateParentAllowanceHint();
     if (onChangeExtra) await onChangeExtra(e);
     onRecalculate();
   });

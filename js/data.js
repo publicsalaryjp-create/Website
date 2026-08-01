@@ -193,11 +193,83 @@ const REGIONAL_ALLOWANCE_REGION_EXAMPLES = [
 const DEPENDENT_ALLOWANCE_RATES = {
   childUnder15: 13000, // 子（15歳以下）
   child16to22: 18000, // 子（16歳以上22歳以下、加算5,000円込み）
-  parent: 6500, // 父母等（年度別の正式額は未確認）
+  parent: 6500, // 父母等（行政職俸給表(一)8級以上は下記PARENT_ALLOWANCE_GRADE_OVERRIDESで減額・不支給）
 };
 
+// 父母等の扶養手当は、行政職俸給表(一)の職務の級が上がると減額・不支給となる
+// （行政職俸給表(一)8級職員等は3,500円、9級以上職員等は支給なし）。
+// この読み替えは行政職俸給表(一)を選択している場合のみ適用し、それ以外の俸給表
+// （指定職俸給表など）を選んでいる場合は簡略化のため一律 DEPENDENT_ALLOWANCE_RATES.parent とする
+// （本省手当の「相当する職務の級」の読み替えを省略する簡略化と同様の考え方）。
+const PARENT_ALLOWANCE_GRADE_OVERRIDE_TABLE_KEY = "administrative_1";
+const PARENT_ALLOWANCE_GRADE_OVERRIDES = {
+  8: 3500,
+  9: 0,
+};
+
+function getParentAllowanceRate(tableKey, grade) {
+  if (tableKey === PARENT_ALLOWANCE_GRADE_OVERRIDE_TABLE_KEY) {
+    if (grade >= 9) return PARENT_ALLOWANCE_GRADE_OVERRIDES[9];
+    if (grade === 8) return PARENT_ALLOWANCE_GRADE_OVERRIDES[8];
+  }
+  return DEPENDENT_ALLOWANCE_RATES.parent;
+}
+
 // ---------------------------------------------------------------------------
-// 4. 住居手当
+// 4. 俸給の特別調整額（管理職手当）
+// ---------------------------------------------------------------------------
+// 出典: 人事院規則九―一七（俸給の特別調整額）別表第一 一 行政職俸給表（一）。
+// 本府省課長・室長級以上等の管理監督職員に、超過勤務手当に代えて支給される定額の手当。
+// 職務の級ごとに支給対象となる区分（一種〜五種）と定額が定められている
+// （1〜3級は支給対象区分がなく、この手当は支給されない）。
+const SPECIAL_ADJUSTMENT_ALLOWANCE_TABLE = {
+  administrative_1: {
+    10: [{ key: "type1", label: "一種", amount: 139300 }],
+    9: [
+      { key: "type1", label: "一種", amount: 130300 },
+      { key: "type2", label: "二種", amount: 104200 },
+    ],
+    8: [
+      { key: "type1", label: "一種", amount: 117500 },
+      { key: "type2", label: "二種", amount: 94000 },
+      { key: "type3", label: "三種", amount: 82200 },
+    ],
+    7: [
+      { key: "type2", label: "二種", amount: 88500 },
+      { key: "type3", label: "三種", amount: 77400 },
+      { key: "type4", label: "四種", amount: 66400 },
+    ],
+    6: [
+      { key: "type3", label: "三種", amount: 72700 },
+      { key: "type4", label: "四種", amount: 62300 },
+      { key: "type5", label: "五種", amount: 51900 },
+    ],
+    5: [
+      { key: "type4", label: "四種", amount: 59500 },
+      { key: "type5", label: "五種", amount: 49600 },
+    ],
+    4: [
+      { key: "type4", label: "四種", amount: 55500 },
+      { key: "type5", label: "五種", amount: 46300 },
+    ],
+  },
+};
+
+/** 指定した俸給表・職務の級で選択可能な俸給の特別調整額の区分一覧を返す（対象外の級は空配列） */
+function getSpecialAdjustmentOptions(tableKey, grade) {
+  const table = SPECIAL_ADJUSTMENT_ALLOWANCE_TABLE[tableKey];
+  return (table && table[grade]) || [];
+}
+
+/** 指定した俸給表・職務の級・区分キーに対応する俸給の特別調整額（円）を返す（該当なしは0円） */
+function getSpecialAdjustmentAmount(tableKey, grade, categoryKey) {
+  const options = getSpecialAdjustmentOptions(tableKey, grade);
+  const option = options.find((o) => o.key === categoryKey);
+  return option ? option.amount : 0;
+}
+
+// ---------------------------------------------------------------------------
+// 5. 住居手当
 // ---------------------------------------------------------------------------
 // 借家・借間に住み、実際に家賃を支払っている場合のみ支給される。
 // 住居手当額 = 家賃月額の半額と28,000円のいずれか低い方（簡略化した実際の計算方法）。
@@ -244,7 +316,7 @@ function getHonshoAllowanceAmount(grade) {
 }
 
 // ---------------------------------------------------------------------------
-// 5. 超過勤務手当（給与法第16条・人事院規則15-14に基づく割増率）
+// 6. 超過勤務手当（給与法第16条・人事院規則15-14に基づく割増率）
 // ---------------------------------------------------------------------------
 
 // 1週間の正規の勤務時間（38時間45分）。年間所定勤務時間 = WEEKLY_HOURS × 52 として時間単価を算定する。
@@ -267,7 +339,7 @@ const OVERTIME_MONTHLY_THRESHOLD_HOURS = 60; // これを超えた時間外勤�
 const TEISHU_MONTHS = 2.45;
 
 // ---------------------------------------------------------------------------
-// 6. 勤勉手当の成績率（令和8年度、人事院公表資料に基づく）
+// 7. 勤勉手当の成績率（令和8年度、人事院公表資料に基づく）
 // ---------------------------------------------------------------------------
 
 // 出典: 人事院「国家公務員の諸手当の概要」（令和8年度）成績率表。

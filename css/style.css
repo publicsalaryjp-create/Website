@@ -81,14 +81,14 @@ h1, h2, h3 {
 .site-header h1 {
   position: relative;
   margin: 0 0 8px;
-  font-size: 1.75rem;
+  font-size: 2.2rem;
   font-weight: 700;
 }
 
 .subtitle {
   position: relative;
   margin: 0;
-  font-size: 0.96rem;
+  font-size: 1.15rem;
   opacity: 0.92;
 }
 
@@ -102,12 +102,12 @@ h1, h2, h3 {
   }
 
   .site-header h1 {
-    font-size: 1.14rem;
+    font-size: 1.5rem;
     letter-spacing: 0;
   }
 
   .subtitle {
-    font-size: 0.86rem;
+    font-size: 1rem;
   }
 }
 

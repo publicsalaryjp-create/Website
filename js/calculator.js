@@ -96,6 +96,7 @@ function calculateOvertimeAllowance(hourlyWage, hours) {
  * @param {number} input.parentCount 扶養する父母等の数
  * @param {number} input.housingAllowance 住居手当の月額（円、支給がある場合のみ直接入力）
  * @param {number} input.honshoAllowance 本府省業務調整手当（本省手当）の月額（円、支給がある場合のみ直接入力）
+ * @param {number} input.specialAdjustmentAllowance 俸給の特別調整額（管理職手当）の月額（円、支給がある場合のみ直接入力）
  * @param {number} input.teishuMonths 期末手当の年間支給月数
  * @param {number} input.meritRateJune 6月期の勤務成績区分に応じた成績率（例: 1.0225。勤勉手当はこの率のみで算定する）
  * @param {number} input.meritRateDecember 12月期の勤務成績区分に応じた成績率（例: 1.0225）
@@ -108,13 +109,18 @@ function calculateSalary(input) {
   const baseSalary = getSalaryAmount(input.tableKey, input.grade, input.step);
   const regionalAllowance = Math.floor(baseSalary * input.regionalRate);
 
-  const dependentAllowance =
-    DEPENDENT_ALLOWANCE_RATES.childUnder15 * Math.max(0, input.childUnder15Count || 0) +
-    DEPENDENT_ALLOWANCE_RATES.child16to22 * Math.max(0, input.child16to22Count || 0) +
-    DEPENDENT_ALLOWANCE_RATES.parent * Math.max(0, input.parentCount || 0);
+  // 指定職職員は扶養手当・住居手当の支給対象外のため、入力値に関わらず0円とする。
+  const isDesignated = input.tableKey === "designated";
 
-  const housingAllowance = Math.max(0, input.housingAllowance || 0);
+  const dependentAllowance = isDesignated
+    ? 0
+    : DEPENDENT_ALLOWANCE_RATES.childUnder15 * Math.max(0, input.childUnder15Count || 0) +
+      DEPENDENT_ALLOWANCE_RATES.child16to22 * Math.max(0, input.child16to22Count || 0) +
+      getParentAllowanceRate(input.tableKey, input.grade) * Math.max(0, input.parentCount || 0);
+
+  const housingAllowance = isDesignated ? 0 : Math.max(0, input.housingAllowance || 0);
   const honshoAllowance = Math.max(0, input.honshoAllowance || 0);
+  const specialAdjustmentAllowance = Math.max(0, input.specialAdjustmentAllowance || 0);
 
   // 超過勤務手当の算定基礎額（俸給月額＋地域手当＋扶養手当）。
   // 本省手当・住居手当は算定基礎に含めない簡略化（PBI-009参照）。
@@ -127,7 +133,8 @@ function calculateSalary(input) {
     holidayNightHours: input.holidayNightHours,
   });
 
-  const monthlyTotal = baseSalary + regionalAllowance + dependentAllowance + housingAllowance + honshoAllowance;
+  const monthlyTotal =
+    baseSalary + regionalAllowance + dependentAllowance + housingAllowance + honshoAllowance + specialAdjustmentAllowance;
   const monthlyTotalWithOvertime = monthlyTotal + overtime.totalAllowance;
 
   // 期末・勤勉手当の算定基礎額は簡略化し「俸給+地域手当」とする（実際は扶養手当等も一部算入）。超過勤務手当は含まない。
@@ -155,6 +162,7 @@ function calculateSalary(input) {
     dependentAllowance,
     housingAllowance,
     honshoAllowance,
+    specialAdjustmentAllowance,
     overtimeHourlyWage: overtime.hourlyWage,
     overtimeHours: overtime.totalHours,
     overtimeExcessHours: overtime.excessHours,
