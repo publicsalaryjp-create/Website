@@ -121,17 +121,18 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
-// index.html: 行政職以外の俸給表（graded型、医療職俸給表(一)）でも俸給月額が正の値になる
+// index.html: 行政職(一)の別の級・号俸（graded型）でも俸給月額が正の値になる
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#salary-table", "medical_1");
+  await page.selectOption("#salary-table", "administrative_1");
+  await page.selectOption("#grade", "3");
   await page.waitForTimeout(300);
   const baseSalaryText = await page.textContent("#r-base");
   const baseSalary = Number(baseSalaryText.replace(/[^\d]/g, ""));
   report(
-    "index.html: 医療職俸給表(一) 1級1号俸の俸給月額が正の値",
+    "index.html: 行政職(一) 3級の俸給月額が正の値",
     baseSalary > 0,
     `俸給月額=${baseSalaryText}`
   );
@@ -293,7 +294,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  await page.selectOption("#merit-staff-type-june", "designated");
+  await page.selectOption("#salary-table", "designated");
   await page.waitForTimeout(200);
   const gradeOptions = await page.$$eval("#merit-grade-june option", (opts) => opts.map((o) => o.value));
   report(
@@ -353,7 +354,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  const options = await page.$$eval("#salary-vintage option", (opts) =>
+  const options = await page.$$eval('#salary-vintage-group input[name="salary-vintage"]', (opts) =>
     opts.map((o) => ({ value: o.value, disabled: o.disabled }))
   );
   const current = options.find((o) => o.value === "current");
