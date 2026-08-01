@@ -4,16 +4,22 @@
  */
 
 function populateVintageOptions() {
-  const select = document.getElementById("salary-vintage");
-  select.innerHTML = "";
+  const group = document.getElementById("salary-vintage-group");
+  group.innerHTML = "";
   SALARY_VINTAGES.forEach((v) => {
-    const opt = document.createElement("option");
-    opt.value = v.key;
-    opt.textContent = v.available ? v.label : `${v.label} ※選択不可`;
-    opt.disabled = !v.available;
-    select.appendChild(opt);
+    const label = document.createElement("label");
+    label.className = "radio-option";
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = "salary-vintage";
+    input.id = `salary-vintage-${v.key}`;
+    input.value = v.key;
+    input.disabled = !v.available;
+    input.checked = v.key === CURRENT_VINTAGE_KEY;
+    label.appendChild(input);
+    label.appendChild(document.createTextNode(v.label));
+    group.appendChild(label);
   });
-  select.value = CURRENT_VINTAGE_KEY;
   updateVintageNote();
 }
 
@@ -22,6 +28,8 @@ function updateVintageNote() {
   const vintage = getVintage(CURRENT_VINTAGE_KEY);
   if (vintage && !vintage.available) {
     note.textContent = "このバージョンのデータはまだ登録されていません。現行の俸給表で計算しています。";
+  } else if (vintage && vintage.note) {
+    note.textContent = vintage.note;
   } else {
     note.textContent = "";
   }
@@ -45,7 +53,7 @@ function readInput() {
   const overtimeExempt = isOvertimeExempt();
   return {
     ...readCommonInput(),
-    teishuMonths: Number(document.getElementById("teishu-months").value),
+    teishuMonths: TEISHU_MONTHS,
     meritRateJune: currentMeritRate("june"),
     meritRateDecember: currentMeritRate("december"),
     // 超過勤務時間は1時間単位で扱う（小数で入力されても四捨五入する）
@@ -90,16 +98,40 @@ function updateOvertimeVisibility() {
   document.getElementById("ot-management-note").hidden = !exempt;
 }
 
+// 指定職俸給表を選んでいる場合は勤勉手当の職員区分も「指定職職員」で固定し、選択させない。
+// それ以外（行政職俸給表(一)）の場合は指定職職員を選ばせない（一般職員・特定管理職員のみ）。
 function populateMeritStaffTypeOptions(period) {
   const select = document.getElementById(`merit-staff-type-${period}`);
+  const isDesignatedTable = currentTableKey() === "designated";
   select.innerHTML = "";
   Object.entries(MERIT_RATE_CATEGORIES).forEach(([key, category]) => {
+    if (isDesignatedTable !== (key === "designated")) return;
     const opt = document.createElement("option");
     opt.value = key;
     opt.textContent = category.label;
     select.appendChild(opt);
   });
-  select.value = "general";
+  select.value = isDesignatedTable ? "designated" : "general";
+}
+
+function updateMeritStaffTypeVisibility() {
+  const hide = currentTableKey() === "designated";
+  document.getElementById("merit-staff-type-field-june").hidden = hide;
+  document.getElementById("merit-staff-type-field-december").hidden = hide;
+}
+
+/**
+ * 勤務成績区分のlabel（例:「特に優秀（125.25/100以上、下限採用）」）を
+ * 段階名と成績率の詳細に分割する。プルダウンには段階名のみを表示し、
+ * 詳細は選択欄の下のヒントテキストに表示する（updateMeritGradeNote参照）。
+ */
+function splitGradeLabel(label) {
+  const idx = label.indexOf("（");
+  if (idx === -1) return { name: label, detail: "" };
+  return {
+    name: label.slice(0, idx),
+    detail: label.slice(idx + 1).replace(/）$/, ""),
+  };
 }
 
 function populateMeritGradeOptions(period) {
@@ -112,10 +144,22 @@ function populateMeritGradeOptions(period) {
     .forEach((g) => {
       const opt = document.createElement("option");
       opt.value = g.key;
-      opt.textContent = g.label;
+      opt.textContent = splitGradeLabel(g.label).name;
       select.appendChild(opt);
     });
   select.value = "good";
+  updateMeritGradeNote(period);
+}
+
+/** 現在選択中の勤務成績区分の成績率の詳細を、選択欄の下のヒントテキストに表示する */
+function updateMeritGradeNote(period) {
+  const note = document.getElementById(`merit-grade-${period}-note`);
+  if (!note) return;
+  const staffType = document.getElementById(`merit-staff-type-${period}`).value;
+  const gradeKey = document.getElementById(`merit-grade-${period}`).value;
+  const category = MERIT_RATE_CATEGORIES[staffType];
+  const grade = category && category.grades.find((g) => g.key === gradeKey);
+  note.textContent = grade ? splitGradeLabel(grade.label).detail : "";
 }
 
 function recalculate() {
@@ -131,11 +175,13 @@ function recalculate() {
 // ---------------------------------------------------------------------------
 
 async function handleVintageChange(e) {
-  if (e.target.id !== "salary-vintage") return;
+  if (e.target.name !== "salary-vintage") return;
   const selectedKey = e.target.value;
   const switched = await switchVintage(selectedKey);
   if (!switched) {
-    e.target.value = CURRENT_VINTAGE_KEY; // 未登録バージョンは選べないので元に戻す
+    // 未登録バージョンは選べないので元に戻す
+    const original = document.getElementById(`salary-vintage-${CURRENT_VINTAGE_KEY}`);
+    if (original) original.checked = true;
   }
   updateVintageNote();
   updateTableSourceNote();
@@ -143,6 +189,11 @@ async function handleVintageChange(e) {
   populateGradeOptions();
   populateStepOptions();
   updateVisibility();
+  ["june", "december"].forEach((period) => {
+    populateMeritStaffTypeOptions(period);
+    populateMeritGradeOptions(period);
+  });
+  updateMeritStaffTypeVisibility();
 }
 
 function initForm() {
@@ -157,6 +208,7 @@ function initForm() {
   populateRegionalRateRegionOptions();
   populateRegionalRateTable();
   populateCurrentStaffTypeOptions();
+  ["child-under15-count", "child-16to22-count", "parent-count"].forEach(populateDependentCountOptions);
   ["june", "december"].forEach((period) => {
     populateMeritStaffTypeOptions(period);
     const savedStaffType = saved && saved[`merit-staff-type-${period}`];
@@ -169,19 +221,31 @@ function initForm() {
     populateMeritGradeOptions(period);
   });
   updateVisibility();
+  updateMeritStaffTypeVisibility();
   applySavedFormValues(form, saved);
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
   updateVisibility(); // 復元したhousing-eligible等の値を反映し直す
   updateOvertimeVisibility(); // 復元したcurrent-staff-typeの値を反映し直す
   updateHonshoAmountHint();
   updateHousingAmountHint();
+  updateMeritGradeNote("june"); // 復元した勤務成績区分の値を反映し直す
+  updateMeritGradeNote("december");
   wireCounterButtons(form);
   initHintToggles();
 
   wireCommonFormEvents(form, {
     onInputExtra: (e) => {
+      if (e.target.id === "salary-table") {
+        ["june", "december"].forEach((period) => {
+          populateMeritStaffTypeOptions(period);
+          populateMeritGradeOptions(period);
+        });
+        updateMeritStaffTypeVisibility();
+      }
       if (e.target.id === "merit-staff-type-june") populateMeritGradeOptions("june");
       if (e.target.id === "merit-staff-type-december") populateMeritGradeOptions("december");
+      if (e.target.id === "merit-grade-june") updateMeritGradeNote("june");
+      if (e.target.id === "merit-grade-december") updateMeritGradeNote("december");
     },
     onChangeExtra: handleVintageChange,
     onRecalculate: recalculate,
@@ -203,7 +267,27 @@ function initForm() {
     location.reload();
   });
 
+  initFloatingResultObserver();
   recalculate();
+}
+
+/**
+ * スマホ版フローティング表示（年収概算）と、計算結果パネル内の実際の年収概算（.result-hero）が
+ * 画面上で重複しないよう、実物が画面内に入っている間はフローティング側を隠す。
+ */
+function initFloatingResultObserver() {
+  const floating = document.getElementById("mobile-floating-result");
+  const target = document.querySelector(".result-hero");
+  if (!floating || !target || !("IntersectionObserver" in window)) return;
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        floating.hidden = entry.isIntersecting;
+      });
+    },
+    { threshold: 0 }
+  );
+  observer.observe(target);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

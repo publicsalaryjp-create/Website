@@ -103,6 +103,23 @@ function populateStepOptions() {
   stepSelect.value = Math.min(Math.max(currentValue, 1), maxStep);
 }
 
+// 扶養親族数のプルダウン（0人〜MAX_DEPENDENT_COUNT人）の上限
+const MAX_DEPENDENT_COUNT = 10;
+
+/** 扶養する子・父母等の数のプルダウン（0人〜10人）を生成する */
+function populateDependentCountOptions(selectId) {
+  const select = document.getElementById(selectId);
+  const currentValue = Number(select.value) || 0;
+  select.innerHTML = "";
+  for (let count = 0; count <= MAX_DEPENDENT_COUNT; count++) {
+    const opt = document.createElement("option");
+    opt.value = count;
+    opt.textContent = `${count}人`;
+    select.appendChild(opt);
+  }
+  select.value = Math.min(Math.max(currentValue, 0), MAX_DEPENDENT_COUNT);
+}
+
 function regionalRateLabel(r) {
   const percent = `${(r.value * 100).toFixed(0)}%`;
   return `${r.name}（${percent}）${r.example ? `例：${r.example}` : ""}`;
@@ -356,6 +373,7 @@ function renderCommonResult(result) {
 /** 俸給表データが公式データか参考値かを画面上部に表示する */
 function updateTableSourceNote() {
   const note = document.getElementById("table-source-note");
+  if (!note) return;
   if (SALARY_CATALOG_IS_OFFICIAL) {
     const date = SALARY_CATALOG.effectiveDate ? `（${SALARY_CATALOG.effectiveDate}時点）` : "";
     note.innerHTML = `俸給表は<strong>提供データ（${getTableKeys().length}表${date}）</strong>を使用しています。${

@@ -32,8 +32,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <main class="layout">
   <form id="calc-form" class="panel form-panel">
     <div class="field">
-      <label for="salary-vintage">俸給表のバージョン</label>
-      <select id="salary-vintage" name="salary-vintage" class="select-center"></select>
+      <span class="field-label-text" id="salary-vintage-label">俸給表のバージョン</span>
+      <div class="radio-group" role="radiogroup" aria-labelledby="salary-vintage-label" id="salary-vintage-group"></div>
       <p class="hint" id="vintage-note"></p>
     </div>
     <fieldset>
@@ -105,7 +105,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <label for="child-under15-count">扶養する子の数（15歳以下）</label>
         <div class="counter-input">
           <button type="button" class="counter-btn" data-target="child-under15-count" data-delta="-1" aria-label="減らす">−</button>
-          <input type="number" id="child-under15-count" name="child-under15-count" min="0" value="0" readonly>
+          <select id="child-under15-count" name="child-under15-count" class="select-center"></select>
           <button type="button" class="counter-btn" data-target="child-under15-count" data-delta="1" aria-label="増やす">＋</button>
         </div>
       </div>
@@ -113,7 +113,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <label for="child-16to22-count">扶養する子の数（16歳以上22歳以下）</label>
         <div class="counter-input">
           <button type="button" class="counter-btn" data-target="child-16to22-count" data-delta="-1" aria-label="減らす">−</button>
-          <input type="number" id="child-16to22-count" name="child-16to22-count" min="0" value="0" readonly>
+          <select id="child-16to22-count" name="child-16to22-count" class="select-center"></select>
           <button type="button" class="counter-btn" data-target="child-16to22-count" data-delta="1" aria-label="増やす">＋</button>
         </div>
       </div>
@@ -121,7 +121,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <label for="parent-count">扶養する父母等の数</label>
         <div class="counter-input">
           <button type="button" class="counter-btn" data-target="parent-count" data-delta="-1" aria-label="減らす">−</button>
-          <input type="number" id="parent-count" name="parent-count" min="0" value="0" readonly>
+          <select id="parent-count" name="parent-count" class="select-center"></select>
           <button type="button" class="counter-btn" data-target="parent-count" data-delta="1" aria-label="増やす">＋</button>
         </div>
       </div>
@@ -201,25 +201,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         勤務成績は6月期・12月期でそれぞれ別に評価されるため、職員区分・成績区分も期別に設定します。
       </p>
       <div class="field">
-        <label for="teishu-months">期末手当の年間支給月数</label>
-        <input type="number" id="teishu-months" name="teishu-months" min="0" step="0.05" value="2.45">
+        <span class="field-label-text">期末手当の支給月数（参考値）</span>
+        <p class="hint">6月期 1.225月分／12月期 1.225月分（年間2.45月分）</p>
       </div>
-      <div class="field">
+      <div class="field" id="merit-staff-type-field-june">
         <label for="merit-staff-type-june">職員区分（6月期）</label>
         <select id="merit-staff-type-june" name="merit-staff-type-june"></select>
       </div>
       <div class="field">
         <label for="merit-grade-june">勤務成績区分（6月期）</label>
         <select id="merit-grade-june" name="merit-grade-june"></select>
+        <p class="hint" id="merit-grade-june-note"></p>
       </div>
-      <div class="field">
+      <div class="field" id="merit-staff-type-field-december">
         <label for="merit-staff-type-december">職員区分（12月期）</label>
         <select id="merit-staff-type-december" name="merit-staff-type-december"></select>
       </div>
       <div class="field">
         <label for="merit-grade-december">勤務成績区分（12月期）</label>
         <select id="merit-grade-december" name="merit-grade-december"></select>
-        <p class="hint">成績率に幅がある区分は下限値を採用しています。</p>
+        <p class="hint" id="merit-grade-december-note"></p>
       </div>
     </fieldset>
 
@@ -300,14 +301,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <div class="disclaimer" id="disclaimer">
   <strong>⚠️ ご利用にあたって：</strong>
-  このツールは国家公務員の給与制度への理解を助けるための<strong>概算シミュレーター</strong>です。
-  <span id="table-source-note">俸給表データを読み込み中です…</span>
-  地域手当・扶養手当・賞与支給月数は公表情報をもとにした概算です。
-  所得税・住民税・共済組合掛金（社会保険料相当）等は控除していない<strong>額面（支給額）ベース</strong>の金額です。
-  入力内容はこの端末のブラウザ内に保存され、次回アクセス時に自動的に復元されます（サーバーには送信されません）。
-  正確な金額は必ず
-  <a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">人事院公表の俸給表</a>
-  等の一次情報をご確認ください。
+  このツールは国家公務員の給与制度への理解を助けるための概算シミュレーターであり、計算結果の正確性を保証するものではありません。
+  本ツールを利用したことで発生した不利益や損害について、運営者は一切責任を負いません。
 </div>
 
 <footer class="site-footer">

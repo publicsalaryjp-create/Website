@@ -21,6 +21,8 @@
   --color-warning-bg: #fdf6e3;
   --color-warning-border: #edd48a;
   --color-warning-text: #6b4e05;
+  --color-hero-bg: #0017c1;
+  --font-hero: "Noto Sans", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
 
   --shadow-xs: 0 1px 2px rgba(20, 30, 50, 0.05);
   --shadow-sm: 0 2px 6px rgba(20, 30, 50, 0.06), 0 1px 2px rgba(20, 30, 50, 0.04);
@@ -60,7 +62,7 @@ h1, h2, h3 {
 
 .site-header {
   position: relative;
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: var(--color-hero-bg);
   color: #fff;
   padding: 40px 20px 36px;
   text-align: center;
@@ -319,6 +321,12 @@ input:focus-visible {
   flex: none;
 }
 
+.radio-group .radio-option:has(input:disabled) {
+  color: var(--color-muted);
+  background: var(--color-bg);
+  cursor: not-allowed;
+}
+
 .counter-input {
   display: flex;
   align-items: center;
@@ -568,9 +576,10 @@ input:focus-visible {
   padding: 20px;
   margin-bottom: 20px;
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  background: var(--color-hero-bg);
   box-shadow: var(--shadow-md);
   color: #fff;
+  font-family: var(--font-hero);
 }
 
 .result-hero-label {
@@ -588,9 +597,12 @@ input:focus-visible {
 
 /* ---------------------------------------------------------------------- */
 /* スマホ版: 年収概算のフローティング表示                                 */
-/* 画面幅760px以下ではフォームと計算結果が縦積みになり、結果を確認するには */
-/* フォーム全体をスクロールする必要があるため、入力の変更が即座に見える   */
-/* よう年収概算だけを画面下部に固定表示する。                             */
+/* position: stickyだけでは「ページ上部にいる間から」表示することはできない */
+/* （sticky要素は本来の位置に到達するまで画面に現れないため）。そのため、  */
+/* 画面下部に常時表示する軽量な複製（このブロック）を用意し、実際の       */
+/* .result-hero（計算結果パネル内の本物）が画面に入ったらjs/app.jsの       */
+/* IntersectionObserverで隠すことで、フォーム入力中は常に金額の変化が見え、 */
+/* 本来の位置に到達したら重複表示を避ける。                               */
 /* ---------------------------------------------------------------------- */
 
 .mobile-floating-result {
@@ -609,9 +621,14 @@ input:focus-visible {
     bottom: 0;
     z-index: 100;
     padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-    box-shadow: 0 -4px 16px rgba(19, 55, 88, 0.25);
+    background: var(--color-hero-bg);
+    box-shadow: 0 -4px 16px rgba(0, 23, 193, 0.35);
     color: #fff;
+    font-family: var(--font-hero);
+  }
+
+  .mobile-floating-result[hidden] {
+    display: none;
   }
 
   .mobile-floating-result-label {
