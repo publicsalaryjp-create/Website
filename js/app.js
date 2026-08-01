@@ -36,8 +36,9 @@ function currentMeritRate(period) {
 }
 
 // 管理職（特定管理職員・指定職職員）は超過勤務手当の支給対象外のため、時間を0として扱う。
+// 指定職俸給表を適用している場合は職員区分の選択にかかわらず常に対象外とする。
 function isOvertimeExempt() {
-  return document.getElementById("current-staff-type").value !== "general";
+  return currentTableKey() === "designated" || document.getElementById("current-staff-type").value !== "general";
 }
 
 function readInput() {
@@ -175,6 +176,7 @@ function initForm() {
   updateHonshoAmountHint();
   updateHousingAmountHint();
   wireCounterButtons(form);
+  initHintToggles();
 
   wireCommonFormEvents(form, {
     onInputExtra: (e) => {

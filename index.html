@@ -11,7 +11,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="国家公務員の俸給・地域手当・扶養手当・住居手当・本省手当・期末勤勉手当・超過勤務手当から月給と年収を概算するシミュレーターです。">
-<title>国家公務員給与計算シミュレーター</title>
+<title>国家公務員給与計算機</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -25,22 +25,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <span class="mobile-floating-result-value" id="r-annual-floating">-</span>
 </div>
 <header class="site-header">
-  <h1>国家公務員給与計算シミュレーター</h1>
-  <p class="subtitle">行政職俸給表(一)を想定した月給・賞与・年収の概算計算ツール</p>
+  <h1>国家公務員給与計算機</h1>
+  <p class="subtitle">月給・賞与・年収の概算計算ツール</p>
 </header>
 
 <main class="layout">
   <form id="calc-form" class="panel form-panel">
+    <div class="field">
+      <label for="salary-vintage">俸給表のバージョン</label>
+      <select id="salary-vintage" name="salary-vintage" class="select-center"></select>
+      <p class="hint" id="vintage-note"></p>
+    </div>
     <fieldset>
       <legend>俸給</legend>
       <div class="field">
-        <label for="salary-vintage">俸給表のバージョン</label>
-        <select id="salary-vintage" name="salary-vintage"></select>
-        <p class="hint" id="vintage-note"></p>
-      </div>
-      <div class="field">
         <label for="salary-table">適用される俸給表</label>
-        <select id="salary-table" name="salary-table"></select>
+        <select id="salary-table" name="salary-table" class="select-center"></select>
         <p class="hint" id="table-note"></p>
       </div>
       <div class="field" id="grade-field">
@@ -58,7 +58,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <select id="step" name="step"></select>
           <button type="button" class="counter-btn" data-target="step" data-delta="1" aria-label="号俸を上げる">＋</button>
         </div>
-        <div class="step-buttons" role="group" aria-label="昇給シミュレーション">
+        <div class="step-buttons" id="step-buttons" role="group" aria-label="昇給シミュレーション">
           <button type="button" class="step-btn" data-delta="-8">-8</button>
           <button type="button" class="step-btn" data-delta="-6">-6</button>
           <button type="button" class="step-btn" data-delta="-4">-4</button>
@@ -66,7 +66,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button type="button" class="step-btn" data-delta="6">+6</button>
           <button type="button" class="step-btn" data-delta="8">+8</button>
         </div>
-        <p class="hint">昇給の号俸数の目安（標準4、良好6、特に良好8）で号俸を上下できます。</p>
+        <p class="hint" id="step-buttons-hint">昇給の号俸数の目安（標準4、良好6、特に良好8）で号俸を上下できます。</p>
       </div>
     </fieldset>
 
@@ -75,7 +75,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="field">
         <label for="regional-rate-region">地域名から選ぶ（任意）</label>
         <select id="regional-rate-region" name="regional-rate-region"></select>
-        <p class="hint">
+        <div class="hint-toggle">
+          <p class="hint hint-short">代表的な市区町村のみの参考リストです。</p>
+          <button type="button" class="hint-toggle-btn" data-target="detail-region" aria-expanded="false" aria-controls="detail-region" aria-label="詳しい説明を表示">？</button>
+        </div>
+        <p class="hint hint-detail" id="detail-region" hidden>
           代表的な市区町村のみを掲載した参考用の一覧です（網羅的ではありません、出典の確度は中）。
           掲載のない地域は、下の級地区分から直接選択してください。
         </p>
@@ -125,7 +129,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <fieldset>
       <legend>住居手当</legend>
-      <p class="hint">
+      <div class="hint-toggle">
+        <p class="hint hint-short">借家・借間のみ対象。家賃の半額と28,000円の低い方が支給額です。</p>
+        <button type="button" class="hint-toggle-btn" data-target="detail-housing" aria-expanded="false" aria-controls="detail-housing" aria-label="詳しい説明を表示">？</button>
+      </div>
+      <p class="hint hint-detail" id="detail-housing" hidden>
         借家・借間に住み、実際に家賃を支払っている場合のみ支給されます。
         持ち家の場合は支給されません（持家世帯向けの住居手当は廃止済み）。
         住居手当額 = 家賃月額の半額と28,000円のいずれか低い方です。
@@ -152,7 +160,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <fieldset>
       <legend>本府省業務調整手当（本省手当）</legend>
-      <p class="hint">
+      <div class="hint-toggle">
+        <p class="hint hint-short">本府省勤務者向け。支給ありを選ぶと自動計算されます。</p>
+        <button type="button" class="hint-toggle-btn" data-target="detail-honsho" aria-expanded="false" aria-controls="detail-honsho" aria-label="詳しい説明を表示">？</button>
+      </div>
+      <p class="hint hint-detail" id="detail-honsho" hidden>
         本府省（霞が関）勤務の職員に支給される手当です（給与法10条の3、人事院規則9-123）。
         支給の有無を選択すると、左で選択した職務の級から参考額（令和8年度人事院公表資料に
         基づく）を自動計算します。行政職俸給表(一)以外の俸給表を選んでいる場合は、
@@ -178,7 +190,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <fieldset>
       <legend>期末・勤勉手当（賞与）</legend>
-      <p class="hint">
+      <div class="hint-toggle">
+        <p class="hint hint-short">期末手当は支給月数、勤勉手当は成績率で計算します（6月期・12月期で別々に設定）。</p>
+        <button type="button" class="hint-toggle-btn" data-target="detail-bonus" aria-expanded="false" aria-controls="detail-bonus" aria-label="詳しい説明を表示">？</button>
+      </div>
+      <p class="hint hint-detail" id="detail-bonus" hidden>
         期末手当 = 算定基礎額（俸給+地域手当）×支給月数（6月期・12月期はその半分）。
         勤勉手当 = 算定基礎額×成績率（成績率が1回あたりの支給割合そのものを表すため、
         月数は別途掛けません）（出典: 人事院「国家公務員の諸手当の概要」令和8年度）。
@@ -209,7 +225,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <fieldset>
       <legend>超過勤務手当（残業代）</legend>
-      <p class="hint">
+      <div class="hint-toggle">
+        <p class="hint hint-short">平日125%・深夜150%・休日135%・休日深夜160%（月60時間超は割増）</p>
+        <button type="button" class="hint-toggle-btn" data-target="detail-overtime" aria-expanded="false" aria-controls="detail-overtime" aria-label="詳しい説明を表示">？</button>
+      </div>
+      <p class="hint hint-detail" id="detail-overtime" hidden>
         時間単価 = （俸給+地域手当+扶養手当）×12か月 ÷ 年間所定勤務時間（週38時間45分×52週）。
         平日時間外は125%、深夜(22時〜翌5時)は150%、休日勤務は135%、休日深夜は160%。
         月60時間を超える時間外勤務（休日を除く）は150%／深夜175%に切り替わります。

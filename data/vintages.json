@@ -10,7 +10,7 @@
     },
     {
       "key": "post_recommendation",
-      "label": "人事院勧告後（データ未登録）",
+      "label": "人事院勧告反映後（今後実装予定）",
       "file": null,
       "effectiveDate": null,
       "available": false

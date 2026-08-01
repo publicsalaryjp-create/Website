@@ -242,6 +242,12 @@ select {
   padding-right: 34px;
 }
 
+.select-center {
+  padding-left: 34px;
+  text-align: center;
+  text-align-last: center;
+}
+
 select:disabled {
   color: var(--color-muted);
   background-color: var(--color-bg);
@@ -369,6 +375,10 @@ input:focus-visible {
   margin-top: 8px;
 }
 
+.step-buttons[hidden] {
+  display: none;
+}
+
 .step-btn {
   flex: 1;
   padding: 7px 0;
@@ -429,6 +439,54 @@ input:focus-visible {
   color: var(--color-muted);
   margin: 5px 0 0;
   line-height: 1.55;
+}
+
+/* 短縮した説明文＋「？」ボタンで詳細を開閉するUI */
+.hint-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.hint-toggle .hint-short {
+  flex: 1;
+  margin: 0;
+}
+
+.hint-toggle-btn {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  background: var(--color-panel);
+  color: var(--color-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.hint-toggle-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.hint-toggle-btn[aria-expanded="true"] {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-primary-dark);
+}
+
+.hint-detail {
+  margin: -4px 0 10px;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
 }
 
 .regional-rate-details {

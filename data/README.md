@@ -18,7 +18,7 @@
   "order": ["administrative_1", "specialized_administrative", "...", "designated"],
   "tables": {
     "administrative_1": {
-      "label": "行政職俸給表(一)　― 一般行政事務など、他の表の適用を受けない職員",
+      "label": "行政職俸給表(一)　― 一般行政事務など",
       "type": "graded",
       "grades": {
         "1": [195800, 196900, 198100, "..."],

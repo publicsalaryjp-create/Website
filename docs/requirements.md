@@ -284,7 +284,7 @@
   "vintages": [
     { "key": "current", "label": "現行（令和8年4月1日施行）", "file": "salary-tables.json",
       "effectiveDate": "2026-04-01", "available": true },
-    { "key": "post_recommendation", "label": "人事院勧告後（データ未登録）", "file": null,
+    { "key": "post_recommendation", "label": "人事院勧告反映後（今後実装予定）", "file": null,
       "effectiveDate": null, "available": false }
   ]
 }

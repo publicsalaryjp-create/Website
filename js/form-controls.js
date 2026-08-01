@@ -28,7 +28,7 @@ function currentTableType() {
 }
 
 /**
- * 俸給表のlabel（例:「行政職俸給表(一)　― 一般行政事務など、他の表の適用を受けない職員」）を
+ * 俸給表のlabel（例:「行政職俸給表(一)　― 一般行政事務など」）を
  * 表名と説明に分割する。プルダウンの選択肢は幅が狭く説明部分が読み切れないため、
  * 説明は別途ヒントテキストとして表示する（updateTableNote参照）。
  */
@@ -198,8 +198,15 @@ function updateHousingAmountHint() {
 }
 
 function updateVisibility() {
-  document.getElementById("grade-field").hidden = currentTableType() !== "graded";
+  const isGraded = currentTableType() === "graded";
+  document.getElementById("grade-field").hidden = !isGraded;
   document.getElementById("housing-amount-field").hidden = radioValue("housing-eligible") !== "1";
+  // 指定職俸給表など級のないflat型は「級」の概念がなく、昇給の号俸数目安（標準4/良好6/特に良好8）
+  // も級構成を前提にしているため、graded型の俸給表を選んでいる場合のみジャンプボタンを表示する。
+  const stepButtons = document.getElementById("step-buttons");
+  const stepButtonsHint = document.getElementById("step-buttons-hint");
+  if (stepButtons) stepButtons.hidden = !isGraded;
+  if (stepButtonsHint) stepButtonsHint.hidden = !isGraded;
 }
 
 /**
@@ -228,6 +235,19 @@ function wireCounterButtons(form) {
       const delta = Number(btn.dataset.delta);
       target.value = Math.min(Math.max((Number(target.value) || 0) + delta, min), max);
       target.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+}
+
+/** 短縮した説明文の横にある「？」ボタン（.hint-toggle-btn）を押すと、詳細（.hint-detail）を開閉する */
+function initHintToggles() {
+  document.querySelectorAll(".hint-toggle-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const detail = document.getElementById(btn.dataset.target);
+      if (!detail) return;
+      const willOpen = detail.hidden;
+      detail.hidden = !willOpen;
+      btn.setAttribute("aria-expanded", String(willOpen));
     });
   });
 }
@@ -362,6 +382,7 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
     if (e.target.id === "salary-table") {
       populateGradeOptions();
       populateStepOptions();
+      document.getElementById("step").value = "1"; // 俸給表切り替え時は号俸を1にリセットする
       updateTableNote();
     }
     if (e.target.id === "grade") {
