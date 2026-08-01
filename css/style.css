@@ -42,7 +42,7 @@
 
 body {
   margin: 0;
-  font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", system-ui, sans-serif;
+  font-family: "Noto Sans JP", "Noto Sans", system-ui, sans-serif;
   background: var(--color-bg);
   background-image: radial-gradient(circle at 15% 0%, rgba(33, 86, 143, 0.06), transparent 45%),
     radial-gradient(circle at 85% 0%, rgba(14, 143, 104, 0.05), transparent 40%);
