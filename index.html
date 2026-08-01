@@ -81,14 +81,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </label>
         </div>
         <div class="hint-toggle">
-          <p class="hint hint-short">特定管理職員は俸給の特別調整額（管理職手当）が支給され超過勤務手当は対象外に、期末・勤勉手当も特定管理職員の区分で計算します。</p>
-          <button type="button" class="hint-toggle-btn" data-target="detail-special-adjustment" aria-expanded="false" aria-controls="detail-special-adjustment" aria-label="詳しい説明を表示">？</button>
+                  <button type="button" class="hint-toggle-btn" data-target="detail-special-adjustment" aria-expanded="false" aria-controls="detail-special-adjustment" aria-label="詳しい説明を表示">？</button>
         </div>
         <p class="hint hint-detail" id="detail-special-adjustment" hidden>
-          俸給の特別調整額は、本府省課長・室長級以上等の管理監督職員に、超過勤務手当に代えて支給される
+          俸給の特別調整額は、課室長級等の管理監督職員に、超過勤務手当に代えて支給される
           定額の手当です（人事院規則9-17）。行政職俸給表(一)の職務の級ごとに定められた区分
-          （一種〜五種）に応じた定額で計算します。この職員区分は期末・勤勉手当（6月期・12月期とも）の
-          区分にも共通して使用します。
+          （一種〜五種）に応じた金額で計算します。
         </p>
         <div class="field" id="special-adjustment-category-field" hidden>
           <label for="special-adjustment-category">区分</label>
@@ -134,10 +132,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </legend>
       <p class="hint hint-detail" id="detail-parent-allowance" hidden>
         扶養する父母等の数の手当額について: 行政職俸給表(一)8級職員等は3,500円に減額され、
-        9級以上職員等は支給されません。
+        9級以上職員等には支給されません。
       </p>
       <p class="hint" id="dependent-exempt-note" hidden>
-        指定職職員は扶養手当の支給対象外のため、0円で計算します。
+        指定職職員は扶養手当の支給対象外です。
       </p>
       <div id="dependent-fields">
         <div class="field">
@@ -208,18 +206,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <fieldset>
       <legend>本府省業務調整手当（本省手当）</legend>
-      <div class="hint-toggle">
-        <p class="hint hint-short">本府省勤務者向け。支給ありを選ぶと自動計算されます。</p>
-        <button type="button" class="hint-toggle-btn" data-target="detail-honsho" aria-expanded="false" aria-controls="detail-honsho" aria-label="詳しい説明を表示">？</button>
-      </div>
-      <p class="hint hint-detail" id="detail-honsho" hidden>
-        本府省（霞が関）勤務の職員に支給される手当です（給与法10条の3、人事院規則9-123）。
-        支給の有無を選択すると、左で選択した職務の級から参考額（令和8年度人事院公表資料に
-        基づく）を自動計算します。行政職俸給表(一)以外の俸給表を選んでいる場合は、
-        本来「相当する職務の級」への読み替えが必要な場合がありますが、本ツールでは
-        選択中の級番号をそのまま適用する簡略化としています。実際の支給額は所属官署の
-        給与担当にご確認ください。
-      </p>
+      <p class="hint hint-short">本府省（霞が関）勤務の職員に支給される手当です。</p>
       <div class="field">
         <span class="field-label-text">支給の有無</span>
         <div class="radio-group" role="radiogroup" aria-label="本省手当の支給の有無">
@@ -248,8 +235,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         月60時間を超える時間外勤務（休日を除く）は150%／深夜175%に切り替わります。
       </p>
       <p class="hint" id="ot-management-note" hidden>
-        管理職（俸給の特別調整額の対象・指定職職員）は超過勤務手当の支給対象外のため、0円で計算します。
-        上の「俸給」欄の職員区分、または俸給表の選択で判定します。
+        管理職・指定職職員は超過勤務手当の支給対象外です。
       </p>
       <div id="ot-hours-fields">
         <div class="field">
@@ -304,19 +290,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         勤務成績は6月期・12月期でそれぞれ別に評価されるため、成績区分は期別に設定します
         （職員区分は上の俸給欄で設定したものを6月期・12月期共通で使用します）。
       </p>
+      <p class="field-label-text">期末手当</p>
       <div class="field">
         <span class="field-label-text">期末手当の支給月数（参考値）</span>
         <p class="hint">6月期 1.225月分／12月期 1.225月分（年間2.45月分）</p>
       </div>
+
+      <p class="field-label-text">勤勉手当</p>
+      <p class="hint">成績区分を選ぶと成績率が自動入力されます。幅のある区分は、下限以外の値に書き換えて計算することもできます。</p>
       <div class="field">
         <label for="merit-grade-june">勤務成績区分（6月期）</label>
         <select id="merit-grade-june" name="merit-grade-june" class="select-center"></select>
         <p class="hint" id="merit-grade-june-note"></p>
+        <label for="merit-rate-june">成績率（6月期・100分率）</label>
+        <input type="number" id="merit-rate-june" name="merit-rate-june" min="0" step="0.01">
       </div>
       <div class="field">
         <label for="merit-grade-december">勤務成績区分（12月期）</label>
         <select id="merit-grade-december" name="merit-grade-december" class="select-center"></select>
         <p class="hint" id="merit-grade-december-note"></p>
+        <label for="merit-rate-december">成績率（12月期・100分率）</label>
+        <input type="number" id="merit-rate-december" name="merit-rate-december" min="0" step="0.01">
       </div>
     </fieldset>
 
@@ -359,8 +353,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <div class="disclaimer" id="disclaimer">
   <strong>⚠️ ご利用にあたって：</strong>
-  このツールは国家公務員の給与制度への理解を助けるための概算シミュレーターであり、計算結果の正確性を保証するものではありません。
-  本ツールを利用したことで発生した不利益や損害について、運営者は一切責任を負いません。
+  このツールは国家公務員給与の概算シミュレーターであり、計算結果の正確性を保証するものではありません。
+  本ツールを利用したことによって発生した不利益や損害について、運営者は一切責任を負いません。
 </div>
 
 <footer class="site-footer">
@@ -375,8 +369,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <li><a href="https://laws.e-gov.go.jp/law/325AC1000000095" target="_blank" rel="noopener">一般職の職員の給与に関する法律（e-Gov法令検索）</a></li>
   </ul>
   <p class="footer-note">
-    俸給表・諸手当の制度は毎年の人事院勧告により改定されます。本ツールの計算結果と実際の給与が異なる場合は、
-    上記リンク先の最新の法令・公表資料をご確認ください。
+    俸給表・諸手当の制度は随時改定が行われます。最新情報は上記リンク先の最新の法令・公表資料をご確認ください。
   </p>
 </footer>
 

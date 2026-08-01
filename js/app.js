@@ -43,12 +43,11 @@ function currentMeritStaffTypeKey() {
   return isSpecialAdjustmentManager() ? "senior_manager" : "general";
 }
 
+/** 成績率の入力欄（100分率、例: 102.25）の値を、計算で使う倍率（例: 1.0225）に変換する */
 function currentMeritRate(period) {
-  const staffType = currentMeritStaffTypeKey();
-  const gradeKey = document.getElementById(`merit-grade-${period}`).value;
-  const category = MERIT_RATE_CATEGORIES[staffType];
-  const grade = category && category.grades.find((g) => g.key === gradeKey);
-  return grade && grade.rate != null ? grade.rate : 1;
+  const input = document.getElementById(`merit-rate-${period}`);
+  const value = input ? Number(input.value) : NaN;
+  return Number.isFinite(value) && value > 0 ? value / 100 : 1;
 }
 
 // 管理職（俸給の特別調整額の対象・指定職職員）は超過勤務手当の支給対象外のため、時間を0として扱う。
@@ -188,6 +187,25 @@ function populateMeritGradeOptions(period) {
     });
   select.value = "good";
   updateMeritGradeNote(period);
+  updateMeritRateInput(period);
+}
+
+/**
+ * 選択中の勤務成績区分に対応する成績率（下限値、100分率）を成績率の入力欄に反映する。
+ * 幅のある区分（特に優秀・優秀等）はMERIT_RATE_CATEGORIESが下限値を保持しているため、
+ * そのまま入力欄に反映すればよい。入力欄自体は編集可能なままにし、下限以外の値でも
+ * 計算できるようにする（currentMeritRateは入力欄の値をそのまま使う）。
+ */
+function updateMeritRateInput(period) {
+  const input = document.getElementById(`merit-rate-${period}`);
+  if (!input) return;
+  const staffType = currentMeritStaffTypeKey();
+  const gradeKey = document.getElementById(`merit-grade-${period}`).value;
+  const category = MERIT_RATE_CATEGORIES[staffType];
+  const grade = category && category.grades.find((g) => g.key === gradeKey);
+  if (grade && grade.rate != null) {
+    input.value = Number((grade.rate * 100).toFixed(4));
+  }
 }
 
 /** 現在選択中の勤務成績区分の成績率の詳細を、選択欄の下のヒントテキストに表示する */
@@ -300,8 +318,14 @@ function initForm() {
       if (categoryMayHaveChanged) {
         ["june", "december"].forEach((period) => populateMeritGradeOptions(period));
       }
-      if (e.target.id === "merit-grade-june") updateMeritGradeNote("june");
-      if (e.target.id === "merit-grade-december") updateMeritGradeNote("december");
+      if (e.target.id === "merit-grade-june") {
+        updateMeritGradeNote("june");
+        updateMeritRateInput("june");
+      }
+      if (e.target.id === "merit-grade-december") {
+        updateMeritGradeNote("december");
+        updateMeritRateInput("december");
+      }
     },
     onChangeExtra: handleVintageChange,
     onRecalculate: recalculate,

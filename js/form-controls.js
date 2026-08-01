@@ -193,9 +193,13 @@ function updateHonshoAmountHint() {
     hint.textContent = "";
     return;
   }
+  const tableKey = currentTableKey();
+  const isGraded = currentTableType() === "graded";
   const grade = Number(document.getElementById("grade").value);
-  const amount = getHonshoAllowanceAmount(grade);
-  if (amount > 0) {
+  const amount = getHonshoAllowanceAmountForTable(tableKey, grade);
+  if (!isGraded) {
+    hint.textContent = `指定職の参考額: ${yen.format(amount)}`;
+  } else if (amount > 0) {
     const gradeLabel = grade >= 7 ? `${grade}級（7級以上）` : `${grade}級`;
     hint.textContent = `${gradeLabel}の参考額: ${yen.format(amount)}`;
   } else {
@@ -209,7 +213,7 @@ function updateParentAllowanceHint() {
   if (!hint) return;
   const grade = Number(document.getElementById("grade").value);
   const rate = getParentAllowanceRate(currentTableKey(), grade);
-  hint.textContent = `1人あたり${yen.format(rate)}`;
+  hint.textContent = `1人あたり${rate.toLocaleString("ja-JP")}円`;
 }
 
 /**
@@ -402,7 +406,7 @@ function readCommonInput() {
     child16to22Count: Number(document.getElementById("child-16to22-count").value),
     parentCount: Number(document.getElementById("parent-count").value),
     housingAllowance: housingEligible ? calcHousingAllowance(document.getElementById("housing-rent").value) : 0,
-    honshoAllowance: honshoEligible ? getHonshoAllowanceAmount(grade) : 0,
+    honshoAllowance: honshoEligible ? getHonshoAllowanceAmountForTable(tableKey, grade) : 0,
     specialAdjustmentAllowance: isSpecialAdjustmentManager()
       ? getSpecialAdjustmentAmount(tableKey, grade, specialAdjustmentCategory)
       : 0,

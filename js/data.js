@@ -315,6 +315,22 @@ function getHonshoAllowanceAmount(grade) {
   return entry ? entry.amount : 0;
 }
 
+/**
+ * 俸給表の種類に応じた本省手当の参考額を求める。
+ * 指定職俸給表など「級」の概念がないflat型の俸給表では、UI上も職務の級を選択させて
+ * いないため、選択欄に残った値（別の俸給表を選んでいた際の名残）を参照すると誤った額に
+ * なる（PBI-XXX参照）。指定職職員は行政職俸給表(一)7級以上に相当する職務にあるため、
+ * 一律「7級以上」の額を適用する（本省手当の「相当する職務の級」の読み替えを省略する
+ * 簡略化、他の俸給表・扶養手当の簡略化と同様の考え方）。
+ */
+function getHonshoAllowanceAmountForTable(tableKey, grade) {
+  const table = getTable(tableKey);
+  if (table && table.type !== "graded") {
+    return getHonshoAllowanceAmount(7);
+  }
+  return getHonshoAllowanceAmount(grade);
+}
+
 // ---------------------------------------------------------------------------
 // 6. 超過勤務手当（給与法第16条・人事院規則15-14に基づく割増率）
 // ---------------------------------------------------------------------------
