@@ -15,8 +15,8 @@
   --color-primary-light: #eaf1fb;
   --color-accent: #096b4c;
   --color-accent-light: #e5f6ef;
-  --color-text: #1a2130;
-  --color-muted: #626c7e;
+  --color-text: #000000;
+  --color-muted: #000000;
   --color-total-bg: #eef3fb;
   --color-warning-bg: #fdf6e3;
   --color-warning-border: #edd48a;
@@ -242,6 +242,7 @@ select {
   background-position: right 10px center;
   background-size: 18px;
   padding-right: 34px;
+  font-weight: 700;
 }
 
 .select-center {
