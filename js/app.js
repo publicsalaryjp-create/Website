@@ -161,6 +161,12 @@ function updateSpecialAdjustmentVisibility() {
 
   const categoryField = document.getElementById("special-adjustment-category-field");
   if (categoryField) categoryField.hidden = !isSpecialAdjustmentManager();
+
+  const detailToggle = document.getElementById("special-adjustment-detail-toggle");
+  if (detailToggle) detailToggle.hidden = !isSpecialAdjustmentManager();
+
+  const detail = document.getElementById("detail-special-adjustment");
+  if (detail && !isSpecialAdjustmentManager()) detail.hidden = true;
 }
 
 function updateOvertimeVisibility() {

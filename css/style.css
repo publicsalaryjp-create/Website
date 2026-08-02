@@ -534,6 +534,12 @@ input:focus-visible {
   line-height: 1.55;
 }
 
+.merit-rate-tool-link a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* 短縮した説明文＋「？」ボタンで詳細を開閉するUI */
 .hint-toggle {
   display: flex;

@@ -1,0 +1,194 @@
+(function () {
+  "use strict";
+
+  const TERM_MONTHS = {
+    general: 1.2625,
+    senior_manager: 1.0625,
+    designated: 0.675,
+  };
+  const form = document.getElementById("merit-rate-form");
+  const salaryTableInput = document.getElementById("salary-table-type");
+  const staffTypeField = document.getElementById("staff-type-field");
+  const termInput = document.getElementById("term-amount");
+  const meritInput = document.getElementById("merit-amount");
+  const emptyResult = document.getElementById("empty-result");
+  const calculatedResult = document.getElementById("calculated-result");
+  const periodRateInput = document.getElementById("period-rate");
+  const serviceRateInput = document.getElementById("service-rate");
+  const dependentBaseInput = document.getElementById("dependent-base-addition");
+  const regionalPrefectureInput = document.getElementById("regional-prefecture");
+  const regionalMunicipalityInput = document.getElementById("regional-municipality");
+  const regionalRateInput = document.getElementById("regional-rate");
+
+  const MERIT_CATEGORIES = {
+    general: { notGoodMax: 93.75, good: 102.25, excellentMin: 113.75, excellentPlusMin: 125.25, max: 318.75 },
+    senior_manager: { notGoodMax: 112.75, good: 122.25, excellentMin: 134.75, excellentPlusMin: 149.25, max: 378.75 },
+    designated: { notGoodMax: 93, good: 101.5, excellentMin: 115, excellentPlusMin: null, max: 215 },
+  };
+
+  function parseAmount(value) {
+    const normalized = String(value).replace(/[０-９]/g, (digit) =>
+      String.fromCharCode(digit.charCodeAt(0) - 0xfee0)
+    );
+    const digits = normalized.replace(/[,，\s円]/g, "");
+    if (!/^\d+$/.test(digits)) return NaN;
+    return Number(digits);
+  }
+
+  function formatInput(input) {
+    const amount = parseAmount(input.value);
+    if (Number.isFinite(amount)) input.value = amount.toLocaleString("ja-JP");
+  }
+
+  function showError(input, message) {
+    const describedBy = input.getAttribute("aria-describedby");
+    const error = describedBy
+      ? document.getElementById(describedBy.split(" ").pop())
+      : document.getElementById(`${input.id}-error`);
+    input.setAttribute("aria-invalid", message ? "true" : "false");
+    if (error) error.textContent = message;
+  }
+
+  function classifyMeritRate(rate, staffType) {
+    const category = MERIT_CATEGORIES[staffType];
+    const rounded = Number(rate.toFixed(2));
+    if (rounded > category.max) return "基準上限を超過";
+    if (category.excellentPlusMin !== null && rounded >= category.excellentPlusMin) return "特に優秀";
+    if (rounded >= category.excellentMin) return "優秀";
+    if (Math.abs(rounded - category.good) < 0.011) return "良好";
+    if (rounded <= category.notGoodMax) return "良好でない";
+    return "区分を特定できません";
+  }
+
+  function populateRegionalInputs() {
+    const prefectures = [...new Set(REGIONAL_ALLOWANCE_LOCATIONS.map((location) => location.prefecture))];
+    regionalPrefectureInput.innerHTML = '<option value="">都道府県を選ぶ</option>';
+    prefectures.forEach((prefecture) => {
+      regionalPrefectureInput.add(new Option(prefecture, prefecture));
+    });
+
+    const rates = [...new Set(REGIONAL_ALLOWANCE_LOCATIONS.map((location) => location.rate))]
+      .sort((a, b) => b - a);
+    regionalRateInput.innerHTML = "";
+    rates.forEach((rate) => {
+      const label = rate === 0 ? "0%（非支給地）" : `${Math.round(rate * 100)}%`;
+      regionalRateInput.add(new Option(label, String(rate)));
+    });
+    regionalRateInput.value = "0";
+    populateMunicipalities();
+  }
+
+  function populateMunicipalities() {
+    const locations = REGIONAL_ALLOWANCE_LOCATIONS.filter(
+      (location) => location.prefecture === regionalPrefectureInput.value
+    );
+    regionalMunicipalityInput.innerHTML = `<option value="">${locations.length ? "市区町村等を選ぶ" : "先に都道府県を選ぶ"}</option>`;
+    locations.forEach((location) => {
+      regionalMunicipalityInput.add(new Option(location.municipality, location.code));
+    });
+    regionalMunicipalityInput.disabled = locations.length === 0;
+  }
+
+  function calculate(event) {
+    event.preventDefault();
+    const termAmount = parseAmount(termInput.value);
+    const meritAmount = parseAmount(meritInput.value);
+    const dependentAllowance = parseAmount(dependentBaseInput.value);
+    const regionalRate = Number(regionalRateInput.value);
+    const periodRatePercent = Number(periodRateInput.value);
+    const serviceRatePercent = Number(serviceRateInput.value);
+    const termValid = Number.isFinite(termAmount) && termAmount > 0;
+    const meritValid = Number.isFinite(meritAmount) && meritAmount >= 0;
+    const dependentBaseValid = Number.isFinite(dependentAllowance) && dependentAllowance >= 0;
+    const periodRateValid = Number.isFinite(periodRatePercent) && periodRatePercent > 0 && periodRatePercent <= 100;
+    const serviceRateValid = Number.isFinite(serviceRatePercent) && serviceRatePercent > 0 && serviceRatePercent <= 100;
+
+    showError(termInput, termValid ? "" : "1円以上の期末手当を入力してください。" );
+    showError(meritInput, meritValid ? "" : "0円以上の勤勉手当を入力してください。" );
+    showError(dependentBaseInput, dependentBaseValid ? "" : "0円以上の加算額を入力してください。" );
+    showError(periodRateInput, periodRateValid ? "" : "0%を超え100%以下で入力してください。" );
+    showError(serviceRateInput, serviceRateValid ? "" : "0%を超え100%以下で入力してください。" );
+    if (!termValid || !meritValid || !dependentBaseValid || !periodRateValid || !serviceRateValid) return;
+
+    formatInput(termInput);
+    formatInput(meritInput);
+    formatInput(dependentBaseInput);
+
+    const staffType = salaryTableInput.value === "designated"
+      ? "designated"
+      : form.elements["staff-type"].value;
+    const termMonths = TERM_MONTHS[staffType];
+    const periodRate = periodRatePercent / 100;
+    const serviceRate = serviceRatePercent / 100;
+    const estimatedTermBase = termAmount / (termMonths * serviceRate);
+    const dependentRegionalAllowance = Math.floor(dependentAllowance * regionalRate);
+    const dependentBaseAddition = dependentAllowance + dependentRegionalAllowance;
+    const estimatedMeritBase = estimatedTermBase - dependentBaseAddition;
+    if (estimatedMeritBase <= 0) {
+      showError(dependentBaseInput, "期末手当から推定される算定基礎額より小さい金額を入力してください。" );
+      return;
+    }
+    const meritRate = (meritAmount / (estimatedMeritBase * periodRate)) * 100;
+
+    document.getElementById("result-rate").textContent = meritRate.toFixed(2);
+    document.getElementById("result-category").textContent = classifyMeritRate(meritRate, staffType);
+    document.getElementById("result-base").textContent = `${Math.round(estimatedMeritBase).toLocaleString("ja-JP")}円`;
+    document.getElementById("result-formula").textContent =
+      `${meritAmount.toLocaleString("ja-JP")}円 ÷ {(${termAmount.toLocaleString("ja-JP")}円 ÷ (${termMonths}月 × ${serviceRatePercent}%) − ${dependentAllowance.toLocaleString("ja-JP")}円 − ${dependentRegionalAllowance.toLocaleString("ja-JP")}円) × ${periodRatePercent}%}`;
+    emptyResult.hidden = true;
+    calculatedResult.hidden = false;
+  }
+
+  [termInput, meritInput, dependentBaseInput].forEach((input) => {
+    input.addEventListener("blur", () => formatInput(input));
+    input.addEventListener("input", () => showError(input, ""));
+  });
+
+  function resetResult() {
+    emptyResult.hidden = false;
+    calculatedResult.hidden = true;
+  }
+
+  salaryTableInput.addEventListener("change", () => {
+    staffTypeField.hidden = salaryTableInput.value !== "administrative_1";
+    resetResult();
+  });
+  form.querySelectorAll('input[name="staff-type"]').forEach((input) => {
+    input.addEventListener("change", resetResult);
+  });
+  form.querySelectorAll('input[name="payment-period"]').forEach((input) => {
+    input.addEventListener("change", resetResult);
+  });
+  [periodRateInput, serviceRateInput].forEach((input) => {
+    input.addEventListener("input", () => {
+      showError(input, "");
+      resetResult();
+    });
+    input.addEventListener("change", resetResult);
+  });
+
+  regionalPrefectureInput.addEventListener("change", () => {
+    populateMunicipalities();
+    resetResult();
+  });
+  regionalMunicipalityInput.addEventListener("change", () => {
+    const location = REGIONAL_ALLOWANCE_LOCATIONS.find(
+      (item) => item.code === regionalMunicipalityInput.value
+    );
+    if (location) regionalRateInput.value = String(location.rate);
+    resetResult();
+  });
+  regionalRateInput.addEventListener("change", () => {
+    const location = REGIONAL_ALLOWANCE_LOCATIONS.find(
+      (item) => item.code === regionalMunicipalityInput.value
+    );
+    if (location && String(location.rate) !== regionalRateInput.value) {
+      regionalMunicipalityInput.value = "";
+    }
+    resetResult();
+  });
+
+  populateRegionalInputs();
+
+  form.addEventListener("submit", calculate);
+})();
