@@ -291,8 +291,8 @@ function initForm() {
   populateGradeOptions(saved && saved.grade);
   populateStepOptions();
   populateRegionalRateOptions();
-  populateRegionalRateRegionOptions();
-  populateRegionalRateTable();
+  populateRegionalPrefectureOptions();
+  populateRegionalMunicipalityOptions();
   ["child-under15-count", "child-16to22-count", "parent-count"].forEach(populateDependentCountOptions);
 
   // 職員区分（ラジオボタン）は勤勉手当の成績率区分にも影響するため、
@@ -311,6 +311,11 @@ function initForm() {
   });
   updateVisibility();
   applySavedFormValues(form, saved);
+  // 都道府県の復元後に市区町村等の選択肢を生成し直さないと、保存済みの市区町村等を選択できない。
+  populateRegionalMunicipalityOptions();
+  if (saved && saved["regional-municipality"]) {
+    document.getElementById("regional-municipality").value = saved["regional-municipality"];
+  }
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
   updateVisibility(); // 復元したhousing-eligible等の値を反映し直す
   updateSpecialAdjustmentVisibility(); // 復元したspecial-adjustment-typeの値を反映し直す

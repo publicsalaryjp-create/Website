@@ -431,39 +431,22 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
-// index.html: 地域手当の級地区分ごとの支給割合表が折りたたみ内に描画され、開閉できる
+// index.html: 都道府県→市区町村等の選択で支給割合に反映され、直接変更すると市区町村等選択が解除される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  const rowCount = await page.$$eval("#regional-rate-table-body tr", (trs) => trs.length);
-  const isOpenBefore = await page.$eval(".regional-rate-details", (el) => el.open);
-  await page.click(".regional-rate-details summary");
-  await page.waitForTimeout(150);
-  const isOpenAfter = await page.$eval(".regional-rate-details", (el) => el.open);
-  report(
-    "index.html: 地域手当の割合表が6区分描画され、クリックで開閉できる",
-    rowCount === 6 && isOpenBefore === false && isOpenAfter === true,
-    `行数=${rowCount} 開閉前=${isOpenBefore} 開閉後=${isOpenAfter}`
-  );
-  await page.close();
-}
-
-// index.html: 地域名から選ぶと級地区分プルダウンに反映され、直接変更すると地域名選択が解除される
-{
-  const page = await browser.newPage();
-  await page.goto(`${base}/index.html`);
-  await page.waitForTimeout(500);
-  await page.selectOption("#regional-rate-region", "東京都特別区（23区）");
+  await page.selectOption("#regional-prefecture", "東京都");
+  await page.selectOption("#regional-municipality", { label: "武蔵野市" });
   await page.waitForTimeout(150);
   const rateAfterRegion = await page.inputValue("#regional-rate");
   await page.selectOption("#regional-rate", "0");
   await page.waitForTimeout(150);
-  const regionAfterManualChange = await page.inputValue("#regional-rate-region");
+  const municipalityAfterManualChange = await page.inputValue("#regional-municipality");
   report(
-    "index.html: 地域名から選ぶと級地区分(1級地=0.2)に反映され、直接変更すると地域名選択が解除される",
-    rateAfterRegion === "0.2" && regionAfterManualChange === "",
-    `regional-rate(選択後)=${rateAfterRegion} regional-rate-region(手動変更後)=${regionAfterManualChange}`
+    "index.html: 都道府県・市区町村等の選択で令和8年度の率に反映され、直接変更すると市区町村等選択が解除される",
+    rateAfterRegion === "0.16" && municipalityAfterManualChange === "",
+    `regional-rate(選択後)=${rateAfterRegion} regional-municipality(手動変更後)=${municipalityAfterManualChange}`
   );
   await page.close();
 }

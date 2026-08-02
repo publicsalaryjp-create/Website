@@ -98,31 +98,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <fieldset>
       <legend>地域手当</legend>
-      <div class="field">
-        <label for="regional-rate-region">地域名から選ぶ（任意）</label>
-        <select id="regional-rate-region" name="regional-rate-region"></select>
-        <div class="hint-toggle">
-          <p class="hint hint-short">代表的な市区町村のみの参考リストです。</p>
-          <button type="button" class="hint-toggle-btn" data-target="detail-region" aria-expanded="false" aria-controls="detail-region" aria-label="詳しい説明を表示">？</button>
+      <div class="hint-toggle">
+        <p class="hint hint-short">都道府県と市区町村を選択すると、支給割合が設定されます。<br>もしくは、支給割合を直接選択してください。</p>
+        <button type="button" class="hint-toggle-btn" data-target="detail-region" aria-expanded="false" aria-controls="detail-region" aria-label="詳しい説明を表示">？</button>
+      </div>
+      <p class="hint hint-detail" id="detail-region" hidden>
+        人事院の公式給与シミュレーターに収録された令和8年度の市区町村等データに基づきます。
+        本府省勤務かどうかは、地域手当ではなく本府省業務調整手当で設定してください。官署単位で指定される場合などは、下の支給割合を直接選択してください。
+      </p>
+      <div class="regional-location-fields">
+        <div class="field">
+          <label for="regional-prefecture">都道府県</label>
+          <select id="regional-prefecture" name="regional-prefecture" class="select-center"></select>
         </div>
-        <p class="hint hint-detail" id="detail-region" hidden>
-          代表的な市区町村のみを掲載した参考用の一覧です（網羅的ではありません、出典の確度は中）。
-          掲載のない地域は、下の級地区分から直接選択してください。
-        </p>
+        <div class="field">
+          <label for="regional-municipality">市区町村</label>
+          <select id="regional-municipality" name="regional-municipality" class="select-center" disabled></select>
+        </div>
       </div>
       <div class="field">
-        <label for="regional-rate">勤務地の級地区分</label>
-        <select id="regional-rate" name="regional-rate"></select>
+        <label for="regional-rate">地域手当の支給割合</label>
+        <select id="regional-rate" name="regional-rate" class="select-center"></select>
       </div>
-      <details class="regional-rate-details">
-        <summary>級地区分ごとの支給割合を見る</summary>
-        <table class="regional-rate-table">
-          <thead>
-            <tr><th>級地区分</th><th>支給割合</th><th>該当地域の例</th></tr>
-          </thead>
-          <tbody id="regional-rate-table-body"></tbody>
-        </table>
-      </details>
     </fieldset>
 
     <fieldset>
@@ -405,6 +402,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <footer class="site-footer">
   <h2 class="footer-heading">関連機関・法令リンク</h2>
   <ul class="link-list">
+    <li><a href="kinben-seisekiritsu/">勤勉手当の成績率計算機</a></li>
     <li><a href="https://www.jinji.go.jp/" target="_blank" rel="noopener">人事院</a></li>
     <li><a href="https://www.jinji.go.jp/seisaku/kankoku/archive/r7/r7_top.html" target="_blank" rel="noopener">人事院 令和7年人事院勧告</a></li>
     <li><a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">俸給表（別表第一）PDF - 人事院</a></li>
@@ -418,6 +416,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </p>
 </footer>
 
+<script src="js/regional-allowance-locations.js"></script>
 <script src="js/data.js"></script>
 <script src="js/calculator.js"></script>
 <script src="js/form-controls.js"></script>

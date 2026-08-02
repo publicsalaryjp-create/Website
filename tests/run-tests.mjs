@@ -14,6 +14,11 @@ const root = path.join(__dirname, "..");
 
 const context = { console };
 vm.createContext(context);
+vm.runInContext(
+  readFileSync(path.join(root, "js/regional-allowance-locations.js"), "utf8"),
+  context,
+  { filename: "js/regional-allowance-locations.js" }
+);
 vm.runInContext(readFileSync(path.join(root, "js/data.js"), "utf8"), context, { filename: "js/data.js" });
 vm.runInContext(readFileSync(path.join(root, "js/calculator.js"), "utf8"), context, { filename: "js/calculator.js" });
 
