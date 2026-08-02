@@ -130,19 +130,18 @@ h1, h2, h3 {
 /* ---------------------------------------------------------------------- */
 
 .disclaimer {
-  max-width: 1000px;
+  max-width: 760px;
   margin: 22px auto;
-  padding: 16px 20px;
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xs);
-  font-size: 0.88rem;
-  color: var(--color-warning-text);
+  padding: 14px 16px;
+  border: 1px solid #d9dee5;
+  border-radius: 4px;
+  background: #f7f8fa;
+  font-size: 0.75rem;
+  line-height: 1.65;
+  color: #374151;
 }
 
-.disclaimer a {
-  color: var(--color-primary-dark);
+.disclaimer strong {
   font-weight: 600;
 }
 
@@ -192,7 +191,7 @@ legend {
   gap: 8px;
   font-weight: 700;
   font-size: 1rem;
-  color: var(--color-primary-dark);
+  color: var(--color-text);
   padding: 0;
   margin-bottom: 12px;
 }
@@ -413,12 +412,14 @@ input:focus-visible {
 }
 
 .merit-rate-buttons,
-.overtime-buttons {
+.overtime-buttons,
+.housing-rent-buttons {
   display: contents;
 }
 
 .merit-rate-buttons .counter-btn,
-.overtime-buttons .counter-btn {
+.overtime-buttons .counter-btn,
+.housing-rent-buttons .counter-btn {
   flex: 0 0 40px;
   width: 40px;
   padding: 0;
@@ -430,6 +431,41 @@ input:focus-visible {
   display: flex;
   gap: 6px;
   margin-top: 8px;
+}
+
+.promotion-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.promotion-btn {
+  min-height: 34px;
+  padding: 6px 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.promotion-btn:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.promotion-btn:disabled {
+  border-color: var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.promotion-undo-btn {
+  background: #fff;
+  color: var(--color-primary-dark);
 }
 
 .step-buttons[hidden] {
@@ -557,7 +593,7 @@ input:focus-visible {
 
 .result-panel-heading {
   margin: 0 0 16px;
-  color: var(--color-primary-dark);
+  color: var(--color-text);
   font-size: 1.2rem;
 }
 
@@ -701,54 +737,51 @@ input:focus-visible {
 /* ---------------------------------------------------------------------- */
 
 .site-footer {
-  text-align: center;
+  max-width: 760px;
+  margin: 22px auto 36px;
+  padding: 14px 16px;
+  border: 1px solid #d9dee5;
+  border-radius: 4px;
+  background: #f7f8fa;
+  text-align: left;
   font-size: 0.8rem;
   color: var(--color-muted);
-  padding: 8px 20px 36px;
 }
 
 .site-footer a {
-  color: var(--color-primary);
-  font-weight: 600;
-  text-decoration: none;
+  color: #1f2933;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
 .site-footer a:hover {
-  text-decoration: underline;
+  color: #000;
 }
 
 .footer-heading {
   font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--color-primary-dark);
+  font-weight: 600;
+  color: var(--color-text);
   margin: 0 0 12px;
 }
 
 .link-list {
-  list-style: none;
-  padding: 0;
+  list-style: disc;
+  padding-left: 1.25em;
   margin: 0 0 16px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 12px;
 }
 
 .link-list li {
-  background: var(--color-panel);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  padding: 6px 14px;
-  box-shadow: var(--shadow-xs);
-  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  padding: 0 0 8px;
 }
 
-.link-list li:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
+.link-list li:last-child {
+  padding-bottom: 0;
 }
 
 .footer-note {
-  max-width: 640px;
-  margin: 0 auto;
+  max-width: 720px;
+  margin: 0;
 }

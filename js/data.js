@@ -153,6 +153,18 @@ function getVisibleTableKeys() {
   return getTableKeys().filter((key) => VISIBLE_TABLE_KEYS.includes(key));
 }
 
+/**
+ * 昇格時号俸対応表から、1級上の職務の級に昇格した際の号俸を返す。
+ * 対応表を持たない俸給表・号俸の場合は null を返す。
+ */
+function getPromotionTargetStep(tableKey, targetGrade, sourceStep) {
+  if (typeof PROMOTION_STEP_MAPPINGS === "undefined") return null;
+  const table = PROMOTION_STEP_MAPPINGS.tables && PROMOTION_STEP_MAPPINGS.tables[tableKey];
+  const targetMapping = table && table[String(targetGrade)];
+  const step = targetMapping && targetMapping[String(sourceStep)];
+  return Number.isInteger(step) ? step : null;
+}
+
 // ---------------------------------------------------------------------------
 // 2. 地域手当（令和6年人事院勧告後の5区分制度）
 // ---------------------------------------------------------------------------

@@ -19,6 +19,11 @@ vm.runInContext(
   context,
   { filename: "js/regional-allowance-locations.js" }
 );
+vm.runInContext(
+  readFileSync(path.join(root, "js/promotion-step-mapping.js"), "utf8"),
+  context,
+  { filename: "js/promotion-step-mapping.js" }
+);
 vm.runInContext(readFileSync(path.join(root, "js/data.js"), "utf8"), context, { filename: "js/data.js" });
 vm.runInContext(readFileSync(path.join(root, "js/calculator.js"), "utf8"), context, { filename: "js/calculator.js" });
 
@@ -81,6 +86,19 @@ test("getSalaryAmount: flat型俸給表は級を無視してstepsを参照", () 
 test("getMaxStep: 級ごとの号俸数を返す", () => {
   assert.equal(context.getMaxStep("test_graded", 1), 4);
   assert.equal(context.getMaxStep("test_graded", 2), 2);
+});
+
+test("getPromotionTargetStep: 行政職俸給表(一)の公式対応表から昇格後の号俸を返す", () => {
+  assert.equal(context.getPromotionTargetStep("administrative_1", 2, 10), 1);
+  assert.equal(context.getPromotionTargetStep("administrative_1", 3, 50), 30);
+  assert.equal(context.getPromotionTargetStep("designated", 2, 1), null);
+});
+
+test("getPromotionTargetStep: 9級から10級は1〜3号が同号、4〜9号が4号となる", () => {
+  const expected = [1, 2, 3, 4, 4, 4, 4, 4, 4];
+  expected.forEach((targetStep, index) => {
+    assert.equal(context.getPromotionTargetStep("administrative_1", 10, index + 1), targetStep);
+  });
 });
 
 // --- 住居手当 ----------------------------------------------------------------------

@@ -282,6 +282,70 @@ async function handleVintageChange(e) {
   updateSpecialAdjustmentAmountHint();
 }
 
+// 昇格操作は直前の1回分だけ戻せる。ページ再読込後や手動変更後は保持しない。
+let promotionUndoState = null;
+let isApplyingPromotion = false;
+
+function updatePromotionControls() {
+  const actions = document.getElementById("promotion-actions");
+  const promoteButton = document.getElementById("promote-grade");
+  const undoButton = document.getElementById("undo-promotion");
+  const gradeSelect = document.getElementById("grade");
+  const stepSelect = document.getElementById("step");
+  if (!actions || !promoteButton || !undoButton || !gradeSelect || !stepSelect) return;
+
+  const targetGrade = Number(gradeSelect.value) + 1;
+  const targetStep = getPromotionTargetStep(currentTableKey(), targetGrade, Number(stepSelect.value));
+  const isAvailable = currentTableType() === "graded" && targetStep !== null;
+  actions.hidden = !isAvailable && !promotionUndoState;
+  promoteButton.disabled = !isAvailable;
+  undoButton.hidden = !promotionUndoState;
+}
+
+function applyPromotionGradeAndStep(grade, step) {
+  const gradeSelect = document.getElementById("grade");
+  const stepSelect = document.getElementById("step");
+  isApplyingPromotion = true;
+  gradeSelect.value = String(grade);
+  gradeSelect.dispatchEvent(new Event("input", { bubbles: true }));
+  stepSelect.value = String(step);
+  stepSelect.dispatchEvent(new Event("input", { bubbles: true }));
+  isApplyingPromotion = false;
+  updatePromotionControls();
+}
+
+function initPromotionControls() {
+  const promoteButton = document.getElementById("promote-grade");
+  const undoButton = document.getElementById("undo-promotion");
+  const gradeSelect = document.getElementById("grade");
+  const stepSelect = document.getElementById("step");
+  if (!promoteButton || !undoButton || !gradeSelect || !stepSelect) return;
+
+  promoteButton.addEventListener("click", () => {
+    const grade = Number(gradeSelect.value);
+    const step = Number(stepSelect.value);
+    const targetStep = getPromotionTargetStep(currentTableKey(), grade + 1, step);
+    if (targetStep === null) return;
+    promotionUndoState = { grade, step };
+    applyPromotionGradeAndStep(grade + 1, targetStep);
+  });
+
+  undoButton.addEventListener("click", () => {
+    if (!promotionUndoState) return;
+    const { grade, step } = promotionUndoState;
+    promotionUndoState = null;
+    applyPromotionGradeAndStep(grade, step);
+  });
+
+  [gradeSelect, stepSelect].forEach((select) => {
+    select.addEventListener("input", () => {
+      if (!isApplyingPromotion) promotionUndoState = null;
+      updatePromotionControls();
+    });
+  });
+  updatePromotionControls();
+}
+
 function initForm() {
   const saved = loadFormState("index");
   const form = document.getElementById("calc-form");
@@ -332,6 +396,7 @@ function initForm() {
   });
   wireCounterButtons(form);
   initHintToggles();
+  initPromotionControls();
 
   wireCommonFormEvents(form, {
     onInputExtra: (e) => {
@@ -362,6 +427,9 @@ function initForm() {
       if (e.target.id === "merit-grade-december") {
         updateMeritGradeNote("december");
         updateMeritRateInput("december");
+      }
+      if (["salary-table", "grade", "step"].includes(e.target.id)) {
+        updatePromotionControls();
       }
     },
     onChangeExtra: handleVintageChange,
@@ -397,6 +465,8 @@ function initForm() {
       const delta = Number(btn.dataset.delta);
       const next = Math.min(Math.max((Number(stepInput.value) || 1) + delta, 1), maxStep);
       stepInput.value = next;
+      promotionUndoState = null;
+      updatePromotionControls();
       recalculate();
     });
   });

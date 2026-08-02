@@ -203,6 +203,31 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
+// index.html: 昇格ボタンは公式の対応表で1級上の号俸を設定し、戻るで直前の級・号俸を復元する
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#grade", "2");
+  await page.selectOption("#step", "50");
+  await page.click("#promote-grade");
+  await page.waitForTimeout(150);
+  const promotedGrade = await page.inputValue("#grade");
+  const promotedStep = await page.inputValue("#step");
+  const undoVisible = await page.isVisible("#undo-promotion");
+  await page.click("#undo-promotion");
+  await page.waitForTimeout(150);
+  const restoredGrade = await page.inputValue("#grade");
+  const restoredStep = await page.inputValue("#step");
+  const undoHidden = await page.isHidden("#undo-promotion");
+  report(
+    "index.html: 昇格で公式対応表どおり2級50号→3級30号となり、戻るで2級50号へ復元できる",
+    promotedGrade === "3" && promotedStep === "30" && undoVisible && restoredGrade === "2" && restoredStep === "50" && undoHidden,
+    `昇格後=${promotedGrade}級${promotedStep}号 戻し後=${restoredGrade}級${restoredStep}号`
+  );
+  await page.close();
+}
+
 // index.html: 住居手当は既定「支給なし」で0円、「支給あり」にすると家賃20,000円で4,000円が反映される
 {
   const page = await browser.newPage();
@@ -241,6 +266,27 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
     "index.html: 家賃100,000円でも住居手当は上限の28,000円になる",
     housingText.includes("28,000"),
     `表示=${housingText}`
+  );
+  await page.close();
+}
+
+// index.html: 家賃は千円・一万円の増減ボタンで操作でき、0円未満にはならない
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.check("#housing-eligible-yes");
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="1000"]');
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="10000"]');
+  const increasedValue = await page.inputValue("#housing-rent");
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="-10000"]');
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="-1000"]');
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="-1000"]');
+  const clampedValue = await page.inputValue("#housing-rent");
+  report(
+    "index.html: 家賃は−1万/−1千/+1千/+1万ボタンで増減でき、0円未満にはならない",
+    increasedValue === "11000" && clampedValue === "0",
+    `増額後=${increasedValue} 下限後=${clampedValue}`
   );
   await page.close();
 }
