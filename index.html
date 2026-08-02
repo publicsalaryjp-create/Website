@@ -13,7 +13,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="description" content="国家公務員の俸給・地域手当・扶養手当・住居手当・本省手当・期末勤勉手当・超過勤務手当から月給と年収を概算するシミュレーターです。">
 <title>国家公務員給与計算機</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260802-8">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -66,6 +66,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button type="button" class="step-btn" data-delta="6">+6</button>
           <button type="button" class="step-btn" data-delta="8">+8</button>
         </div>
+        <div class="promotion-actions" id="promotion-actions" role="group" aria-label="昇格シミュレーション">
+          <button type="button" class="promotion-btn" id="promote-grade">昇格</button>
+          <button type="button" class="promotion-btn promotion-undo-btn" id="undo-promotion" hidden>戻る</button>
+        </div>
         <p class="hint" id="step-buttons-hint">昇給の号俸数の目安（標準4、良好6、特に良好8）で号俸を上下できます。</p>
       </div>
       <div class="field" id="special-adjustment-field">
@@ -80,8 +84,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             特定管理職員
           </label>
         </div>
-        <div class="hint-toggle">
-                  <button type="button" class="hint-toggle-btn" data-target="detail-special-adjustment" aria-expanded="false" aria-controls="detail-special-adjustment" aria-label="詳しい説明を表示">？</button>
+        <div class="hint-toggle" id="special-adjustment-detail-toggle" hidden>
+          <button type="button" class="hint-toggle-btn" data-target="detail-special-adjustment" aria-expanded="false" aria-controls="detail-special-adjustment" aria-label="詳しい説明を表示">？</button>
         </div>
         <p class="hint hint-detail" id="detail-special-adjustment" hidden>
           俸給の特別調整額は、課室長級等の管理監督職員に、超過勤務手当に代えて支給される
@@ -98,31 +102,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <fieldset>
       <legend>地域手当</legend>
-      <div class="field">
-        <label for="regional-rate-region">地域名から選ぶ（任意）</label>
-        <select id="regional-rate-region" name="regional-rate-region"></select>
-        <div class="hint-toggle">
-          <p class="hint hint-short">代表的な市区町村のみの参考リストです。</p>
-          <button type="button" class="hint-toggle-btn" data-target="detail-region" aria-expanded="false" aria-controls="detail-region" aria-label="詳しい説明を表示">？</button>
+      <div class="hint-toggle">
+        <p class="hint hint-short">都道府県と市区町村を選択すると、支給割合が設定されます。<br>もしくは、支給割合を直接選択してください。</p>
+        <button type="button" class="hint-toggle-btn" data-target="detail-region" aria-expanded="false" aria-controls="detail-region" aria-label="詳しい説明を表示">？</button>
+      </div>
+      <p class="hint hint-detail" id="detail-region" hidden>
+        人事院の公式給与シミュレーターに収録された令和8年度の市区町村等データに基づきます。
+        本府省勤務かどうかは、地域手当ではなく本府省業務調整手当で設定してください。官署単位で指定される場合などは、下の支給割合を直接選択してください。
+      </p>
+      <div class="regional-location-fields">
+        <div class="field">
+          <label for="regional-prefecture">都道府県</label>
+          <select id="regional-prefecture" name="regional-prefecture" class="select-center"></select>
         </div>
-        <p class="hint hint-detail" id="detail-region" hidden>
-          代表的な市区町村のみを掲載した参考用の一覧です（網羅的ではありません、出典の確度は中）。
-          掲載のない地域は、下の級地区分から直接選択してください。
-        </p>
+        <div class="field">
+          <label for="regional-municipality">市区町村</label>
+          <select id="regional-municipality" name="regional-municipality" class="select-center" disabled></select>
+        </div>
       </div>
       <div class="field">
-        <label for="regional-rate">勤務地の級地区分</label>
-        <select id="regional-rate" name="regional-rate"></select>
+        <label for="regional-rate">地域手当の支給割合</label>
+        <select id="regional-rate" name="regional-rate" class="select-center"></select>
       </div>
-      <details class="regional-rate-details">
-        <summary>級地区分ごとの支給割合を見る</summary>
-        <table class="regional-rate-table">
-          <thead>
-            <tr><th>級地区分</th><th>支給割合</th><th>該当地域の例</th></tr>
-          </thead>
-          <tbody id="regional-rate-table-body"></tbody>
-        </table>
-      </details>
     </fieldset>
 
     <fieldset>
@@ -175,13 +176,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </p>
       <div id="housing-fields">
         <div class="hint-toggle">
-          <p class="hint hint-short">借家・借間のみ対象。家賃の半額と28,000円の低い方が支給額です。</p>
+          <p class="hint hint-short">借家・借間のみ対象。家賃16,000円超から支給され、最高28,000円です。</p>
           <button type="button" class="hint-toggle-btn" data-target="detail-housing" aria-expanded="false" aria-controls="detail-housing" aria-label="詳しい説明を表示">？</button>
         </div>
         <p class="hint hint-detail" id="detail-housing" hidden>
           借家・借間に住み、実際に家賃を支払っている場合のみ支給されます。
           持ち家の場合は支給されません（持家世帯向けの住居手当は廃止済み）。
-          住居手当額 = 家賃月額の半額と28,000円のいずれか低い方です。
+          家賃が16,000円超〜27,000円以下の場合は「家賃−16,000円」、27,000円超の場合は
+          「11,000円＋（家賃−27,000円）の半額」で計算します。支給額は最高28,000円です。
         </p>
         <div class="field">
           <span class="field-label-text">支給の有無</span>
@@ -198,7 +200,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <div class="field" id="housing-amount-field">
           <label for="housing-rent">家賃（月額・円）</label>
-          <input type="number" id="housing-rent" name="housing-rent" min="0" step="1000" value="0">
+          <div class="counter-input housing-rent-input">
+            <div class="housing-rent-buttons">
+              <button type="button" class="counter-btn" data-target="housing-rent" data-delta="-10000" aria-label="家賃を1万円減らす">−1万</button>
+              <button type="button" class="counter-btn" data-target="housing-rent" data-delta="-1000" aria-label="家賃を1千円減らす">−1千</button>
+            </div>
+            <input type="number" id="housing-rent" name="housing-rent" min="0" step="1000" value="0">
+            <div class="housing-rent-buttons">
+              <button type="button" class="counter-btn" data-target="housing-rent" data-delta="1000" aria-label="家賃を1千円増やす">+1千</button>
+              <button type="button" class="counter-btn" data-target="housing-rent" data-delta="10000" aria-label="家賃を1万円増やす">+1万</button>
+            </div>
+          </div>
           <p class="hint" id="housing-amount-hint"></p>
         </div>
       </div>
@@ -240,37 +252,61 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="ot-hours-fields">
         <div class="field">
           <label for="ot-weekday-normal">平日の時間外勤務（22時〜翌5時を除く）</label>
-          <div class="counter-input">
-            <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="-1" aria-label="減らす">−</button>
+          <div class="counter-input overtime-input">
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="-10" aria-label="平日通常の時間外勤務を10時間減らす">−10</button>
+              <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="-1" aria-label="平日通常の時間外勤務を1時間減らす">−1</button>
+            </div>
             <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="1" value="0">
-            <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="1" aria-label="増やす">＋</button>
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="1" aria-label="平日通常の時間外勤務を1時間増やす">+1</button>
+              <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="10" aria-label="平日通常の時間外勤務を10時間増やす">+10</button>
+            </div>
           </div>
           <p class="hint" id="ot-weekday-normal-rate-hint"></p>
         </div>
         <div class="field">
           <label for="ot-weekday-night">平日の時間外勤務（22時〜翌5時）</label>
-          <div class="counter-input">
-            <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="-1" aria-label="減らす">−</button>
+          <div class="counter-input overtime-input">
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="-10" aria-label="平日深夜の時間外勤務を10時間減らす">−10</button>
+              <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="-1" aria-label="平日深夜の時間外勤務を1時間減らす">−1</button>
+            </div>
             <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="1" value="0">
-            <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="1" aria-label="増やす">＋</button>
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="1" aria-label="平日深夜の時間外勤務を1時間増やす">+1</button>
+              <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="10" aria-label="平日深夜の時間外勤務を10時間増やす">+10</button>
+            </div>
           </div>
           <p class="hint" id="ot-weekday-night-rate-hint"></p>
         </div>
         <div class="field">
           <label for="ot-holiday-normal">休日の時間外勤務（22時〜翌5時を除く）</label>
-          <div class="counter-input">
-            <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="-1" aria-label="減らす">−</button>
+          <div class="counter-input overtime-input">
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="-10" aria-label="休日通常の時間外勤務を10時間減らす">−10</button>
+              <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="-1" aria-label="休日通常の時間外勤務を1時間減らす">−1</button>
+            </div>
             <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="1" value="0">
-            <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="1" aria-label="増やす">＋</button>
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="1" aria-label="休日通常の時間外勤務を1時間増やす">+1</button>
+              <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="10" aria-label="休日通常の時間外勤務を10時間増やす">+10</button>
+            </div>
           </div>
           <p class="hint" id="ot-holiday-normal-rate-hint"></p>
         </div>
         <div class="field">
           <label for="ot-holiday-night">休日の時間外勤務（22時〜翌5時）</label>
-          <div class="counter-input">
-            <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="-1" aria-label="減らす">−</button>
+          <div class="counter-input overtime-input">
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="-10" aria-label="休日深夜の時間外勤務を10時間減らす">−10</button>
+              <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="-1" aria-label="休日深夜の時間外勤務を1時間減らす">−1</button>
+            </div>
             <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="1" value="0">
-            <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="1" aria-label="増やす">＋</button>
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="1" aria-label="休日深夜の時間外勤務を1時間増やす">+1</button>
+              <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="10" aria-label="休日深夜の時間外勤務を10時間増やす">+10</button>
+            </div>
           </div>
           <p class="hint" id="ot-holiday-night-rate-hint"></p>
         </div>
@@ -297,20 +333,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
 
       <p class="field-label-text">勤勉手当</p>
-      <p class="hint">成績区分を選ぶと成績率が自動入力されます。幅のある区分は、下限以外の値に書き換えて計算することもできます。</p>
+      <p class="hint">成績区分を選ぶと成績率が自動入力されます。入力できる値は、選択した成績区分の範囲内に限られます。</p>
+      <p class="hint merit-rate-tool-link"><a href="kinben-seisekiritsu/">勤勉手当の成績率計算機で逆算する</a></p>
       <div class="field">
         <label for="merit-grade-june">勤務成績区分（6月期）</label>
         <select id="merit-grade-june" name="merit-grade-june" class="select-center"></select>
         <p class="hint" id="merit-grade-june-note"></p>
         <label for="merit-rate-june">成績率（6月期・100分率）</label>
-        <input type="number" id="merit-rate-june" name="merit-rate-june" min="0" step="0.01">
+        <div class="counter-input merit-rate-input">
+          <div class="merit-rate-buttons">
+            <button type="button" class="counter-btn merit-rate-btn" data-period="june" data-delta="-10" aria-label="6月期の成績率を10ポイント下げる">−10</button>
+            <button type="button" class="counter-btn merit-rate-btn" data-period="june" data-delta="-1" aria-label="6月期の成績率を1ポイント下げる">−1</button>
+          </div>
+          <input type="number" id="merit-rate-june" name="merit-rate-june" min="0" step="0.01">
+          <div class="merit-rate-buttons">
+            <button type="button" class="counter-btn merit-rate-btn" data-period="june" data-delta="1" aria-label="6月期の成績率を1ポイント上げる">+1</button>
+            <button type="button" class="counter-btn merit-rate-btn" data-period="june" data-delta="10" aria-label="6月期の成績率を10ポイント上げる">+10</button>
+          </div>
+        </div>
       </div>
       <div class="field">
         <label for="merit-grade-december">勤務成績区分（12月期）</label>
         <select id="merit-grade-december" name="merit-grade-december" class="select-center"></select>
         <p class="hint" id="merit-grade-december-note"></p>
         <label for="merit-rate-december">成績率（12月期・100分率）</label>
-        <input type="number" id="merit-rate-december" name="merit-rate-december" min="0" step="0.01">
+        <div class="counter-input merit-rate-input">
+          <div class="merit-rate-buttons">
+            <button type="button" class="counter-btn merit-rate-btn" data-period="december" data-delta="-10" aria-label="12月期の成績率を10ポイント下げる">−10</button>
+            <button type="button" class="counter-btn merit-rate-btn" data-period="december" data-delta="-1" aria-label="12月期の成績率を1ポイント下げる">−1</button>
+          </div>
+          <input type="number" id="merit-rate-december" name="merit-rate-december" min="0" step="0.01">
+          <div class="merit-rate-buttons">
+            <button type="button" class="counter-btn merit-rate-btn" data-period="december" data-delta="1" aria-label="12月期の成績率を1ポイント上げる">+1</button>
+            <button type="button" class="counter-btn merit-rate-btn" data-period="december" data-delta="10" aria-label="12月期の成績率を10ポイント上げる">+10</button>
+          </div>
+        </div>
       </div>
     </fieldset>
 
@@ -352,27 +409,25 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </main>
 
 <div class="disclaimer" id="disclaimer">
-  <strong>⚠️ ご利用にあたって：</strong>
+  <strong>ご利用にあたって：</strong>
   このツールは国家公務員給与の概算シミュレーターであり、計算結果の正確性を保証するものではありません。
   本ツールを利用したことによって発生した不利益や損害について、運営者は一切責任を負いません。
 </div>
 
 <footer class="site-footer">
-  <h2 class="footer-heading">関連機関・法令リンク</h2>
+  <h2 class="footer-heading">関連資料</h2>
   <ul class="link-list">
-    <li><a href="https://www.jinji.go.jp/" target="_blank" rel="noopener">人事院</a></li>
     <li><a href="https://www.jinji.go.jp/seisaku/kankoku/archive/r7/r7_top.html" target="_blank" rel="noopener">人事院 令和7年人事院勧告</a></li>
-    <li><a href="https://www.jinji.go.jp/content/900030877.pdf" target="_blank" rel="noopener">俸給表（別表第一）PDF - 人事院</a></li>
     <li><a href="https://www.jinji.go.jp/content/000013374.pdf" target="_blank" rel="noopener">国家公務員の諸手当の概要 PDF - 人事院</a></li>
     <li><a href="https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r08_kyuyo.pdf" target="_blank" rel="noopener">内閣人事局 国家公務員の給与（令和8年版）</a></li>
-    <li><a href="https://laws.e-gov.go.jp/" target="_blank" rel="noopener">e-Gov法令検索</a></li>
-    <li><a href="https://laws.e-gov.go.jp/law/325AC1000000095" target="_blank" rel="noopener">一般職の職員の給与に関する法律（e-Gov法令検索）</a></li>
   </ul>
   <p class="footer-note">
     俸給表・諸手当の制度は随時改定が行われます。最新情報は上記リンク先の最新の法令・公表資料をご確認ください。
   </p>
 </footer>
 
+<script src="js/regional-allowance-locations.js"></script>
+<script src="js/promotion-step-mapping.js"></script>
 <script src="js/data.js"></script>
 <script src="js/calculator.js"></script>
 <script src="js/form-controls.js"></script>

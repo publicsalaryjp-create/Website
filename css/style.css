@@ -130,19 +130,18 @@ h1, h2, h3 {
 /* ---------------------------------------------------------------------- */
 
 .disclaimer {
-  max-width: 1000px;
+  max-width: 760px;
   margin: 22px auto;
-  padding: 16px 20px;
-  background: var(--color-warning-bg);
-  border: 1px solid var(--color-warning-border);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-xs);
-  font-size: 0.88rem;
-  color: var(--color-warning-text);
+  padding: 14px 16px;
+  border: 1px solid #d9dee5;
+  border-radius: 4px;
+  background: #f7f8fa;
+  font-size: 0.75rem;
+  line-height: 1.65;
+  color: #374151;
 }
 
-.disclaimer a {
-  color: var(--color-primary-dark);
+.disclaimer strong {
   font-weight: 600;
 }
 
@@ -192,7 +191,7 @@ legend {
   gap: 8px;
   font-weight: 700;
   font-size: 1rem;
-  color: var(--color-primary-dark);
+  color: var(--color-text);
   padding: 0;
   margin-bottom: 12px;
 }
@@ -208,6 +207,28 @@ legend::before {
 
 .field {
   margin-bottom: 14px;
+}
+
+.regional-location-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.regional-location-fields .field {
+  margin-bottom: 0;
+}
+
+@media (max-width: 480px) {
+  .regional-location-fields {
+    gap: 8px;
+  }
+
+  .regional-location-fields select {
+    padding-left: 26px;
+    padding-right: 30px;
+    font-size: 0.88rem;
+  }
 }
 
 .field label {
@@ -233,6 +254,11 @@ input[type="number"] {
   background: #fff;
   color: var(--color-text);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+input[type="number"] {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 select {
@@ -336,6 +362,7 @@ input:focus-visible {
 
 .counter-input input[type="number"] {
   flex: 1;
+  min-width: 0;
   text-align: center;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -378,10 +405,67 @@ input:focus-visible {
   transform: scale(0.94);
 }
 
+/* 成績率は4つの増減ボタンを並べるため、号俸と同じ高さを保ちつつ横幅を圧縮する。 */
+.merit-rate-input,
+.overtime-input {
+  gap: 4px;
+}
+
+.merit-rate-buttons,
+.overtime-buttons,
+.housing-rent-buttons {
+  display: contents;
+}
+
+.merit-rate-buttons .counter-btn,
+.overtime-buttons .counter-btn,
+.housing-rent-buttons .counter-btn {
+  flex: 0 0 40px;
+  width: 40px;
+  padding: 0;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 .step-buttons {
   display: flex;
   gap: 6px;
   margin-top: 8px;
+}
+
+.promotion-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.promotion-btn {
+  min-height: 34px;
+  padding: 6px 16px;
+  border: 1px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: #fff;
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.promotion-btn:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.promotion-btn:disabled {
+  border-color: var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-muted);
+  cursor: not-allowed;
+}
+
+.promotion-undo-btn {
+  background: #fff;
+  color: var(--color-primary-dark);
 }
 
 .step-buttons[hidden] {
@@ -450,6 +534,12 @@ input:focus-visible {
   line-height: 1.55;
 }
 
+.merit-rate-tool-link a {
+  color: var(--color-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 /* 短縮した説明文＋「？」ボタンで詳細を開閉するUI */
 .hint-toggle {
   display: flex;
@@ -498,63 +588,6 @@ input:focus-visible {
   border-radius: var(--radius-sm);
 }
 
-.regional-rate-details {
-  margin-top: 10px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  background: var(--color-bg);
-}
-
-.regional-rate-details summary {
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-primary-dark);
-  list-style: none;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.regional-rate-details summary::-webkit-details-marker {
-  display: none;
-}
-
-.regional-rate-details summary::before {
-  content: "";
-  width: 0;
-  height: 0;
-  border-left: 5px solid var(--color-primary-dark);
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  transition: transform var(--transition-fast);
-  flex: none;
-}
-
-.regional-rate-details[open] summary::before {
-  transform: rotate(90deg);
-}
-
-.regional-rate-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.regional-rate-table th,
-.regional-rate-table td {
-  text-align: left;
-  padding: 7px 6px;
-  border-bottom: 1px solid var(--color-border);
-  font-size: 0.85rem;
-}
-
-.regional-rate-table th {
-  font-weight: 600;
-  color: var(--color-muted);
-}
-
 /* ---------------------------------------------------------------------- */
 /* 計算結果                                                               */
 /* ---------------------------------------------------------------------- */
@@ -566,7 +599,7 @@ input:focus-visible {
 
 .result-panel-heading {
   margin: 0 0 16px;
-  color: var(--color-primary-dark);
+  color: var(--color-text);
   font-size: 1.2rem;
 }
 
@@ -710,54 +743,51 @@ input:focus-visible {
 /* ---------------------------------------------------------------------- */
 
 .site-footer {
-  text-align: center;
+  max-width: 760px;
+  margin: 22px auto 36px;
+  padding: 14px 16px;
+  border: 1px solid #d9dee5;
+  border-radius: 4px;
+  background: #f7f8fa;
+  text-align: left;
   font-size: 0.8rem;
   color: var(--color-muted);
-  padding: 8px 20px 36px;
 }
 
 .site-footer a {
-  color: var(--color-primary);
-  font-weight: 600;
-  text-decoration: none;
+  color: #1f2933;
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
 }
 
 .site-footer a:hover {
-  text-decoration: underline;
+  color: #000;
 }
 
 .footer-heading {
   font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--color-primary-dark);
+  font-weight: 600;
+  color: var(--color-text);
   margin: 0 0 12px;
 }
 
 .link-list {
-  list-style: none;
-  padding: 0;
+  list-style: disc;
+  padding-left: 1.25em;
   margin: 0 0 16px;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px 12px;
 }
 
 .link-list li {
-  background: var(--color-panel);
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  padding: 6px 14px;
-  box-shadow: var(--shadow-xs);
-  transition: box-shadow var(--transition-fast), border-color var(--transition-fast);
+  padding: 0 0 8px;
 }
 
-.link-list li:hover {
-  border-color: var(--color-primary);
-  box-shadow: var(--shadow-sm);
+.link-list li:last-child {
+  padding-bottom: 0;
 }
 
 .footer-note {
-  max-width: 640px;
-  margin: 0 auto;
+  max-width: 720px;
+  margin: 0;
 }

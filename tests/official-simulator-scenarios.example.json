@@ -1,0 +1,36 @@
+[
+  {
+    "id": "admin1-grade1-step1-tokyo-standard",
+    "official": {
+      "payTable": "行政(一)",
+      "grade": 1,
+      "step": 1,
+      "specialAdjustmentCategory": "該当なし",
+      "officeLocation": "東京都特別区（本府省）",
+      "singleAssignmentDistance": "－",
+      "rent": 20000,
+      "spouseRent": 0,
+      "commuterPassSixMonths": 0,
+      "childCount": 0,
+      "childAge1": "",
+      "childAge2": "",
+      "childAge3": "",
+      "childAge4": "",
+      "otherDependentCount": 0,
+      "weekdayOvertimeHours": 0,
+      "meritJune": "良好（標準）",
+      "meritDecember": "良好（標準）"
+    },
+    "web": {
+      "tableKey": "administrative_1",
+      "grade": 1,
+      "step": 1,
+      "regionalRate": 0.2,
+      "honshoEligible": true,
+      "housingEligible": true,
+      "rent": 20000,
+      "meritRateJune": 1.0225,
+      "meritRateDecember": 1.0225
+    }
+  }
+]

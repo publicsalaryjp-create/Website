@@ -14,6 +14,16 @@ const root = path.join(__dirname, "..");
 
 const context = { console };
 vm.createContext(context);
+vm.runInContext(
+  readFileSync(path.join(root, "js/regional-allowance-locations.js"), "utf8"),
+  context,
+  { filename: "js/regional-allowance-locations.js" }
+);
+vm.runInContext(
+  readFileSync(path.join(root, "js/promotion-step-mapping.js"), "utf8"),
+  context,
+  { filename: "js/promotion-step-mapping.js" }
+);
 vm.runInContext(readFileSync(path.join(root, "js/data.js"), "utf8"), context, { filename: "js/data.js" });
 vm.runInContext(readFileSync(path.join(root, "js/calculator.js"), "utf8"), context, { filename: "js/calculator.js" });
 
@@ -76,6 +86,36 @@ test("getSalaryAmount: flat型俸給表は級を無視してstepsを参照", () 
 test("getMaxStep: 級ごとの号俸数を返す", () => {
   assert.equal(context.getMaxStep("test_graded", 1), 4);
   assert.equal(context.getMaxStep("test_graded", 2), 2);
+});
+
+test("getPromotionTargetStep: 行政職俸給表(一)の公式対応表から昇格後の号俸を返す", () => {
+  assert.equal(context.getPromotionTargetStep("administrative_1", 2, 10), 1);
+  assert.equal(context.getPromotionTargetStep("administrative_1", 3, 50), 30);
+  assert.equal(context.getPromotionTargetStep("designated", 2, 1), null);
+});
+
+test("getPromotionTargetStep: 9級から10級は1〜3号が同号、4〜9号が4号となる", () => {
+  const expected = [1, 2, 3, 4, 4, 4, 4, 4, 4];
+  expected.forEach((targetStep, index) => {
+    assert.equal(context.getPromotionTargetStep("administrative_1", 10, index + 1), targetStep);
+  });
+});
+
+// --- 住居手当 ----------------------------------------------------------------------
+
+test("calcHousingAllowance: 家賃16,000円以下は支給されない", () => {
+  assert.equal(context.calcHousingAllowance(16000), 0);
+});
+
+test("calcHousingAllowance: 家賃16,000円超〜27,000円以下は家賃から16,000円を控除する", () => {
+  assert.equal(context.calcHousingAllowance(20000), 4000);
+  assert.equal(context.calcHousingAllowance(27000), 11000);
+});
+
+test("calcHousingAllowance: 家賃27,000円超は段階式で計算し、28,000円を上限とする", () => {
+  assert.equal(context.calcHousingAllowance(30000), 12500);
+  assert.equal(context.calcHousingAllowance(61000), 28000);
+  assert.equal(context.calcHousingAllowance(100000), 28000);
 });
 
 // --- calculateOvertimeAllowance -----------------------------------------------------

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="期末手当と勤勉手当の支給額から、国家公務員の勤勉手当の成績率を概算する計算機です。">
+  <title>勤勉手当の成績率計算機｜国家公務員給与計算機</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="../css/style.css?v=20260802-7">
+  <link rel="stylesheet" href="style.css?v=20260802-1">
+</head>
+<body>
+  <header class="site-header tool-header">
+    <h1>勤勉手当の成績率計算機</h1>
+    <p class="subtitle">ボーナスの支給額から成績率を逆算</p>
+  </header>
+
+  <main class="subpage-layout">
+    <nav class="breadcrumb" aria-label="パンくずリスト">
+      <ol>
+        <li><a href="../index.html">国家公務員給与計算機</a></li>
+        <li aria-current="page">勤勉手当の成績率計算機</li>
+      </ol>
+    </nav>
+    <section class="panel calculator-card" aria-labelledby="calculator-heading">
+      <div class="section-heading">
+        <span class="eyebrow">支給条件と金額から逆算</span>
+        <h2 id="calculator-heading">支給額を入力</h2>
+        <p>俸給表・職員区分を選び、給与明細に記載された控除前の支給額を入力してください。</p>
+      </div>
+
+      <form id="merit-rate-form" novalidate>
+        <h3 class="form-category-heading">共通条件</h3>
+        <fieldset class="staff-type-field payment-period-field">
+          <legend>支給期</legend>
+          <div class="staff-type-options payment-period-options">
+            <label>
+              <input type="radio" name="payment-period" value="june" checked>
+              <span><strong>2026年6月期</strong></span>
+            </label>
+            <label>
+              <input type="radio" name="payment-period" value="december">
+              <span><strong>2026年12月期</strong></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="amount-field">
+          <label for="salary-table-type">俸給表の種類</label>
+          <select id="salary-table-type" name="salary-table-type">
+            <option value="administrative_1">行政職俸給表（一）</option>
+            <option value="designated">指定職俸給表</option>
+          </select>
+        </div>
+
+        <fieldset class="staff-type-field" id="staff-type-field">
+          <legend>職員区分</legend>
+          <div class="staff-type-options">
+            <label>
+              <input type="radio" name="staff-type" value="general" checked>
+              <span><strong>一般職員</strong></span>
+            </label>
+            <label>
+              <input type="radio" name="staff-type" value="senior_manager">
+              <span><strong>特定管理職員</strong><small>本府省課長等</small></span>
+            </label>
+          </div>
+        </fieldset>
+
+        <h3 class="form-category-heading">期末手当</h3>
+        <div class="rate-fields single-rate-field">
+          <div class="amount-field">
+            <label for="service-rate">期末手当の在職期間別割合</label>
+            <select id="service-rate" name="service-rate">
+              <option value="100">6か月（100%）</option>
+              <option value="80">5か月以上6か月未満（80%）</option>
+              <option value="60">3か月以上5か月未満（60%）</option>
+              <option value="30">3か月未満（30%）</option>
+            </select>
+            <p class="input-error" id="service-rate-error" role="alert"></p>
+          </div>
+        </div>
+
+        <div class="amount-field">
+          <label for="dependent-base-addition">扶養手当（月額）</label>
+          <div class="currency-input">
+            <input type="text" id="dependent-base-addition" name="dependent-base-addition" inputmode="numeric" autocomplete="off" value="0" aria-describedby="dependent-base-error">
+            <span aria-hidden="true">円</span>
+          </div>
+          <p class="input-error" id="dependent-base-error" role="alert"></p>
+        </div>
+
+        <fieldset class="staff-type-field regional-fields">
+          <legend>地域手当</legend>
+          <div class="amount-field">
+            <label for="regional-prefecture">勤務地の都道府県</label>
+            <select id="regional-prefecture" name="regional-prefecture"></select>
+          </div>
+          <div class="amount-field">
+            <label for="regional-municipality">勤務地の市区町村等</label>
+            <select id="regional-municipality" name="regional-municipality" disabled></select>
+          </div>
+          <div class="amount-field">
+            <label for="regional-rate">地域手当の支給割合</label>
+            <select id="regional-rate" name="regional-rate"></select>
+            <p class="hint">勤務地を選ぶと令和8年度の割合を自動設定します。直接変更もできます</p>
+          </div>
+        </fieldset>
+
+        <div class="amount-field">
+          <label for="term-amount">期末手当</label>
+          <div class="currency-input">
+            <input type="text" id="term-amount" name="term-amount" inputmode="numeric" autocomplete="off" placeholder="例：400,000" aria-describedby="term-error">
+            <span aria-hidden="true">円</span>
+          </div>
+          <p class="input-error" id="term-error" role="alert"></p>
+        </div>
+
+        <h3 class="form-category-heading">勤勉手当</h3>
+        <div class="amount-field">
+          <label for="period-rate">勤勉手当の期間率</label>
+          <div class="percent-input">
+            <input type="number" id="period-rate" name="period-rate" min="0" max="100" step="0.01" value="100">
+            <span aria-hidden="true">%</span>
+          </div>
+          <p class="hint">基準日前6か月の勤務期間に応じた率</p>
+          <p class="input-error" id="period-rate-error" role="alert"></p>
+        </div>
+
+        <div class="amount-field">
+          <label for="merit-amount">勤勉手当</label>
+          <div class="currency-input">
+            <input type="text" id="merit-amount" name="merit-amount" inputmode="numeric" autocomplete="off" placeholder="例：323,960" aria-describedby="merit-error">
+            <span aria-hidden="true">円</span>
+          </div>
+          <p class="input-error" id="merit-error" role="alert"></p>
+        </div>
+
+        <button type="submit" class="calculate-button">成績率を計算する</button>
+      </form>
+
+    <section class="result-card" id="result-card" aria-live="polite" aria-atomic="true">
+      <p class="result-kicker">計算結果</p>
+      <div class="empty-result" id="empty-result">
+        <span class="empty-result-mark" aria-hidden="true">%</span>
+        <p>2つの金額を入力すると<br>ここに成績率が表示されます</p>
+      </div>
+      <div id="calculated-result" hidden>
+        <p class="result-label">推定される成績率</p>
+        <p class="rate-result"><strong id="result-rate">—</strong><span>%</span></p>
+        <p class="result-caption">100分率（1回あたり）</p>
+        <div class="category-result">
+          <span>推定成績区分</span>
+          <strong id="result-category">—</strong>
+        </div>
+        <div class="calculation-detail">
+          <div>
+            <span>推定勤勉手当算定基礎額</span>
+            <strong id="result-base">—</strong>
+          </div>
+          <p id="result-formula">—</p>
+        </div>
+      </div>
+    </section>
+    </section>
+
+    <aside class="assumption-note">
+      <h2>この計算の前提</h2>
+      <p>令和8年度以降の支給月数を使用します。1回あたりの期末手当は、一般職員<strong>1.2625月</strong>、特定管理職員<strong>1.0625月</strong>、指定職職員<strong>0.675月</strong>です。6月期・12月期とも成績率と支給月数は同じですが、対象となる勤務期間を確認できるよう支給期を選択します。</p>
+      <p>勤勉手当の期間率は基準日前6か月の勤務期間に応じた0〜100%の率です。期末手当の在職期間別割合は、6か月100%、5か月以上6か月未満80%、3か月以上5か月未満60%、3か月未満30%から選択します。</p>
+      <p>期末手当の算定基礎には扶養手当とそれに対する地域手当等が含まれますが、勤勉手当の算定基礎には含まれません。入力した扶養手当と地域手当率から差額を自動計算して補正します。</p>
+      <p>実際の支給額には端数処理や休職等による期間率が反映されるため、通知された成績率とわずかに異なることがあります。</p>
+    </aside>
+  </main>
+
+  <footer class="site-footer compact-footer">
+    <p><a href="../index.html">国家公務員給与計算機に戻る</a></p>
+  </footer>
+
+  <script src="../js/regional-allowance-locations.js"></script>
+  <script src="script.js?v=20260802-2"></script>
+</body>
+</html>

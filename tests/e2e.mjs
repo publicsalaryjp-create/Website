@@ -159,6 +159,30 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
+// index.html: 超過勤務時間は−10/−1/+1/+10ボタンで増減でき、0未満にはならない
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  const plusTen = page.getByRole("button", { name: "平日通常の時間外勤務を10時間増やす", exact: true });
+  const plusOne = page.getByRole("button", { name: "平日通常の時間外勤務を1時間増やす", exact: true });
+  const minusOne = page.getByRole("button", { name: "平日通常の時間外勤務を1時間減らす", exact: true });
+  const minusTen = page.getByRole("button", { name: "平日通常の時間外勤務を10時間減らす", exact: true });
+  const buttonCount = (await plusTen.count()) + (await plusOne.count()) + (await minusOne.count()) + (await minusTen.count());
+  await plusTen.click();
+  await plusOne.click();
+  const afterIncrease = await page.inputValue("#ot-weekday-normal");
+  await minusTen.click();
+  await minusTen.click();
+  const afterDecrease = await page.inputValue("#ot-weekday-normal");
+  report(
+    "index.html: 超過勤務時間は−10/−1/+1/+10ボタンで増減でき、0未満にはならない",
+    buttonCount === 4 && afterIncrease === "11" && afterDecrease === "0",
+    `ボタン数=${buttonCount} 加算後=${afterIncrease} 減算後=${afterDecrease}`
+  );
+  await page.close();
+}
+
 // index.html: 号俸の昇給ボタン（+4/+6/+8, -4/-6/-8）が正しく増減する
 {
   const page = await browser.newPage();
@@ -179,7 +203,32 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
-// index.html: 住居手当は既定「支給なし」で0円、「支給あり」にすると家賃の半額(28,000円未満)が反映される
+// index.html: 昇格ボタンは公式の対応表で1級上の号俸を設定し、戻るで直前の級・号俸を復元する
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#grade", "2");
+  await page.selectOption("#step", "50");
+  await page.click("#promote-grade");
+  await page.waitForTimeout(150);
+  const promotedGrade = await page.inputValue("#grade");
+  const promotedStep = await page.inputValue("#step");
+  const undoVisible = await page.isVisible("#undo-promotion");
+  await page.click("#undo-promotion");
+  await page.waitForTimeout(150);
+  const restoredGrade = await page.inputValue("#grade");
+  const restoredStep = await page.inputValue("#step");
+  const undoHidden = await page.isHidden("#undo-promotion");
+  report(
+    "index.html: 昇格で公式対応表どおり2級50号→3級30号となり、戻るで2級50号へ復元できる",
+    promotedGrade === "3" && promotedStep === "30" && undoVisible && restoredGrade === "2" && restoredStep === "50" && undoHidden,
+    `昇格後=${promotedGrade}級${promotedStep}号 戻し後=${restoredGrade}級${restoredStep}号`
+  );
+  await page.close();
+}
+
+// index.html: 住居手当は既定「支給なし」で0円、「支給あり」にすると家賃20,000円で4,000円が反映される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
@@ -188,17 +237,17 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   const defaultHousingText = await page.textContent("#r-housing");
   const amountFieldHiddenByDefault = await page.isHidden("#housing-amount-field");
   await page.check("#housing-eligible-yes");
-  await page.fill("#housing-rent", "15000");
+  await page.fill("#housing-rent", "20000");
   await page.waitForTimeout(200);
   const housingText = await page.textContent("#r-housing");
   const hintText = await page.textContent("#housing-amount-hint");
   report(
-    "index.html: 住居手当は既定で支給なし(0円、金額欄は非表示)、支給ありで家賃15,000円なら半額の7,500円が反映される",
+    "index.html: 住居手当は既定で支給なし(0円、金額欄は非表示)、支給ありで家賃20,000円なら4,000円が反映される",
     defaultChecked &&
       defaultHousingText.includes("0") &&
       amountFieldHiddenByDefault &&
-      housingText.includes("7,500") &&
-      hintText.includes("7,500"),
+      housingText.includes("4,000") &&
+      hintText.includes("4,000"),
     `既定チェック=${defaultChecked}/${defaultHousingText}/非表示=${amountFieldHiddenByDefault} 支給あり後=${housingText} ヒント=${hintText}`
   );
   await page.close();
@@ -214,9 +263,30 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.waitForTimeout(200);
   const housingText = await page.textContent("#r-housing");
   report(
-    "index.html: 家賃100,000円（半額50,000円）でも住居手当は上限の28,000円になる",
+    "index.html: 家賃100,000円でも住居手当は上限の28,000円になる",
     housingText.includes("28,000"),
     `表示=${housingText}`
+  );
+  await page.close();
+}
+
+// index.html: 家賃は千円・一万円の増減ボタンで操作でき、0円未満にはならない
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.check("#housing-eligible-yes");
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="1000"]');
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="10000"]');
+  const increasedValue = await page.inputValue("#housing-rent");
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="-10000"]');
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="-1000"]');
+  await page.click('.counter-btn[data-target="housing-rent"][data-delta="-1000"]');
+  const clampedValue = await page.inputValue("#housing-rent");
+  report(
+    "index.html: 家賃は−1万/−1千/+1千/+1万ボタンで増減でき、0円未満にはならない",
+    increasedValue === "11000" && clampedValue === "0",
+    `増額後=${increasedValue} 下限後=${clampedValue}`
   );
   await page.close();
 }
@@ -272,7 +342,6 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
   await page.selectOption("#regional-rate", "0");
-  await page.selectOption("#merit-staff-type-june", "general");
   await page.selectOption("#merit-grade-june", "good");
   await page.waitForTimeout(200);
   const kinbenGood = await page.textContent("#r-kinben-june");
@@ -305,16 +374,57 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
-// index.html: 勤勉手当は6月期・12月期で別々に職員区分・成績区分を設定できる
+// index.html: 成績率は成績区分の範囲内に制限され、「良好でない」では0を入力できる
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
   await page.selectOption("#regional-rate", "0");
-  await page.selectOption("#merit-staff-type-june", "general");
+  await page.selectOption("#merit-grade-june", "good");
+  const goodMin = await page.getAttribute("#merit-rate-june", "min");
+  const goodMax = await page.getAttribute("#merit-rate-june", "max");
+  const decreaseTenButton = page.getByRole("button", { name: "6月期の成績率を10ポイント下げる", exact: true });
+  const decreaseOneButton = page.getByRole("button", { name: "6月期の成績率を1ポイント下げる", exact: true });
+  const increaseOneButton = page.getByRole("button", { name: "6月期の成績率を1ポイント上げる", exact: true });
+  const increaseTenButton = page.getByRole("button", { name: "6月期の成績率を10ポイント上げる", exact: true });
+  const rateButtonCount =
+    (await decreaseTenButton.count()) +
+    (await decreaseOneButton.count()) +
+    (await increaseOneButton.count()) +
+    (await increaseTenButton.count());
+  await page.fill("#merit-rate-june", "999");
+  await page.locator("#merit-rate-june").blur();
+  const normalizedGood = await page.inputValue("#merit-rate-june");
+  await page.selectOption("#merit-grade-june", "not_good");
+  await page.fill("#merit-rate-june", "0");
+  await page.locator("#merit-rate-june").blur();
+  const zeroRate = await page.inputValue("#merit-rate-june");
+  const kinbenZero = await page.textContent("#r-kinben-june");
+  await increaseOneButton.click();
+  const incrementedRate = await page.inputValue("#merit-rate-june");
+  report(
+    "index.html: 成績率は区分の範囲内に制限され、「良好でない」では0を入力できる",
+    goodMin === "102.25" &&
+      goodMax === "102.25" &&
+      rateButtonCount === 4 &&
+      normalizedGood === "102.25" &&
+      zeroRate === "0" &&
+      incrementedRate === "1" &&
+      kinbenZero.includes("0"),
+    `良好の範囲=${goodMin}〜${goodMax} 正規化=${normalizedGood} 良好でない=${zeroRate}/${kinbenZero} 加算後=${incrementedRate}`
+  );
+  await page.close();
+}
+
+// index.html: 勤勉手当は6月期・12月期で別々に成績区分を設定できる
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "administrative_1");
+  await page.selectOption("#regional-rate", "0");
   await page.selectOption("#merit-grade-june", "excellent_plus");
-  await page.selectOption("#merit-staff-type-december", "general");
   await page.selectOption("#merit-grade-december", "not_good");
   await page.waitForTimeout(200);
   const kinbenJune = await page.textContent("#r-kinben-june");
@@ -367,39 +477,22 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
-// index.html: 地域手当の級地区分ごとの支給割合表が折りたたみ内に描画され、開閉できる
+// index.html: 都道府県→市区町村等の選択で支給割合に反映され、直接変更すると市区町村等選択が解除される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
-  const rowCount = await page.$$eval("#regional-rate-table-body tr", (trs) => trs.length);
-  const isOpenBefore = await page.$eval(".regional-rate-details", (el) => el.open);
-  await page.click(".regional-rate-details summary");
-  await page.waitForTimeout(150);
-  const isOpenAfter = await page.$eval(".regional-rate-details", (el) => el.open);
-  report(
-    "index.html: 地域手当の割合表が6区分描画され、クリックで開閉できる",
-    rowCount === 6 && isOpenBefore === false && isOpenAfter === true,
-    `行数=${rowCount} 開閉前=${isOpenBefore} 開閉後=${isOpenAfter}`
-  );
-  await page.close();
-}
-
-// index.html: 地域名から選ぶと級地区分プルダウンに反映され、直接変更すると地域名選択が解除される
-{
-  const page = await browser.newPage();
-  await page.goto(`${base}/index.html`);
-  await page.waitForTimeout(500);
-  await page.selectOption("#regional-rate-region", "東京都特別区（23区）");
+  await page.selectOption("#regional-prefecture", "東京都");
+  await page.selectOption("#regional-municipality", { label: "武蔵野市" });
   await page.waitForTimeout(150);
   const rateAfterRegion = await page.inputValue("#regional-rate");
   await page.selectOption("#regional-rate", "0");
   await page.waitForTimeout(150);
-  const regionAfterManualChange = await page.inputValue("#regional-rate-region");
+  const municipalityAfterManualChange = await page.inputValue("#regional-municipality");
   report(
-    "index.html: 地域名から選ぶと級地区分(1級地=0.2)に反映され、直接変更すると地域名選択が解除される",
-    rateAfterRegion === "0.2" && regionAfterManualChange === "",
-    `regional-rate(選択後)=${rateAfterRegion} regional-rate-region(手動変更後)=${regionAfterManualChange}`
+    "index.html: 都道府県・市区町村等の選択で令和8年度の率に反映され、直接変更すると市区町村等選択が解除される",
+    rateAfterRegion === "0.16" && municipalityAfterManualChange === "",
+    `regional-rate(選択後)=${rateAfterRegion} regional-municipality(手動変更後)=${municipalityAfterManualChange}`
   );
   await page.close();
 }

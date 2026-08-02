@@ -153,35 +153,27 @@ function getVisibleTableKeys() {
   return getTableKeys().filter((key) => VISIBLE_TABLE_KEYS.includes(key));
 }
 
+/**
+ * 昇格時号俸対応表から、1級上の職務の級に昇格した際の号俸を返す。
+ * 対応表を持たない俸給表・号俸の場合は null を返す。
+ */
+function getPromotionTargetStep(tableKey, targetGrade, sourceStep) {
+  if (typeof PROMOTION_STEP_MAPPINGS === "undefined") return null;
+  const table = PROMOTION_STEP_MAPPINGS.tables && PROMOTION_STEP_MAPPINGS.tables[tableKey];
+  const targetMapping = table && table[String(targetGrade)];
+  const step = targetMapping && targetMapping[String(sourceStep)];
+  return Number.isInteger(step) ? step : null;
+}
+
 // ---------------------------------------------------------------------------
 // 2. 地域手当（令和6年人事院勧告後の5区分制度）
 // ---------------------------------------------------------------------------
 
-const REGIONAL_ALLOWANCE_RATES = [
-  { value: 0.2, name: "1級地", example: "東京都特別区 ほか" },
-  { value: 0.16, name: "2級地" },
-  { value: 0.12, name: "3級地" },
-  { value: 0.08, name: "4級地" },
-  { value: 0.04, name: "5級地" },
-  { value: 0, name: "非支給地" },
-];
-
-// 主要な市区町村から級地区分を逆引きするための代表例リスト（網羅的ではない）。
-// 出典の確度: 中（Web検索で見つかった民間サイトの記載に基づく参考値、人事院規則9-49の
-// 原文とは未突合）。ここに掲載のない地域は、下の級地区分プルダウンから直接選択する。
-const REGIONAL_ALLOWANCE_REGION_EXAMPLES = [
-  { name: "東京都特別区（23区）", rate: 0.2 },
-  { name: "東京都武蔵野市", rate: 0.16 },
-  { name: "東京都調布市", rate: 0.16 },
-  { name: "茨城県取手市", rate: 0.16 },
-  { name: "茨城県つくば市", rate: 0.16 },
-  { name: "埼玉県和光市", rate: 0.16 },
-  { name: "千葉県袖ケ浦市", rate: 0.16 },
-  { name: "千葉県印西市", rate: 0.16 },
-  { name: "埼玉県さいたま市", rate: 0.12 },
-  { name: "千葉県千葉市", rate: 0.12 },
-  { name: "茨城県守谷市", rate: 0.12 },
-];
+// 令和8年度は制度の段階的見直し期間中のため、級地区分だけでなく地域ごとに
+// 1%刻みの経過措置割合がある。公式シミュレーター収録データから使われる割合を生成する。
+const REGIONAL_ALLOWANCE_RATES = [...new Set(REGIONAL_ALLOWANCE_LOCATIONS.map((location) => location.rate))]
+  .sort((a, b) => b - a)
+  .map((value) => ({ value, name: value === 0 ? "非支給地" : `${value * 100}%` }));
 
 // ---------------------------------------------------------------------------
 // 3. 扶養手当（令和8年度・現行のみ。配偶者手当は廃止済みのため対象外）
@@ -272,13 +264,24 @@ function getSpecialAdjustmentAmount(tableKey, grade, categoryKey) {
 // 5. 住居手当
 // ---------------------------------------------------------------------------
 // 借家・借間に住み、実際に家賃を支払っている場合のみ支給される。
-// 住居手当額 = 家賃月額の半額と28,000円のいずれか低い方（簡略化した実際の計算方法）。
+// 家賃月額が16,000円を超える場合に支給される。27,000円以下では「家賃−16,000円」、
+// 27,000円超では「11,000円＋（家賃−27,000円）の半額」（上限28,000円）で計算する。
+const HOUSING_ALLOWANCE_MIN_RENT = 16000;
+const HOUSING_ALLOWANCE_THRESHOLD_RENT = 27000;
+const HOUSING_ALLOWANCE_BASE_AMOUNT = 11000;
+const HOUSING_ALLOWANCE_ADDITIONAL_CAP = 17000;
 const HOUSING_ALLOWANCE_CAP = 28000;
 
-/** 家賃月額から住居手当を計算する。家賃の半額と28,000円のいずれか低い方（小数点以下切り捨て） */
+/** 家賃月額から住居手当を計算する。人事院規則に基づく段階式（1円未満切り捨て）。 */
 function calcHousingAllowance(rent) {
-  const r = Math.max(0, Number(rent) || 0);
-  return Math.min(Math.floor(r / 2), HOUSING_ALLOWANCE_CAP);
+  const r = Math.max(0, Math.floor(Number(rent) || 0));
+  if (r <= HOUSING_ALLOWANCE_MIN_RENT) return 0;
+  if (r <= HOUSING_ALLOWANCE_THRESHOLD_RENT) return r - HOUSING_ALLOWANCE_MIN_RENT;
+  const additional = Math.min(
+    Math.floor((r - HOUSING_ALLOWANCE_THRESHOLD_RENT) / 2),
+    HOUSING_ALLOWANCE_ADDITIONAL_CAP
+  );
+  return HOUSING_ALLOWANCE_BASE_AMOUNT + additional;
 }
 
 // ---------------------------------------------------------------------------
@@ -365,28 +368,28 @@ const MERIT_RATE_CATEGORIES = {
   general: {
     label: "一般職員",
     grades: [
-      { key: "excellent_plus", label: "特に優秀（125.25/100以上、下限採用）", rate: 1.2525 },
-      { key: "excellent", label: "優秀（113.75/100以上125.25/100未満、下限採用）", rate: 1.1375 },
-      { key: "good", label: "良好（102.25/100）", rate: 1.0225 },
-      { key: "not_good", label: "良好でない（93.75/100以下）", rate: 0.9375 },
+      { key: "excellent_plus", label: "特に優秀（125.25/100以上、下限採用）", rate: 1.2525, minRate: 1.2525 },
+      { key: "excellent", label: "優秀（113.75/100以上125.25/100未満、下限採用）", rate: 1.1375, minRate: 1.1375, maxRate: 1.2524 },
+      { key: "good", label: "良好（102.25/100）", rate: 1.0225, minRate: 1.0225, maxRate: 1.0225 },
+      { key: "not_good", label: "良好でない（93.75/100以下）", rate: 0.9375, minRate: 0, maxRate: 0.9375 },
     ],
   },
   senior_manager: {
     label: "特定管理職員（本府省課長等）",
     grades: [
-      { key: "excellent_plus", label: "特に優秀（149.25/100以上、下限採用）", rate: 1.4925 },
-      { key: "excellent", label: "優秀（134.75/100以上149.25/100未満、下限採用）", rate: 1.3475 },
-      { key: "good", label: "良好（122.25/100）", rate: 1.2225 },
-      { key: "not_good", label: "良好でない（112.75/100以下）", rate: 1.1275 },
+      { key: "excellent_plus", label: "特に優秀（149.25/100以上、下限採用）", rate: 1.4925, minRate: 1.4925 },
+      { key: "excellent", label: "優秀（134.75/100以上149.25/100未満、下限採用）", rate: 1.3475, minRate: 1.3475, maxRate: 1.4924 },
+      { key: "good", label: "良好（122.25/100）", rate: 1.2225, minRate: 1.2225, maxRate: 1.2225 },
+      { key: "not_good", label: "良好でない（112.75/100以下）", rate: 1.1275, minRate: 0, maxRate: 1.1275 },
     ],
   },
   designated: {
     label: "指定職職員",
     grades: [
       { key: "excellent_plus", label: "特に優秀（該当なし）", rate: null },
-      { key: "excellent", label: "優秀（115/100以上215/100以下、下限採用）", rate: 1.15 },
-      { key: "good", label: "良好（101.5/100。事務次官等は107.5/100）", rate: 1.015 },
-      { key: "not_good", label: "良好でない（93/100以下）", rate: 0.93 },
+      { key: "excellent", label: "優秀（115/100以上215/100以下、下限採用）", rate: 1.15, minRate: 1.15, maxRate: 2.15 },
+      { key: "good", label: "良好（101.5/100。事務次官等は107.5/100）", rate: 1.015, minRate: 1.015, maxRate: 1.015 },
+      { key: "not_good", label: "良好でない（93/100以下）", rate: 0.93, minRate: 0, maxRate: 0.93 },
     ],
   },
 };
