@@ -3,14 +3,14 @@
 }
 
 .breadcrumb {
-  position: relative;
-  margin-bottom: 20px;
-  font-size: 0.82rem;
+  margin-bottom: -10px;
+  color: var(--color-muted);
+  font-size: 0.76rem;
 }
 
 .breadcrumb ol {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   flex-wrap: wrap;
   gap: 7px;
@@ -31,7 +31,7 @@
 }
 
 .breadcrumb a {
-  color: #fff;
+  color: var(--color-primary);
   font-weight: 600;
   text-decoration: none;
 }
@@ -41,7 +41,7 @@
 }
 
 .breadcrumb [aria-current="page"] {
-  opacity: 0.82;
+  color: var(--color-muted);
 }
 
 .subpage-layout {
