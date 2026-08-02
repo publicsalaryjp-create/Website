@@ -78,6 +78,23 @@ test("getMaxStep: 級ごとの号俸数を返す", () => {
   assert.equal(context.getMaxStep("test_graded", 2), 2);
 });
 
+// --- 住居手当 ----------------------------------------------------------------------
+
+test("calcHousingAllowance: 家賃16,000円以下は支給されない", () => {
+  assert.equal(context.calcHousingAllowance(16000), 0);
+});
+
+test("calcHousingAllowance: 家賃16,000円超〜27,000円以下は家賃から16,000円を控除する", () => {
+  assert.equal(context.calcHousingAllowance(20000), 4000);
+  assert.equal(context.calcHousingAllowance(27000), 11000);
+});
+
+test("calcHousingAllowance: 家賃27,000円超は段階式で計算し、28,000円を上限とする", () => {
+  assert.equal(context.calcHousingAllowance(30000), 12500);
+  assert.equal(context.calcHousingAllowance(61000), 28000);
+  assert.equal(context.calcHousingAllowance(100000), 28000);
+});
+
 // --- calculateOvertimeAllowance -----------------------------------------------------
 
 test("calculateOvertimeAllowance: 月60時間以下は通常の割増率のみ", () => {

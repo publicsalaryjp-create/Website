@@ -13,7 +13,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="description" content="国家公務員の俸給・地域手当・扶養手当・住居手当・本省手当・期末勤勉手当・超過勤務手当から月給と年収を概算するシミュレーターです。">
 <title>国家公務員給与計算機</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20260802-7">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -175,13 +175,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </p>
       <div id="housing-fields">
         <div class="hint-toggle">
-          <p class="hint hint-short">借家・借間のみ対象。家賃の半額と28,000円の低い方が支給額です。</p>
+          <p class="hint hint-short">借家・借間のみ対象。家賃16,000円超から支給され、最高28,000円です。</p>
           <button type="button" class="hint-toggle-btn" data-target="detail-housing" aria-expanded="false" aria-controls="detail-housing" aria-label="詳しい説明を表示">？</button>
         </div>
         <p class="hint hint-detail" id="detail-housing" hidden>
           借家・借間に住み、実際に家賃を支払っている場合のみ支給されます。
           持ち家の場合は支給されません（持家世帯向けの住居手当は廃止済み）。
-          住居手当額 = 家賃月額の半額と28,000円のいずれか低い方です。
+          家賃が16,000円超〜27,000円以下の場合は「家賃−16,000円」、27,000円超の場合は
+          「11,000円＋（家賃−27,000円）の半額」で計算します。支給額は最高28,000円です。
         </p>
         <div class="field">
           <span class="field-label-text">支給の有無</span>
@@ -240,37 +241,61 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="ot-hours-fields">
         <div class="field">
           <label for="ot-weekday-normal">平日の時間外勤務（22時〜翌5時を除く）</label>
-          <div class="counter-input">
-            <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="-1" aria-label="減らす">−</button>
+          <div class="counter-input overtime-input">
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="-10" aria-label="平日通常の時間外勤務を10時間減らす">−10</button>
+              <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="-1" aria-label="平日通常の時間外勤務を1時間減らす">−1</button>
+            </div>
             <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="1" value="0">
-            <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="1" aria-label="増やす">＋</button>
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="1" aria-label="平日通常の時間外勤務を1時間増やす">+1</button>
+              <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="10" aria-label="平日通常の時間外勤務を10時間増やす">+10</button>
+            </div>
           </div>
           <p class="hint" id="ot-weekday-normal-rate-hint"></p>
         </div>
         <div class="field">
           <label for="ot-weekday-night">平日の時間外勤務（22時〜翌5時）</label>
-          <div class="counter-input">
-            <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="-1" aria-label="減らす">−</button>
+          <div class="counter-input overtime-input">
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="-10" aria-label="平日深夜の時間外勤務を10時間減らす">−10</button>
+              <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="-1" aria-label="平日深夜の時間外勤務を1時間減らす">−1</button>
+            </div>
             <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="1" value="0">
-            <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="1" aria-label="増やす">＋</button>
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="1" aria-label="平日深夜の時間外勤務を1時間増やす">+1</button>
+              <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="10" aria-label="平日深夜の時間外勤務を10時間増やす">+10</button>
+            </div>
           </div>
           <p class="hint" id="ot-weekday-night-rate-hint"></p>
         </div>
         <div class="field">
           <label for="ot-holiday-normal">休日の時間外勤務（22時〜翌5時を除く）</label>
-          <div class="counter-input">
-            <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="-1" aria-label="減らす">−</button>
+          <div class="counter-input overtime-input">
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="-10" aria-label="休日通常の時間外勤務を10時間減らす">−10</button>
+              <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="-1" aria-label="休日通常の時間外勤務を1時間減らす">−1</button>
+            </div>
             <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="1" value="0">
-            <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="1" aria-label="増やす">＋</button>
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="1" aria-label="休日通常の時間外勤務を1時間増やす">+1</button>
+              <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="10" aria-label="休日通常の時間外勤務を10時間増やす">+10</button>
+            </div>
           </div>
           <p class="hint" id="ot-holiday-normal-rate-hint"></p>
         </div>
         <div class="field">
           <label for="ot-holiday-night">休日の時間外勤務（22時〜翌5時）</label>
-          <div class="counter-input">
-            <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="-1" aria-label="減らす">−</button>
+          <div class="counter-input overtime-input">
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="-10" aria-label="休日深夜の時間外勤務を10時間減らす">−10</button>
+              <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="-1" aria-label="休日深夜の時間外勤務を1時間減らす">−1</button>
+            </div>
             <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="1" value="0">
-            <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="1" aria-label="増やす">＋</button>
+            <div class="overtime-buttons">
+              <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="1" aria-label="休日深夜の時間外勤務を1時間増やす">+1</button>
+              <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="10" aria-label="休日深夜の時間外勤務を10時間増やす">+10</button>
+            </div>
           </div>
           <p class="hint" id="ot-holiday-night-rate-hint"></p>
         </div>
@@ -297,20 +322,40 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
 
       <p class="field-label-text">勤勉手当</p>
-      <p class="hint">成績区分を選ぶと成績率が自動入力されます。幅のある区分は、下限以外の値に書き換えて計算することもできます。</p>
+      <p class="hint">成績区分を選ぶと成績率が自動入力されます。入力できる値は、選択した成績区分の範囲内に限られます。</p>
       <div class="field">
         <label for="merit-grade-june">勤務成績区分（6月期）</label>
         <select id="merit-grade-june" name="merit-grade-june" class="select-center"></select>
         <p class="hint" id="merit-grade-june-note"></p>
         <label for="merit-rate-june">成績率（6月期・100分率）</label>
-        <input type="number" id="merit-rate-june" name="merit-rate-june" min="0" step="0.01">
+        <div class="counter-input merit-rate-input">
+          <div class="merit-rate-buttons">
+            <button type="button" class="counter-btn merit-rate-btn" data-period="june" data-delta="-10" aria-label="6月期の成績率を10ポイント下げる">−10</button>
+            <button type="button" class="counter-btn merit-rate-btn" data-period="june" data-delta="-1" aria-label="6月期の成績率を1ポイント下げる">−1</button>
+          </div>
+          <input type="number" id="merit-rate-june" name="merit-rate-june" min="0" step="0.01">
+          <div class="merit-rate-buttons">
+            <button type="button" class="counter-btn merit-rate-btn" data-period="june" data-delta="1" aria-label="6月期の成績率を1ポイント上げる">+1</button>
+            <button type="button" class="counter-btn merit-rate-btn" data-period="june" data-delta="10" aria-label="6月期の成績率を10ポイント上げる">+10</button>
+          </div>
+        </div>
       </div>
       <div class="field">
         <label for="merit-grade-december">勤務成績区分（12月期）</label>
         <select id="merit-grade-december" name="merit-grade-december" class="select-center"></select>
         <p class="hint" id="merit-grade-december-note"></p>
         <label for="merit-rate-december">成績率（12月期・100分率）</label>
-        <input type="number" id="merit-rate-december" name="merit-rate-december" min="0" step="0.01">
+        <div class="counter-input merit-rate-input">
+          <div class="merit-rate-buttons">
+            <button type="button" class="counter-btn merit-rate-btn" data-period="december" data-delta="-10" aria-label="12月期の成績率を10ポイント下げる">−10</button>
+            <button type="button" class="counter-btn merit-rate-btn" data-period="december" data-delta="-1" aria-label="12月期の成績率を1ポイント下げる">−1</button>
+          </div>
+          <input type="number" id="merit-rate-december" name="merit-rate-december" min="0" step="0.01">
+          <div class="merit-rate-buttons">
+            <button type="button" class="counter-btn merit-rate-btn" data-period="december" data-delta="1" aria-label="12月期の成績率を1ポイント上げる">+1</button>
+            <button type="button" class="counter-btn merit-rate-btn" data-period="december" data-delta="10" aria-label="12月期の成績率を10ポイント上げる">+10</button>
+          </div>
+        </div>
       </div>
     </fieldset>
 

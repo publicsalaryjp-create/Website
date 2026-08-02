@@ -241,7 +241,7 @@ function updateHousingAmountHint() {
     return;
   }
   const rent = Number(document.getElementById("housing-rent").value);
-  hint.textContent = `住居手当: ${yen.format(calcHousingAllowance(rent))}（家賃の半額と28,000円のいずれか低い方）`;
+  hint.textContent = `住居手当: ${yen.format(calcHousingAllowance(rent))}`;
 }
 
 function updateVisibility() {

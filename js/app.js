@@ -43,11 +43,22 @@ function currentMeritStaffTypeKey() {
   return isSpecialAdjustmentManager() ? "senior_manager" : "general";
 }
 
+function currentMeritGrade(period) {
+  const staffType = currentMeritStaffTypeKey();
+  const gradeKey = document.getElementById(`merit-grade-${period}`).value;
+  const category = MERIT_RATE_CATEGORIES[staffType];
+  return category && category.grades.find((g) => g.key === gradeKey);
+}
+
 /** 成績率の入力欄（100分率、例: 102.25）の値を、計算で使う倍率（例: 1.0225）に変換する */
 function currentMeritRate(period) {
   const input = document.getElementById(`merit-rate-${period}`);
   const value = input ? Number(input.value) : NaN;
-  return Number.isFinite(value) && value > 0 ? value / 100 : 1;
+  const grade = currentMeritGrade(period);
+  if (!grade) return 1;
+  if (!Number.isFinite(value)) return grade.rate;
+  const rate = value / 100;
+  return Math.min(Math.max(rate, grade.minRate), grade.maxRate);
 }
 
 // 管理職（俸給の特別調整額の対象・指定職職員）は超過勤務手当の支給対象外のため、時間を0として扱う。
@@ -199,13 +210,30 @@ function populateMeritGradeOptions(period) {
 function updateMeritRateInput(period) {
   const input = document.getElementById(`merit-rate-${period}`);
   if (!input) return;
-  const staffType = currentMeritStaffTypeKey();
-  const gradeKey = document.getElementById(`merit-grade-${period}`).value;
-  const category = MERIT_RATE_CATEGORIES[staffType];
-  const grade = category && category.grades.find((g) => g.key === gradeKey);
+  const grade = currentMeritGrade(period);
   if (grade && grade.rate != null) {
     input.value = Number((grade.rate * 100).toFixed(4));
   }
+  updateMeritRateConstraints(period);
+}
+
+/** 選択中の成績区分に合わせて、成績率入力欄の許容範囲を設定する。 */
+function updateMeritRateConstraints(period) {
+  const input = document.getElementById(`merit-rate-${period}`);
+  const grade = currentMeritGrade(period);
+  if (!input || !grade || grade.rate == null) return;
+  input.min = String(grade.minRate * 100);
+  input.max = String(grade.maxRate * 100);
+}
+
+/** 確定時に空欄・範囲外の成績率を、選択中の区分で許容される値に戻す。 */
+function normalizeMeritRateInput(period) {
+  const input = document.getElementById(`merit-rate-${period}`);
+  const grade = currentMeritGrade(period);
+  if (!input || !grade || grade.rate == null) return;
+  const value = Number(input.value);
+  const rate = Number.isFinite(value) ? value / 100 : grade.rate;
+  input.value = Number((Math.min(Math.max(rate, grade.minRate), grade.maxRate) * 100).toFixed(4));
 }
 
 /** 現在選択中の勤務成績区分の成績率の詳細を、選択欄の下のヒントテキストに表示する */
@@ -293,6 +321,10 @@ function initForm() {
   updateSpecialAdjustmentAmountHint();
   updateMeritGradeNote("june"); // 復元した勤務成績区分の値を反映し直す
   updateMeritGradeNote("december");
+  ["june", "december"].forEach((period) => {
+    updateMeritRateConstraints(period);
+    normalizeMeritRateInput(period);
+  });
   wireCounterButtons(form);
   initHintToggles();
 
@@ -329,6 +361,28 @@ function initForm() {
     },
     onChangeExtra: handleVintageChange,
     onRecalculate: recalculate,
+  });
+
+  ["june", "december"].forEach((period) => {
+    document.getElementById(`merit-rate-${period}`).addEventListener("change", () => {
+      normalizeMeritRateInput(period);
+      recalculate();
+    });
+  });
+
+  document.querySelectorAll(".merit-rate-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const period = btn.dataset.period;
+      const input = document.getElementById(`merit-rate-${period}`);
+      const grade = currentMeritGrade(period);
+      const delta = Number(btn.dataset.delta);
+      if (!input || !grade || !Number.isFinite(delta)) return;
+      const current = Number(input.value);
+      const value = Number.isFinite(current) ? current / 100 : grade.rate;
+      const next = Math.min(Math.max(value + delta / 100, grade.minRate), grade.maxRate);
+      input.value = Number((next * 100).toFixed(4));
+      recalculate();
+    });
   });
 
   document.querySelectorAll(".step-btn").forEach((btn) => {

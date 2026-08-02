@@ -272,13 +272,24 @@ function getSpecialAdjustmentAmount(tableKey, grade, categoryKey) {
 // 5. 住居手当
 // ---------------------------------------------------------------------------
 // 借家・借間に住み、実際に家賃を支払っている場合のみ支給される。
-// 住居手当額 = 家賃月額の半額と28,000円のいずれか低い方（簡略化した実際の計算方法）。
+// 家賃月額が16,000円を超える場合に支給される。27,000円以下では「家賃−16,000円」、
+// 27,000円超では「11,000円＋（家賃−27,000円）の半額」（上限28,000円）で計算する。
+const HOUSING_ALLOWANCE_MIN_RENT = 16000;
+const HOUSING_ALLOWANCE_THRESHOLD_RENT = 27000;
+const HOUSING_ALLOWANCE_BASE_AMOUNT = 11000;
+const HOUSING_ALLOWANCE_ADDITIONAL_CAP = 17000;
 const HOUSING_ALLOWANCE_CAP = 28000;
 
-/** 家賃月額から住居手当を計算する。家賃の半額と28,000円のいずれか低い方（小数点以下切り捨て） */
+/** 家賃月額から住居手当を計算する。人事院規則に基づく段階式（1円未満切り捨て）。 */
 function calcHousingAllowance(rent) {
-  const r = Math.max(0, Number(rent) || 0);
-  return Math.min(Math.floor(r / 2), HOUSING_ALLOWANCE_CAP);
+  const r = Math.max(0, Math.floor(Number(rent) || 0));
+  if (r <= HOUSING_ALLOWANCE_MIN_RENT) return 0;
+  if (r <= HOUSING_ALLOWANCE_THRESHOLD_RENT) return r - HOUSING_ALLOWANCE_MIN_RENT;
+  const additional = Math.min(
+    Math.floor((r - HOUSING_ALLOWANCE_THRESHOLD_RENT) / 2),
+    HOUSING_ALLOWANCE_ADDITIONAL_CAP
+  );
+  return HOUSING_ALLOWANCE_BASE_AMOUNT + additional;
 }
 
 // ---------------------------------------------------------------------------
@@ -365,28 +376,28 @@ const MERIT_RATE_CATEGORIES = {
   general: {
     label: "一般職員",
     grades: [
-      { key: "excellent_plus", label: "特に優秀（125.25/100以上、下限採用）", rate: 1.2525 },
-      { key: "excellent", label: "優秀（113.75/100以上125.25/100未満、下限採用）", rate: 1.1375 },
-      { key: "good", label: "良好（102.25/100）", rate: 1.0225 },
-      { key: "not_good", label: "良好でない（93.75/100以下）", rate: 0.9375 },
+      { key: "excellent_plus", label: "特に優秀（125.25/100以上、下限採用）", rate: 1.2525, minRate: 1.2525 },
+      { key: "excellent", label: "優秀（113.75/100以上125.25/100未満、下限採用）", rate: 1.1375, minRate: 1.1375, maxRate: 1.2524 },
+      { key: "good", label: "良好（102.25/100）", rate: 1.0225, minRate: 1.0225, maxRate: 1.0225 },
+      { key: "not_good", label: "良好でない（93.75/100以下）", rate: 0.9375, minRate: 0, maxRate: 0.9375 },
     ],
   },
   senior_manager: {
     label: "特定管理職員（本府省課長等）",
     grades: [
-      { key: "excellent_plus", label: "特に優秀（149.25/100以上、下限採用）", rate: 1.4925 },
-      { key: "excellent", label: "優秀（134.75/100以上149.25/100未満、下限採用）", rate: 1.3475 },
-      { key: "good", label: "良好（122.25/100）", rate: 1.2225 },
-      { key: "not_good", label: "良好でない（112.75/100以下）", rate: 1.1275 },
+      { key: "excellent_plus", label: "特に優秀（149.25/100以上、下限採用）", rate: 1.4925, minRate: 1.4925 },
+      { key: "excellent", label: "優秀（134.75/100以上149.25/100未満、下限採用）", rate: 1.3475, minRate: 1.3475, maxRate: 1.4924 },
+      { key: "good", label: "良好（122.25/100）", rate: 1.2225, minRate: 1.2225, maxRate: 1.2225 },
+      { key: "not_good", label: "良好でない（112.75/100以下）", rate: 1.1275, minRate: 0, maxRate: 1.1275 },
     ],
   },
   designated: {
     label: "指定職職員",
     grades: [
       { key: "excellent_plus", label: "特に優秀（該当なし）", rate: null },
-      { key: "excellent", label: "優秀（115/100以上215/100以下、下限採用）", rate: 1.15 },
-      { key: "good", label: "良好（101.5/100。事務次官等は107.5/100）", rate: 1.015 },
-      { key: "not_good", label: "良好でない（93/100以下）", rate: 0.93 },
+      { key: "excellent", label: "優秀（115/100以上215/100以下、下限採用）", rate: 1.15, minRate: 1.15, maxRate: 2.15 },
+      { key: "good", label: "良好（101.5/100。事務次官等は107.5/100）", rate: 1.015, minRate: 1.015, maxRate: 1.015 },
+      { key: "not_good", label: "良好でない（93/100以下）", rate: 0.93, minRate: 0, maxRate: 0.93 },
     ],
   },
 };
