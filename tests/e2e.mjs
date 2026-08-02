@@ -67,6 +67,11 @@ async function setReadonlyNumber(page, selector, value) {
   );
 }
 
+async function setRegionalRate(page, value) {
+  await page.check("#regional-input-method-rate");
+  await page.selectOption("#regional-rate", value);
+}
+
 async function checkNoConsoleErrors(pathName, label) {
   const page = await browser.newPage();
   const errors = [];
@@ -90,7 +95,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#regional-rate", "0");
+  await setRegionalRate(page, "0");
   await page.waitForTimeout(300);
   const baseSalaryText = await page.textContent("#r-base");
   const baseSalary = Number(baseSalaryText.replace(/[^\d]/g, ""));
@@ -145,7 +150,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#regional-rate", "0");
+  await setRegionalRate(page, "0");
   await page.click('.counter-btn[data-target="child-under15-count"][data-delta="1"]');
   await page.click('.counter-btn[data-target="child-16to22-count"][data-delta="1"]');
   await page.click('.counter-btn[data-target="parent-count"][data-delta="1"]');
@@ -341,7 +346,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#regional-rate", "0");
+  await setRegionalRate(page, "0");
   await page.selectOption("#merit-grade-june", "good");
   await page.waitForTimeout(200);
   const kinbenGood = await page.textContent("#r-kinben-june");
@@ -380,7 +385,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#regional-rate", "0");
+  await setRegionalRate(page, "0");
   await page.selectOption("#merit-grade-june", "good");
   const goodMin = await page.getAttribute("#merit-rate-june", "min");
   const goodMax = await page.getAttribute("#merit-rate-june", "max");
@@ -423,7 +428,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
-  await page.selectOption("#regional-rate", "0");
+  await setRegionalRate(page, "0");
   await page.selectOption("#merit-grade-june", "excellent_plus");
   await page.selectOption("#merit-grade-december", "not_good");
   await page.waitForTimeout(200);
@@ -477,22 +482,31 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
-// index.html: 都道府県→市区町村等の選択で支給割合に反映され、直接変更すると市区町村等選択が解除される
+// index.html: 設定方法によって入力欄が分岐し、地域選択時は支給割合へ反映される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  const locationInitiallyVisible = await page.isVisible("#regional-location-inputs");
+  const rateInitiallyHidden = await page.isHidden("#regional-rate-input");
   await page.selectOption("#regional-prefecture", "東京都");
   await page.selectOption("#regional-municipality", { label: "武蔵野市" });
   await page.waitForTimeout(150);
   const rateAfterRegion = await page.inputValue("#regional-rate");
-  await page.selectOption("#regional-rate", "0");
+  const statusAfterRegion = await page.textContent("#regional-rate-status");
+  await page.check("#regional-input-method-rate");
+  await page.waitForTimeout(100);
+  const locationAfterSwitchHidden = await page.isHidden("#regional-location-inputs");
+  const rateAfterSwitchVisible = await page.isVisible("#regional-rate-input");
+  await setRegionalRate(page, "0");
   await page.waitForTimeout(150);
   const municipalityAfterManualChange = await page.inputValue("#regional-municipality");
   report(
-    "index.html: 都道府県・市区町村等の選択で令和8年度の率に反映され、直接変更すると市区町村等選択が解除される",
-    rateAfterRegion === "0.16" && municipalityAfterManualChange === "",
-    `regional-rate(選択後)=${rateAfterRegion} regional-municipality(手動変更後)=${municipalityAfterManualChange}`
+    "index.html: 設定方法で入力欄が分岐し、地域選択で令和8年度の率に反映される",
+    locationInitiallyVisible && rateInitiallyHidden && rateAfterRegion === "0.16" &&
+      statusAfterRegion.includes("16%") && locationAfterSwitchHidden && rateAfterSwitchVisible &&
+      municipalityAfterManualChange === "",
+    `地域初期表示=${locationInitiallyVisible} 割合初期非表示=${rateInitiallyHidden} rate=${rateAfterRegion} status=${statusAfterRegion} 地域切替後非表示=${locationAfterSwitchHidden} 割合切替後表示=${rateAfterSwitchVisible}`
   );
   await page.close();
 }
@@ -504,7 +518,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.waitForTimeout(500);
   await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "23000");
-  await page.selectOption("#regional-rate", "0.12");
+  await setRegionalRate(page, "0.12");
   await page.waitForTimeout(200);
   await page.reload();
   await page.waitForTimeout(500);

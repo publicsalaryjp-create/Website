@@ -172,6 +172,33 @@ function populateRegionalMunicipalityOptions() {
     municipalitySelect.appendChild(opt);
   });
   municipalitySelect.disabled = locations.length === 0;
+  updateRegionalRateStatus();
+}
+
+/** 地域手当の設定方法に応じて、地域選択か支給割合選択の一方だけを表示する。 */
+function updateRegionalInputMethod() {
+  const useLocation = radioValue("regional-input-method") !== "rate";
+  const locationInputs = document.getElementById("regional-location-inputs");
+  const rateInput = document.getElementById("regional-rate-input");
+  if (locationInputs) locationInputs.hidden = !useLocation;
+  if (rateInput) rateInput.hidden = useLocation;
+  updateRegionalRateStatus();
+}
+
+/** 地域から選んだ場合に、自動設定された支給割合を明示する。 */
+function updateRegionalRateStatus() {
+  const status = document.getElementById("regional-rate-status");
+  const municipalitySelect = document.getElementById("regional-municipality");
+  const rateSelect = document.getElementById("regional-rate");
+  if (!status || !municipalitySelect || !rateSelect) return;
+  if (!municipalitySelect.value) {
+    status.textContent = "市区町村を選ぶと、支給割合が自動で設定されます。";
+    status.classList.remove("is-selected");
+    return;
+  }
+  const selectedOption = rateSelect.options[rateSelect.selectedIndex];
+  status.textContent = `設定された支給割合: ${selectedOption ? selectedOption.textContent : "-"}`;
+  status.classList.add("is-selected");
 }
 
 /** 市区町村等の選択を地域手当率に反映する。 */
@@ -182,6 +209,7 @@ function applyRegionalMunicipalitySelection() {
   const location = REGIONAL_ALLOWANCE_LOCATIONS.find((item) => item.code === municipalitySelect.value);
   if (!location) return;
   rateSelect.value = location.rate;
+  updateRegionalRateStatus();
   rateSelect.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
@@ -468,6 +496,9 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
           municipalitySelect.value = "";
         }
       }
+    }
+    if (e.target.name === "regional-input-method") {
+      updateRegionalInputMethod();
     }
     updateVisibility();
     updateHonshoAmountHint();

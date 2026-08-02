@@ -354,8 +354,32 @@ const OVERTIME_RATES = {
 
 const OVERTIME_MONTHLY_THRESHOLD_HOURS = 60; // これを超えた時間外勤務（休日勤務を除く）から割増率が上がる
 
-// 期末手当の年間支給月数（6月期・12月期で均等に折半、参考値）。ユーザーによる入力は受け付けない。
-const TEISHU_MONTHS = 2.45;
+// 期末手当の支給月数。実データは data/allowance-rates.json から読み込む。
+let ALLOWANCE_RATES = null;
+
+async function loadAllowanceRates() {
+  const res = await fetch("data/allowance-rates.json", { cache: "no-store" });
+  if (!res.ok) throw new Error(`手当率データを読み込めませんでした（HTTP ${res.status}）`);
+  const json = await res.json();
+  const terminal = json && json.terminalAllowance;
+  const roleStageRates = json && json.bonusRoleStageAdditionRates;
+  const staffTypes = ["general", "senior_manager", "designated"];
+  const periods = ["2026-06", "2026-12"];
+  if (!terminal || !roleStageRates || !Number.isFinite(roleStageRates.designated) ||
+    !roleStageRates.administrative_1 || staffTypes.some((type) =>
+    !terminal[type] || periods.some((period) => !Number.isFinite(terminal[type][period]))
+  )) {
+    throw new Error("手当率データの期末手当支給月数が不正です");
+  }
+  ALLOWANCE_RATES = json;
+}
+
+function getBonusRoleStageAdditionRate(tableKey, grade) {
+  const rates = ALLOWANCE_RATES.bonusRoleStageAdditionRates;
+  if (tableKey === "designated") return rates.designated;
+  if (tableKey !== "administrative_1") return 0;
+  return rates.administrative_1[String(grade)] || 0;
+}
 
 // ---------------------------------------------------------------------------
 // 7. 勤勉手当の成績率（令和8年度、人事院公表資料に基づく）
