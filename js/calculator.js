@@ -97,7 +97,9 @@ function calculateOvertimeAllowance(hourlyWage, hours) {
  * @param {number} input.housingAllowance 住居手当の月額（円、支給がある場合のみ直接入力）
  * @param {number} input.honshoAllowance 本府省業務調整手当（本省手当）の月額（円、支給がある場合のみ直接入力）
  * @param {number} input.specialAdjustmentAllowance 俸給の特別調整額（管理職手当）の月額（円、支給がある場合のみ直接入力）
- * @param {number} input.teishuMonths 期末手当の年間支給月数
+ * @param {number} input.teishuMonthsJune 6月期の期末手当支給月数
+ * @param {number} input.teishuMonthsDecember 12月期の期末手当支給月数
+ * @param {number} input.bonusRoleStageAdditionRate 期末・勤勉手当の役職段階別加算割合
  * @param {number} input.meritRateJune 6月期の勤務成績区分に応じた成績率（例: 1.0225。勤勉手当はこの率のみで算定する）
  * @param {number} input.meritRateDecember 12月期の勤務成績区分に応じた成績率（例: 1.0225）
  * @param {number} input.weekdayNormalHours 平日の時間外勤務時間（深夜を除く月間合計）
@@ -138,17 +140,21 @@ function calculateSalary(input) {
   const monthlyTotalWithOvertime = monthlyTotal + overtime.totalAllowance;
 
   // 期末・勤勉手当の算定基礎額は簡略化し「俸給+地域手当」とする（実際は扶養手当等も一部算入）。超過勤務手当は含まない。
-  // 期末手当 = 基礎額×年間支給月数の半分（成績率なし）。
+  // 期末手当 = 基礎額×各期の支給月数（成績率なし）。
   // 勤勉手当 = 基礎額×成績率（成績率自体が1回あたりの支給割合を表すため、月数は別途掛けない）。
   const bonusBase = baseSalary + regionalAllowance;
-  const teishuMonths = input.teishuMonths || 0;
+  const teishuMonthsJune = input.teishuMonthsJune || 0;
+  const teishuMonthsDecember = input.teishuMonthsDecember || 0;
+  const bonusRoleStageAdditionRate = input.bonusRoleStageAdditionRate || 0;
   const meritRateJune = input.meritRateJune == null ? 1 : input.meritRateJune;
   const meritRateDecember = input.meritRateDecember == null ? 1 : input.meritRateDecember;
 
-  const teishuJune = Math.floor(bonusBase * (teishuMonths / 2));
-  const teishuDecember = Math.floor(bonusBase * (teishuMonths / 2));
-  const kinbenJune = Math.floor(bonusBase * meritRateJune);
-  const kinbenDecember = Math.floor(bonusBase * meritRateDecember);
+  const bonusRoleStageAddition = Math.floor(bonusBase * bonusRoleStageAdditionRate);
+  const adjustedBonusBase = bonusBase + bonusRoleStageAddition;
+  const teishuJune = Math.floor(adjustedBonusBase * teishuMonthsJune);
+  const teishuDecember = Math.floor(adjustedBonusBase * teishuMonthsDecember);
+  const kinbenJune = Math.floor(adjustedBonusBase * meritRateJune);
+  const kinbenDecember = Math.floor(adjustedBonusBase * meritRateDecember);
   const bonusJune = teishuJune + kinbenJune;
   const bonusDecember = teishuDecember + kinbenDecember;
   const bonusAnnual = bonusJune + bonusDecember;
@@ -170,6 +176,8 @@ function calculateSalary(input) {
     monthlyTotal,
     monthlyTotalWithOvertime,
     bonusBase,
+    bonusRoleStageAddition,
+    adjustedBonusBase,
     teishuJune,
     teishuDecember,
     kinbenJune,

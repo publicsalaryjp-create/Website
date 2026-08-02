@@ -43,6 +43,10 @@ function currentMeritStaffTypeKey() {
   return isSpecialAdjustmentManager() ? "senior_manager" : "general";
 }
 
+function currentGrade() {
+  return Number(document.getElementById("grade").value) || 0;
+}
+
 function currentMeritGrade(period) {
   const staffType = currentMeritStaffTypeKey();
   const gradeKey = document.getElementById(`merit-grade-${period}`).value;
@@ -69,9 +73,12 @@ function isOvertimeExempt() {
 
 function readInput() {
   const overtimeExempt = isOvertimeExempt();
+  const terminalRates = ALLOWANCE_RATES.terminalAllowance[currentMeritStaffTypeKey()];
   return {
     ...readCommonInput(),
-    teishuMonths: TEISHU_MONTHS,
+    teishuMonthsJune: terminalRates["2026-06"],
+    teishuMonthsDecember: terminalRates["2026-12"],
+    bonusRoleStageAdditionRate: getBonusRoleStageAdditionRate(currentTableKey(), currentGrade()),
     meritRateJune: currentMeritRate("june"),
     meritRateDecember: currentMeritRate("december"),
     // 超過勤務時間は1時間単位で扱う（小数で入力されても四捨五入する）
@@ -80,6 +87,14 @@ function readInput() {
     holidayNormalHours: overtimeExempt ? 0 : Math.round(Number(document.getElementById("ot-holiday-normal").value)),
     holidayNightHours: overtimeExempt ? 0 : Math.round(Number(document.getElementById("ot-holiday-night").value)),
   };
+}
+
+function renderTerminalAllowanceRateNote() {
+  const staffType = currentMeritStaffTypeKey();
+  const terminal = ALLOWANCE_RATES.terminalAllowance[staffType];
+  const label = MERIT_RATE_CATEGORIES[staffType].label;
+  document.getElementById("terminal-allowance-rate-note").textContent =
+    `${label}: 2026年6月期 ${terminal["2026-06"]}月分／2026年12月期 ${terminal["2026-12"]}月分`;
 }
 
 /** 平日125%・深夜150%・休日135%・休日深夜160%の各時間単価（月60時間超の割増分は別途注記で案内） */
@@ -99,6 +114,7 @@ function renderOvertimeRateHints(overtimeHourlyWage) {
 }
 
 function renderResult(result) {
+  renderTerminalAllowanceRateNote();
   renderCommonResult(result);
   renderOvertimeRateHints(result.overtimeHourlyWage);
   document.getElementById("r-ot-allowance").textContent = yen.format(result.overtimeAllowance);
@@ -381,11 +397,19 @@ function initForm() {
   });
   updateVisibility();
   applySavedFormValues(form, saved);
+  // 旧形式の保存データには設定方法がないため、地域の保存有無から自然な入力方法を引き継ぐ。
+  if (saved && saved["regional-input-method"] === undefined) {
+    const method = saved["regional-municipality"] ? "location" : "rate";
+    const radio = document.querySelector(`input[name="regional-input-method"][value="${method}"]`);
+    if (radio) radio.checked = true;
+  }
   // 都道府県の復元後に市区町村等の選択肢を生成し直さないと、保存済みの市区町村等を選択できない。
   populateRegionalMunicipalityOptions();
   if (saved && saved["regional-municipality"]) {
     document.getElementById("regional-municipality").value = saved["regional-municipality"];
   }
+  updateRegionalInputMethod();
+  updateRegionalRateStatus();
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
   updateVisibility(); // 復元したhousing-eligible等の値を反映し直す
   updateSpecialAdjustmentVisibility(); // 復元したspecial-adjustment-typeの値を反映し直す
@@ -506,9 +530,16 @@ function initFloatingResultObserver() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
-  await loadVintages();
-  const initialVintage = getVintage(CURRENT_VINTAGE_KEY);
-  await loadOfficialSalaryTable(initialVintage && initialVintage.file);
-  updateTableSourceNote();
-  initForm();
+  try {
+    await Promise.all([loadVintages(), loadAllowanceRates()]);
+    const initialVintage = getVintage(CURRENT_VINTAGE_KEY);
+    await loadOfficialSalaryTable(initialVintage && initialVintage.file);
+    updateTableSourceNote();
+    renderTerminalAllowanceRateNote();
+    initForm();
+  } catch (error) {
+    console.error(error);
+    document.getElementById("terminal-allowance-rate-note").textContent =
+      "支給月数データを読み込めないため、計算を開始できません。";
+  }
 });

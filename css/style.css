@@ -219,6 +219,29 @@ legend::before {
   margin-bottom: 0;
 }
 
+.regional-rate-status {
+  margin: 8px 0 14px;
+}
+
+.regional-rate-status.is-selected {
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+@media (max-width: 480px) {
+  #regional-input-method-group,
+  .regional-location-fields {
+    grid-template-columns: 1fr;
+  }
+
+  #regional-input-method-group {
+    display: grid;
+  }
+}
+
 @media (max-width: 480px) {
   .regional-location-fields {
     gap: 8px;

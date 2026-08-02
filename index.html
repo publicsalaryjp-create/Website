@@ -103,25 +103,41 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <fieldset>
       <legend>地域手当</legend>
       <div class="hint-toggle">
-        <p class="hint hint-short">都道府県と市区町村を選択すると、支給割合が設定されます。<br>もしくは、支給割合を直接選択してください。</p>
+        <p class="hint hint-short">はじめに、支給割合の設定方法を選んでください。</p>
         <button type="button" class="hint-toggle-btn" data-target="detail-region" aria-expanded="false" aria-controls="detail-region" aria-label="詳しい説明を表示">？</button>
       </div>
       <p class="hint hint-detail" id="detail-region" hidden>
         人事院の公式給与シミュレーターに収録された令和8年度の市区町村等データに基づきます。
         本府省勤務かどうかは、地域手当ではなく本府省業務調整手当で設定してください。官署単位で指定される場合などは、下の支給割合を直接選択してください。
       </p>
-      <div class="regional-location-fields">
-        <div class="field">
-          <label for="regional-prefecture">都道府県</label>
-          <select id="regional-prefecture" name="regional-prefecture" class="select-center"></select>
-        </div>
-        <div class="field">
-          <label for="regional-municipality">市区町村</label>
-          <select id="regional-municipality" name="regional-municipality" class="select-center" disabled></select>
+      <div class="field">
+        <span class="field-label-text">設定方法</span>
+        <div class="radio-group" id="regional-input-method-group">
+          <label class="radio-option" for="regional-input-method-location">
+            <input type="radio" id="regional-input-method-location" name="regional-input-method" value="location" checked>
+            地域から選ぶ
+          </label>
+          <label class="radio-option" for="regional-input-method-rate">
+            <input type="radio" id="regional-input-method-rate" name="regional-input-method" value="rate">
+            支給割合を直接選ぶ
+          </label>
         </div>
       </div>
-      <div class="field">
-        <label for="regional-rate">地域手当の支給割合</label>
+      <div id="regional-location-inputs">
+        <div class="regional-location-fields">
+          <div class="field">
+            <label for="regional-prefecture">都道府県</label>
+            <select id="regional-prefecture" name="regional-prefecture" class="select-center"></select>
+          </div>
+          <div class="field">
+            <label for="regional-municipality">市区町村</label>
+            <select id="regional-municipality" name="regional-municipality" class="select-center" disabled></select>
+          </div>
+        </div>
+        <p class="hint regional-rate-status" id="regional-rate-status" aria-live="polite">市区町村を選ぶと、支給割合が自動で設定されます。</p>
+      </div>
+      <div class="field" id="regional-rate-input" hidden>
+        <label for="regional-rate">支給割合</label>
         <select id="regional-rate" name="regional-rate" class="select-center"></select>
       </div>
     </fieldset>
@@ -320,8 +336,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <button type="button" class="hint-toggle-btn" data-target="detail-bonus" aria-expanded="false" aria-controls="detail-bonus" aria-label="詳しい説明を表示">？</button>
       </div>
       <p class="hint hint-detail" id="detail-bonus" hidden>
-        期末手当 = 算定基礎額（俸給+地域手当）×支給月数（6月期・12月期はその半分）。
-        勤勉手当 = 算定基礎額×成績率（成績率が1回あたりの支給割合そのものを表すため、
+        期末手当 = 算定基礎額（俸給+地域手当+役職段階別加算額）×職員区分・支給期ごとの支給月数。
+        勤勉手当 = 算定基礎額（俸給+地域手当+役職段階別加算額）×成績率（成績率が1回あたりの支給割合そのものを表すため、
         月数は別途掛けません）（出典: 人事院「国家公務員の諸手当の概要」令和8年度）。
         勤務成績は6月期・12月期でそれぞれ別に評価されるため、成績区分は期別に設定します
         （職員区分は上の俸給欄で設定したものを6月期・12月期共通で使用します）。
@@ -329,7 +345,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <p class="field-label-text">期末手当</p>
       <div class="field">
         <span class="field-label-text">期末手当の支給月数（参考値）</span>
-        <p class="hint">6月期 1.225月分／12月期 1.225月分（年間2.45月分）</p>
+        <p class="hint" id="terminal-allowance-rate-note">支給月数データを読み込んでいます。</p>
       </div>
 
       <p class="field-label-text">勤勉手当</p>

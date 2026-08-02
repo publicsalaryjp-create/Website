@@ -50,3 +50,12 @@ python3 scripts/extract-salary-tables.py path/to/official-salary-tables.xlsx
 
 シート名や列レイアウトが異なる場合は `scripts/extract-salary-tables.py` 内の
 `GRADED_SHEETS` 等を実際のファイルに合わせて修正してください。
+
+## `allowance-rates.json` について
+
+期末手当など、年度によって改定される手当率を俸給表と同様にアプリ本体から分離して管理します。
+`terminalAllowance` に職員区分（`general`、`senior_manager`、`designated`）ごとの支給月数を、
+支給年月（例: `2026-06`）をキーとして記録します。年間支給月数は保持しません。アプリの計算と
+画面表示はこのファイルを参照します。更新時は `source` と `fiscalYear` も合わせて変更してください。
+`bonusRoleStageAdditionRates` には、期末・勤勉手当の算定基礎に加える役職段階別加算割合を
+俸給表・級ごとに記録します。指定職は級がないため、区分に対する割合を直接記録します。
