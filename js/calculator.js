@@ -109,9 +109,9 @@ function calculateOvertimeAllowance(hourlyWage, hours) {
  */
 function calculateSalary(input) {
   const baseSalary = getSalaryAmount(input.tableKey, input.grade, input.step);
-  const regionalAllowance = Math.floor(baseSalary * input.regionalRate);
 
-  // 指定職職員は扶養手当・住居手当の支給対象外のため、入力値に関わらず0円とする。
+  // 指定職職員は扶養手当・住居手当・俸給の特別調整額の支給対象外のため、
+  // 入力値に関わらず0円とする。
   const isDesignated = input.tableKey === "designated";
 
   const dependentAllowance = isDesignated
@@ -120,9 +120,14 @@ function calculateSalary(input) {
       DEPENDENT_ALLOWANCE_RATES.child16to22 * Math.max(0, input.child16to22Count || 0) +
       getParentAllowanceRate(input.tableKey, input.grade) * Math.max(0, input.parentCount || 0);
 
+  // 地域手当の算定基礎には俸給月額と扶養手当を含め、小数点以下を切り捨てる。
+  const regionalAllowance = Math.floor((baseSalary + dependentAllowance) * input.regionalRate);
+
   const housingAllowance = isDesignated ? 0 : Math.max(0, input.housingAllowance || 0);
   const honshoAllowance = Math.max(0, input.honshoAllowance || 0);
-  const specialAdjustmentAllowance = Math.max(0, input.specialAdjustmentAllowance || 0);
+  const specialAdjustmentAllowance = isDesignated
+    ? 0
+    : Math.max(0, input.specialAdjustmentAllowance || 0);
 
   // 超過勤務手当の算定基礎額（俸給月額＋地域手当＋扶養手当）。
   // 本省手当・住居手当は算定基礎に含めない簡略化（PBI-009参照）。

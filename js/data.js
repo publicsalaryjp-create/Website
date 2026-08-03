@@ -272,16 +272,17 @@ const HOUSING_ALLOWANCE_BASE_AMOUNT = 11000;
 const HOUSING_ALLOWANCE_ADDITIONAL_CAP = 17000;
 const HOUSING_ALLOWANCE_CAP = 28000;
 
-/** 家賃月額から住居手当を計算する。人事院規則に基づく段階式（1円未満切り捨て）。 */
+/** 家賃月額から住居手当を計算する。人事院規則に基づく段階式（100円未満切り捨て）。 */
 function calcHousingAllowance(rent) {
   const r = Math.max(0, Math.floor(Number(rent) || 0));
   if (r <= HOUSING_ALLOWANCE_MIN_RENT) return 0;
-  if (r <= HOUSING_ALLOWANCE_THRESHOLD_RENT) return r - HOUSING_ALLOWANCE_MIN_RENT;
-  const additional = Math.min(
-    Math.floor((r - HOUSING_ALLOWANCE_THRESHOLD_RENT) / 2),
-    HOUSING_ALLOWANCE_ADDITIONAL_CAP
-  );
-  return HOUSING_ALLOWANCE_BASE_AMOUNT + additional;
+  const amount = r <= HOUSING_ALLOWANCE_THRESHOLD_RENT
+    ? r - HOUSING_ALLOWANCE_MIN_RENT
+    : HOUSING_ALLOWANCE_BASE_AMOUNT + Math.min(
+      Math.floor((r - HOUSING_ALLOWANCE_THRESHOLD_RENT) / 2),
+      HOUSING_ALLOWANCE_ADDITIONAL_CAP
+    );
+  return Math.floor(amount / 100) * 100;
 }
 
 // ---------------------------------------------------------------------------

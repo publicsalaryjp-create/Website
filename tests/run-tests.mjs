@@ -35,7 +35,7 @@ vm.runInContext(`ALLOWANCE_RATES = ${JSON.stringify(allowanceRates)};`, context)
 // 直接代入しても書き換わらない（let/const はグローバルオブジェクトのプロパティにならない）。
 // そのためコンテキスト内でコードとして代入式を実行する。
 const fixtureCatalog = {
-  order: ["test_graded", "test_flat"],
+  order: ["test_graded", "test_flat", "designated"],
   tables: {
     test_graded: {
       label: "テスト用俸給表",
@@ -49,6 +49,11 @@ const fixtureCatalog = {
       label: "テスト用フラット俸給表",
       type: "flat",
       steps: [500000, 510000, 520000],
+    },
+    designated: {
+      label: "テスト用指定職俸給表",
+      type: "flat",
+      steps: [700000],
     },
   },
 };
@@ -113,6 +118,13 @@ test("calcHousingAllowance: 家賃16,000円以下は支給されない", () => {
 test("calcHousingAllowance: 家賃16,000円超〜27,000円以下は家賃から16,000円を控除する", () => {
   assert.equal(context.calcHousingAllowance(20000), 4000);
   assert.equal(context.calcHousingAllowance(27000), 11000);
+});
+
+test("calcHousingAllowance: 支給額の100円未満を切り捨てる", () => {
+  assert.equal(context.calcHousingAllowance(20099), 4000);
+  assert.equal(context.calcHousingAllowance(20100), 4100);
+  assert.equal(context.calcHousingAllowance(30199), 12500);
+  assert.equal(context.calcHousingAllowance(30200), 12600);
 });
 
 test("calcHousingAllowance: 家賃27,000円超は段階式で計算し、28,000円を上限とする", () => {
@@ -221,12 +233,28 @@ test("calculateSalary: 各手当と合計額が期待通り計算される", () 
   });
 
   assert.equal(result.baseSalary, 101000);
-  assert.equal(result.regionalAllowance, 20200); // 101000*0.2
   assert.equal(result.dependentAllowance, 37500); // 15歳以下の子1人13000 + 16-22歳の子1人18000 + 父母等1人6500
+  assert.equal(result.regionalAllowance, 27700); // (101000+37500)*0.2
   assert.equal(result.housingAllowance, 20000); // 直接入力した値がそのまま使われる
   assert.equal(result.honshoAllowance, 10000); // 直接入力した値がそのまま使われる
-  assert.equal(result.monthlyTotal, 188700);
+  assert.equal(result.monthlyTotal, 196200);
   assert.equal(result.overtimeAllowance, 0);
+});
+
+test("calculateSalary: 指定職は入力値に関わらず俸給の特別調整額を0円とする", () => {
+  const result = context.calculateSalary({
+    tableKey: "designated",
+    step: 1,
+    regionalRate: 0,
+    specialAdjustmentAllowance: 100000,
+    weekdayNormalHours: 0,
+    weekdayNightHours: 0,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+
+  assert.equal(result.specialAdjustmentAllowance, 0);
+  assert.equal(result.monthlyTotal, 700000);
 });
 
 test("calculateSalary: 本省手当は月額支給額合計に算入されるが、超過勤務手当・期末勤勉手当の算定基礎には含まれない", () => {
