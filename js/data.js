@@ -260,6 +260,20 @@ function getSpecialAdjustmentAmount(tableKey, grade, categoryKey) {
   return option ? option.amount : 0;
 }
 
+// 期末・勤勉手当の管理職加算。人事院規則九―四〇第四条の四に基づき、
+// 俸給の特別調整額の区分が一種は25%、二種は15%、対象となる三種は10%。
+// この簡易計算では三種を対象として扱い、四種・五種には加算しない。
+const MANAGEMENT_BONUS_ADDITION_RATES = {
+  type1: 0.25,
+  type2: 0.15,
+  type3: 0.1,
+};
+
+/** 俸給の特別調整額の区分に対応する期末・勤勉手当の管理職加算割合を返す。 */
+function getManagementBonusAdditionRate(categoryKey) {
+  return MANAGEMENT_BONUS_ADDITION_RATES[categoryKey] || 0;
+}
+
 // ---------------------------------------------------------------------------
 // 5. 住居手当
 // ---------------------------------------------------------------------------

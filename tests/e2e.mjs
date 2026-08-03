@@ -114,6 +114,8 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
@@ -231,6 +233,35 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
     "index.html: 行政職(一)3級1号・地域手当20%・父母等1人・良好の年間賞与は1,610,684円",
     bonusAnnualText.includes("1,610,684"),
     `実際の表示: ${bonusAnnualText}`
+  );
+  await page.close();
+}
+
+// index.html: 特定管理職員の賞与には俸給の特別調整額の区分に応じた管理職加算を算入する
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "administrative_1");
+  await setReadonlyNumber(page, "#grade", 10);
+  await setReadonlyNumber(page, "#step", 8);
+  await setRegionalRate(page, "0.2");
+  await page.selectOption("#child-under15-count", "1");
+  await page.selectOption("#child-16to22-count", "1");
+  await page.check("#special-adjustment-type-manager");
+  await page.selectOption("#special-adjustment-category", "type1");
+  await page.check("#honsho-eligible-yes");
+  await selectMeritGrade(page, "june", "good");
+  await selectMeritGrade(page, "december", "good");
+  await page.waitForTimeout(300);
+  const monthlyText = await page.textContent("#r-monthly-total");
+  const bonusAnnualText = await page.textContent("#r-bonus-annual");
+  report(
+    "index.html: 10級8号・特定管理職員一種・本省・地域20%・子2人・良好の年間賞与は4,682,134円",
+    monthlyText.includes("971,360") && bonusAnnualText.includes("4,682,134"),
+    `月額=${monthlyText} 年間賞与=${bonusAnnualText}`
   );
   await page.close();
 }

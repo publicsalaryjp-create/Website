@@ -478,6 +478,52 @@ test("calculateSalary: 役職段階別加算額は期末・勤勉手当の算定
   assert.equal(result.kinbenJune, 120000);
 });
 
+test("calculateSalary: 管理職加算額は期末・勤勉手当の算定基礎に加算される", () => {
+  const result = context.calculateSalary({
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1,
+    regionalRate: 0,
+    childUnder15Count: 0,
+    child16to22Count: 0,
+    parentCount: 0,
+    teishuMonthsJune: 1,
+    teishuMonthsDecember: 1,
+    bonusRoleStageAdditionRate: 0,
+    managementBonusAdditionRate: 0.25,
+    meritRateJune: 1,
+    meritRateDecember: 1,
+  });
+  assert.equal(result.managementBonusAddition, 25000);
+  assert.equal(result.teishuBonusBase, 125000);
+  assert.equal(result.adjustedBonusBase, 125000);
+  assert.equal(result.teishuJune, 125000);
+  assert.equal(result.kinbenJune, 125000);
+});
+
+test("calculateSalary: 指定職の管理職加算25%は期末・勤勉手当の算定基礎に加算される", () => {
+  const result = context.calculateSalary({
+    tableKey: "designated",
+    grade: 1,
+    step: 1,
+    regionalRate: 0,
+    childUnder15Count: 0,
+    child16to22Count: 0,
+    parentCount: 0,
+    specialAdjustmentAllowance: 50000,
+    teishuMonthsJune: 1,
+    teishuMonthsDecember: 1,
+    bonusRoleStageAdditionRate: 0,
+    managementBonusAdditionRate: 0.25,
+    meritRateJune: 1,
+    meritRateDecember: 1,
+  });
+  assert.equal(result.specialAdjustmentAllowance, 0);
+  assert.equal(result.managementBonusAddition, 175000);
+  assert.equal(result.teishuJune, 875000);
+  assert.equal(result.kinbenJune, 875000);
+});
+
 test("calculateSalary: 6月期と12月期で異なる成績率を設定すると勤勉手当だけ期ごとに変わる", () => {
   const result = context.calculateSalary({
     tableKey: "test_graded",

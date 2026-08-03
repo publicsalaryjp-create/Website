@@ -438,6 +438,12 @@ function readCommonInput() {
     specialAdjustmentAllowance: isSpecialAdjustmentManager()
       ? getSpecialAdjustmentAmount(tableKey, grade, specialAdjustmentCategory)
       : 0,
+    managementBonusAdditionRate:
+      tableKey === "designated"
+        ? 0.25
+        : isSpecialAdjustmentManager()
+          ? getManagementBonusAdditionRate(specialAdjustmentCategory)
+          : 0,
   };
 }
 
