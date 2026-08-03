@@ -343,12 +343,12 @@ test("calculateSalary: 扶養手当は15歳以下と16〜22歳で額が異なる
   assert.equal(age16to22.dependentAllowance, 18000);
 });
 
-test("calculateSalary: 扶養手当は超過勤務手当の算定基礎に含まれない", () => {
+test("calculateSalary: 扶養手当とそれに対応する地域手当は超過勤務手当の算定基礎に含まれない", () => {
   const baseInput = {
     tableKey: "test_graded",
     grade: 1,
     step: 1,
-    regionalRate: 0,
+    regionalRate: 0.2,
     childUnder15Count: 0,
     child16to22Count: 0,
     parentCount: 0,
@@ -361,6 +361,8 @@ test("calculateSalary: 扶養手当は超過勤務手当の算定基礎に含ま
   const withDependent = context.calculateSalary({ ...baseInput, childUnder15Count: 1 });
 
   assert.equal(withDependent.dependentAllowance, 13000);
+  assert.equal(withoutDependent.regionalAllowance, 20000);
+  assert.equal(withDependent.regionalAllowance, 22600);
   assert.equal(withDependent.overtimeHourlyWage, withoutDependent.overtimeHourlyWage);
   assert.equal(withDependent.overtimeAllowance, withoutDependent.overtimeAllowance);
 });

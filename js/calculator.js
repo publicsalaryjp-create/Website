@@ -24,7 +24,8 @@ function getMaxStep(tableKey, grade) {
 
 /**
  * 勤務1時間当たりの給与額を算定する。
- * 算定基礎額（俸給月額＋地域手当）× 12ヶ月 ÷ 年間所定勤務時間（週38時間45分×52週）。
+ * 算定基礎額（俸給月額＋俸給月額に対する地域手当）× 12ヶ月 ÷ 年間所定勤務時間
+ * （週38時間45分×52週）。
  * 住居手当は実費補填的な手当のため算定基礎に含めない。
  */
 function calcHourlyWage(overtimeBase) {
@@ -129,9 +130,10 @@ function calculateSalary(input) {
     ? 0
     : Math.max(0, input.specialAdjustmentAllowance || 0);
 
-  // 超過勤務手当の算定基礎額（俸給月額＋地域手当）。
-  // 扶養手当・本省手当・住居手当は算定基礎に含めない。
-  const overtimeBase = baseSalary + regionalAllowance;
+  // 超過勤務手当には、地域手当のうち俸給月額に対応する額だけを算入する。
+  // 扶養手当とそれに対応する地域手当、本省手当、住居手当は算定基礎に含めない。
+  const baseSalaryRegionalAllowance = Math.floor(baseSalary * input.regionalRate);
+  const overtimeBase = baseSalary + baseSalaryRegionalAllowance;
   const hourlyWage = calcHourlyWage(overtimeBase);
   const overtime = calculateOvertimeAllowance(hourlyWage, {
     weekdayNormalHours: input.weekdayNormalHours,
