@@ -121,14 +121,16 @@ function calculateSalary(input) {
       DEPENDENT_ALLOWANCE_RATES.child16to22 * Math.max(0, input.child16to22Count || 0) +
       getParentAllowanceRate(input.tableKey, input.grade) * Math.max(0, input.parentCount || 0);
 
-  // 地域手当の算定基礎には俸給月額と扶養手当を含め、小数点以下を切り捨てる。
-  const regionalAllowance = Math.floor((baseSalary + dependentAllowance) * input.regionalRate);
-
-  const housingAllowance = isDesignated ? 0 : Math.max(0, input.housingAllowance || 0);
-  const honshoAllowance = Math.max(0, input.honshoAllowance || 0);
   const specialAdjustmentAllowance = isDesignated
     ? 0
     : Math.max(0, input.specialAdjustmentAllowance || 0);
+  // 地域手当の算定基礎には俸給月額、俸給の特別調整額、扶養手当を含める。
+  const regionalAllowance = Math.floor(
+    (baseSalary + specialAdjustmentAllowance + dependentAllowance) * input.regionalRate
+  );
+
+  const housingAllowance = isDesignated ? 0 : Math.max(0, input.housingAllowance || 0);
+  const honshoAllowance = Math.max(0, input.honshoAllowance || 0);
 
   // 超過勤務手当には、地域手当のうち俸給月額に対応する額だけを算入する。
   // 扶養手当とそれに対応する地域手当、本省手当、住居手当は算定基礎に含めない。
@@ -158,7 +160,8 @@ function calculateSalary(input) {
 
   const bonusRoleStageAddition = Math.floor(bonusBase * bonusRoleStageAdditionRate);
   const adjustedBonusBase = bonusBase + bonusRoleStageAddition;
-  const teishuBonusBase = baseSalary + dependentAllowance + regionalAllowance + bonusRoleStageAddition;
+  const teishuRegionalAllowance = Math.floor((baseSalary + dependentAllowance) * input.regionalRate);
+  const teishuBonusBase = baseSalary + dependentAllowance + teishuRegionalAllowance + bonusRoleStageAddition;
   const teishuJune = Math.floor(teishuBonusBase * teishuMonthsJune);
   const teishuDecember = Math.floor(teishuBonusBase * teishuMonthsDecember);
   const kinbenJune = Math.floor(adjustedBonusBase * meritRateJune);

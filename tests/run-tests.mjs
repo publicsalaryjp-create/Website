@@ -264,6 +264,25 @@ test("calculateSalary: 指定職は入力値に関わらず俸給の特別調整
   assert.equal(result.monthlyTotal, 700000);
 });
 
+test("calculateSalary: 俸給の特別調整額を地域手当の算定基礎に含める", () => {
+  const result = context.calculateSalary({
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1,
+    regionalRate: 0.2,
+    parentCount: 1,
+    specialAdjustmentAllowance: 50000,
+    weekdayNormalHours: 0,
+    weekdayNightHours: 0,
+    holidayNormalHours: 0,
+    holidayNightHours: 0,
+  });
+
+  assert.equal(result.dependentAllowance, 6500);
+  assert.equal(result.specialAdjustmentAllowance, 50000);
+  assert.equal(result.regionalAllowance, 31300); // (100000+50000+6500)*0.2
+});
+
 test("calculateSalary: 本省手当は月額支給額合計に算入されるが、超過勤務手当・期末勤勉手当の算定基礎には含まれない", () => {
   const withoutHonsho = context.calculateSalary({
     tableKey: "test_graded",

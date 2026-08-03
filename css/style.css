@@ -377,6 +377,16 @@ input:focus-visible {
   cursor: not-allowed;
 }
 
+.merit-grade-radio-group {
+  flex-wrap: wrap;
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.merit-grade-radio-group .radio-option {
+  min-width: 7rem;
+}
+
 .counter-input {
   display: flex;
   align-items: center;

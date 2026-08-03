@@ -108,6 +108,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <p class="hint hint-detail" id="detail-region" hidden>
         人事院の公式給与シミュレーターに収録された令和8年度の市区町村等データに基づきます。
+        地域手当は「俸給＋俸給の特別調整額＋扶養手当」に支給割合を掛けて計算します。
         本府省勤務かどうかは、地域手当ではなく本府省業務調整手当で設定してください。官署単位で指定される場合などは、下の支給割合を直接選択してください。
       </p>
       <div class="field">
@@ -353,8 +354,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <p class="hint">成績区分を選ぶと成績率が自動入力されます。入力できる値は、選択した成績区分の範囲内に限られます。</p>
       <p class="hint merit-rate-tool-link"><a href="kinben-seisekiritsu/">勤勉手当の成績率計算機で逆算する</a></p>
       <div class="field">
-        <label for="merit-grade-june">勤務成績区分（6月期）</label>
-        <select id="merit-grade-june" name="merit-grade-june" class="select-center"></select>
+        <span class="field-label-text" id="merit-grade-june-label">勤務成績区分（6月期）</span>
+        <div id="merit-grade-june" class="radio-group merit-grade-radio-group" role="radiogroup" aria-labelledby="merit-grade-june-label"></div>
         <p class="hint" id="merit-grade-june-note"></p>
         <label for="merit-rate-june">成績率（6月期・100分率）</label>
         <div class="counter-input merit-rate-input">
@@ -370,8 +371,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
       </div>
       <div class="field">
-        <label for="merit-grade-december">勤務成績区分（12月期）</label>
-        <select id="merit-grade-december" name="merit-grade-december" class="select-center"></select>
+        <span class="field-label-text" id="merit-grade-december-label">勤務成績区分（12月期）</span>
+        <div id="merit-grade-december" class="radio-group merit-grade-radio-group" role="radiogroup" aria-labelledby="merit-grade-december-label"></div>
         <p class="hint" id="merit-grade-december-note"></p>
         <label for="merit-rate-december">成績率（12月期・100分率）</label>
         <div class="counter-input merit-rate-input">

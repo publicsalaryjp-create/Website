@@ -49,7 +49,7 @@ function currentGrade() {
 
 function currentMeritGrade(period) {
   const staffType = currentMeritStaffTypeKey();
-  const gradeKey = document.getElementById(`merit-grade-${period}`).value;
+  const gradeKey = radioValue(`merit-grade-${period}`);
   const category = MERIT_RATE_CATEGORIES[staffType];
   return category && category.grades.find((g) => g.key === gradeKey);
 }
@@ -207,19 +207,24 @@ function splitGradeLabel(label) {
 }
 
 function populateMeritGradeOptions(period) {
-  const select = document.getElementById(`merit-grade-${period}`);
+  const group = document.getElementById(`merit-grade-${period}`);
   const staffType = currentMeritStaffTypeKey();
   const category = MERIT_RATE_CATEGORIES[staffType];
-  select.innerHTML = "";
+  group.innerHTML = "";
   category.grades
     .filter((g) => g.rate != null)
     .forEach((g) => {
-      const opt = document.createElement("option");
-      opt.value = g.key;
-      opt.textContent = splitGradeLabel(g.label).name;
-      select.appendChild(opt);
+      const label = document.createElement("label");
+      label.className = "radio-option";
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.id = `merit-grade-${period}-${g.key}`;
+      input.name = `merit-grade-${period}`;
+      input.value = g.key;
+      input.checked = g.key === "good";
+      label.append(input, document.createTextNode(splitGradeLabel(g.label).name));
+      group.appendChild(label);
     });
-  select.value = "good";
   updateMeritGradeNote(period);
   updateMeritRateInput(period);
 }
@@ -269,7 +274,7 @@ function updateMeritGradeNote(period) {
   const note = document.getElementById(`merit-grade-${period}-note`);
   if (!note) return;
   const staffType = currentMeritStaffTypeKey();
-  const gradeKey = document.getElementById(`merit-grade-${period}`).value;
+  const gradeKey = radioValue(`merit-grade-${period}`);
   const category = MERIT_RATE_CATEGORIES[staffType];
   const grade = category && category.grades.find((g) => g.key === gradeKey);
   note.textContent = grade ? splitGradeLabel(grade.label).detail : "";
@@ -456,11 +461,11 @@ function initForm() {
       if (categoryMayHaveChanged) {
         ["june", "december"].forEach((period) => populateMeritGradeOptions(period));
       }
-      if (e.target.id === "merit-grade-june") {
+      if (e.target.name === "merit-grade-june") {
         updateMeritGradeNote("june");
         updateMeritRateInput("june");
       }
-      if (e.target.id === "merit-grade-december") {
+      if (e.target.name === "merit-grade-december") {
         updateMeritGradeNote("december");
         updateMeritRateInput("december");
       }

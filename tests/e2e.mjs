@@ -72,6 +72,10 @@ async function setRegionalRate(page, value) {
   await page.selectOption("#regional-rate", value);
 }
 
+async function selectMeritGrade(page, period, value) {
+  await page.check(`input[name="merit-grade-${period}"][value="${value}"]`);
+}
+
 async function checkNoConsoleErrors(pathName, label) {
   const page = await browser.newPage();
   const errors = [];
@@ -88,6 +92,23 @@ async function checkNoConsoleErrors(pathName, label) {
 }
 
 await checkNoConsoleErrors("/index.html", "index.html: コンソールエラーなしで読み込める");
+
+// index.html: 勤務成績区分の初期値は6月期・12月期とも「良好」
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.waitForTimeout(500);
+  const juneGood = await page.isChecked('input[name="merit-grade-june"][value="good"]');
+  const decemberGood = await page.isChecked('input[name="merit-grade-december"][value="good"]');
+  report(
+    "index.html: 勤務成績区分は6月期・12月期とも「良好」が初期選択される",
+    juneGood && decemberGood,
+    `6月期=${juneGood} 12月期=${decemberGood}`
+  );
+  await page.close();
+}
 
 // index.html: 代表的な計算結果の妥当性
 {
@@ -164,6 +185,31 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
+// index.html: 俸給の特別調整額を地域手当の算定基礎に含める
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "administrative_1");
+  await page.selectOption("#grade", "4");
+  await page.selectOption("#step", "1");
+  await setRegionalRate(page, "0.2");
+  await page.selectOption("#child-under15-count", "0");
+  await page.selectOption("#child-16to22-count", "0");
+  await page.selectOption("#parent-count", "0");
+  await page.check("#special-adjustment-type-manager");
+  await page.selectOption("#special-adjustment-category", "type4");
+  await page.waitForTimeout(300);
+  const specialAdjustmentText = await page.textContent("#r-special-adjustment");
+  const regionalText = await page.textContent("#r-regional");
+  report(
+    "index.html: 4級1号・特別調整額55,500円・地域手当20%で地域手当は73,060円",
+    specialAdjustmentText.includes("55,500") && regionalText.includes("73,060"),
+    `特別調整額=${specialAdjustmentText} 地域手当=${regionalText}`
+  );
+  await page.close();
+}
+
 // index.html: 扶養手当がある場合も、賞与には俸給に対応する地域手当だけを算入する
 {
   const page = await browser.newPage();
@@ -177,8 +223,8 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.selectOption("#child-16to22-count", "0");
   await page.selectOption("#parent-count", "1");
   await page.check("#special-adjustment-type-general");
-  await page.selectOption("#merit-grade-june", "good");
-  await page.selectOption("#merit-grade-december", "good");
+  await selectMeritGrade(page, "june", "good");
+  await selectMeritGrade(page, "december", "good");
   await page.waitForTimeout(300);
   const bonusAnnualText = await page.textContent("#r-bonus-annual");
   report(
@@ -372,11 +418,11 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
-  await page.selectOption("#merit-grade-june", "good");
+  await selectMeritGrade(page, "june", "good");
   await page.waitForTimeout(200);
   const kinbenGood = await page.textContent("#r-kinben-june");
   const teishuGood = await page.textContent("#r-teishu-june");
-  await page.selectOption("#merit-grade-june", "excellent_plus");
+  await selectMeritGrade(page, "june", "excellent_plus");
   await page.waitForTimeout(200);
   const kinbenExcellentPlus = await page.textContent("#r-kinben-june");
   const teishuExcellentPlus = await page.textContent("#r-teishu-june");
@@ -395,7 +441,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "designated");
   await page.waitForTimeout(200);
-  const gradeOptions = await page.$$eval("#merit-grade-june option", (opts) => opts.map((o) => o.value));
+  const gradeOptions = await page.$$eval('input[name="merit-grade-june"]', (inputs) => inputs.map((input) => input.value));
   report(
     "index.html: 指定職職員には「特に優秀」の選択肢がない",
     !gradeOptions.includes("excellent_plus"),
@@ -412,13 +458,13 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
   await page.check("#special-adjustment-type-general");
-  await page.selectOption("#merit-grade-june", "excellent_plus");
+  await selectMeritGrade(page, "june", "excellent_plus");
   const excellentPlusMin = await page.getAttribute("#merit-rate-june", "min");
   const excellentPlusMax = await page.getAttribute("#merit-rate-june", "max");
   await page.fill("#merit-rate-june", "999");
   await page.locator("#merit-rate-june").blur();
   const normalizedExcellentPlus = await page.inputValue("#merit-rate-june");
-  await page.selectOption("#merit-grade-june", "good");
+  await selectMeritGrade(page, "june", "good");
   const goodMin = await page.getAttribute("#merit-rate-june", "min");
   const goodMax = await page.getAttribute("#merit-rate-june", "max");
   const decreaseTenButton = page.getByRole("button", { name: "6月期の成績率を10ポイント下げる", exact: true });
@@ -433,7 +479,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.fill("#merit-rate-june", "999");
   await page.locator("#merit-rate-june").blur();
   const normalizedGood = await page.inputValue("#merit-rate-june");
-  await page.selectOption("#merit-grade-june", "not_good");
+  await selectMeritGrade(page, "june", "not_good");
   await page.fill("#merit-rate-june", "0");
   await page.locator("#merit-rate-june").blur();
   const zeroRate = await page.inputValue("#merit-rate-june");
@@ -464,8 +510,8 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
-  await page.selectOption("#merit-grade-june", "excellent_plus");
-  await page.selectOption("#merit-grade-december", "not_good");
+  await selectMeritGrade(page, "june", "excellent_plus");
+  await selectMeritGrade(page, "december", "not_good");
   await page.waitForTimeout(200);
   const kinbenJune = await page.textContent("#r-kinben-june");
   const kinbenDecember = await page.textContent("#r-kinben-december");
