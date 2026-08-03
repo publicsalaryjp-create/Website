@@ -93,6 +93,97 @@ async function checkNoConsoleErrors(pathName, label) {
 
 await checkNoConsoleErrors("/index.html", "index.html: コンソールエラーなしで読み込める");
 
+await checkNoConsoleErrors(
+  "/kinben-seisekiritsu/index.html",
+  "kinben-seisekiritsu: コンソールエラーなしで読み込める"
+);
+
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/kinben-seisekiritsu/index.html`);
+  const disclaimerText = await page.textContent("#disclaimer");
+  report(
+    "kinben-seisekiritsu: 免責事項が表示される",
+    disclaimerText.includes("計算結果の正確性を保証するものではありません") &&
+      disclaimerText.includes("運営者は一切責任を負いません"),
+    disclaimerText
+  );
+  await page.close();
+}
+
+// 成績率逆算: 管理職三種は一般職員として今回の支給額から良好102.25%を逆算できる
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/kinben-seisekiritsu/index.html`);
+  await page.waitForTimeout(500);
+  await page.check('input[name="staff-type"][value="general"]');
+  await page.check('input[name="regional-input-method"][value="rate"]');
+  await page.selectOption("#regional-rate", "0.2");
+  await page.fill("#dependent-base-addition", "31000");
+  await page.fill("#term-amount", "955056");
+  await page.fill("#merit-amount", "735463");
+  await page.click("button[type=submit]");
+  const rateText = await page.textContent("#result-rate");
+  const categoryText = await page.textContent("#result-category");
+  report(
+    "kinben-seisekiritsu: 8級8号・管理職三種の支給額から良好102.25%を逆算できる",
+    rateText === "102.25" && categoryText === "良好",
+    `成績率=${rateText} 区分=${categoryText}`
+  );
+  await page.close();
+}
+
+// 成績率逆算: 入力内容をブラウザ内に保存し、再読み込み後に復元する
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/kinben-seisekiritsu/index.html`);
+  await page.evaluate(() => localStorage.removeItem("salary-calculator:kinben-seisekiritsu"));
+  await page.reload();
+  await page.selectOption("#salary-table-type", "administrative_1");
+  await page.check('input[name="staff-type"][value="senior_manager"]');
+  await page.check('input[name="regional-input-method"][value="location"]');
+  await page.selectOption("#regional-prefecture", "東京都");
+  await page.selectOption("#regional-municipality", { label: "特別区" });
+  await page.fill("#dependent-base-addition", "31000");
+  await page.fill("#term-amount", "955056");
+  await page.fill("#merit-amount", "735463");
+  await page.reload();
+  await page.waitForTimeout(300);
+  const staffTypeRestored = await page.isChecked('input[name="staff-type"][value="senior_manager"]');
+  const prefectureRestored = await page.inputValue("#regional-prefecture");
+  const municipalityLabel = await page.locator("#regional-municipality option:checked").textContent();
+  const dependentRestored = await page.inputValue("#dependent-base-addition");
+  const termRestored = await page.inputValue("#term-amount");
+  const meritRestored = await page.inputValue("#merit-amount");
+  report(
+    "kinben-seisekiritsu: 入力内容が再読み込み後も復元される",
+    staffTypeRestored && prefectureRestored === "東京都" && municipalityLabel === "特別区" &&
+      dependentRestored.replaceAll(",", "") === "31000" &&
+      termRestored.replaceAll(",", "") === "955056" && meritRestored.replaceAll(",", "") === "735463",
+    `職員区分=${staffTypeRestored} 都道府県=${prefectureRestored} 市区町村=${municipalityLabel} 扶養=${dependentRestored} 期末=${termRestored} 勤勉=${meritRestored}`
+  );
+  await page.close();
+}
+
+// 成績率逆算: 地域手当の設定方法をラジオボタンで切り替える
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/kinben-seisekiritsu/index.html`);
+  await page.evaluate(() => localStorage.removeItem("salary-calculator:kinben-seisekiritsu"));
+  await page.reload();
+  const locationInitiallyVisible = await page.isVisible("#regional-location-inputs");
+  const rateInitiallyHidden = await page.isHidden("#regional-rate-input");
+  await page.check('input[name="regional-input-method"][value="rate"]');
+  const locationAfterSwitchHidden = await page.isHidden("#regional-location-inputs");
+  const rateAfterSwitchVisible = await page.isVisible("#regional-rate-input");
+  report(
+    "kinben-seisekiritsu: 地域手当の設定方法をラジオボタンで切り替えられる",
+    locationInitiallyVisible && rateInitiallyHidden && locationAfterSwitchHidden && rateAfterSwitchVisible,
+    `地域初期=${locationInitiallyVisible} 割合初期非表示=${rateInitiallyHidden} 地域切替後非表示=${locationAfterSwitchHidden} 割合切替後=${rateAfterSwitchVisible}`
+  );
+  await page.close();
+}
+
 // index.html: 勤務成績区分の初期値は6月期・12月期とも「良好」
 {
   const page = await browser.newPage();

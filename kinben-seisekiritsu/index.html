@@ -62,7 +62,7 @@
             </label>
             <label>
               <input type="radio" name="staff-type" value="senior_manager">
-              <span><strong>特定管理職員</strong><small>本府省課長等</small></span>
+              <span><strong>特定管理職員</strong><small>俸給の特別調整額が一種・二種の職員</small></span>
             </label>
           </div>
         </fieldset>
@@ -92,18 +92,30 @@
 
         <fieldset class="staff-type-field regional-fields">
           <legend>地域手当</legend>
-          <div class="amount-field">
-            <label for="regional-prefecture">勤務地の都道府県</label>
-            <select id="regional-prefecture" name="regional-prefecture"></select>
+          <p class="hint">はじめに、支給割合の設定方法を選んでください。</p>
+          <div class="staff-type-options regional-input-method-options">
+            <label>
+              <input type="radio" name="regional-input-method" value="location" checked>
+              <span><strong>地域から選ぶ</strong></span>
+            </label>
+            <label>
+              <input type="radio" name="regional-input-method" value="rate">
+              <span><strong>支給割合を直接選ぶ</strong></span>
+            </label>
           </div>
-          <div class="amount-field">
-            <label for="regional-municipality">勤務地の市区町村等</label>
-            <select id="regional-municipality" name="regional-municipality" disabled></select>
+          <div id="regional-location-inputs">
+            <div class="amount-field">
+              <label for="regional-prefecture">勤務地の都道府県</label>
+              <select id="regional-prefecture" name="regional-prefecture"></select>
+            </div>
+            <div class="amount-field">
+              <label for="regional-municipality">勤務地の市区町村等</label>
+              <select id="regional-municipality" name="regional-municipality" disabled></select>
+            </div>
           </div>
-          <div class="amount-field">
+          <div class="amount-field" id="regional-rate-input" hidden>
             <label for="regional-rate">地域手当の支給割合</label>
             <select id="regional-rate" name="regional-rate"></select>
-            <p class="hint">勤務地を選ぶと令和8年度の割合を自動設定します。直接変更もできます</p>
           </div>
         </fieldset>
 
@@ -137,6 +149,7 @@
         </div>
 
         <button type="submit" class="calculate-button">成績率を計算する</button>
+        <p class="hint">入力内容はこの端末のブラウザ内に保存され、次回アクセス時に自動的に復元されます。</p>
       </form>
 
     <section class="result-card" id="result-card" aria-live="polite" aria-atomic="true">
@@ -164,14 +177,13 @@
     </section>
     </section>
 
-    <aside class="assumption-note">
-      <h2>この計算の前提</h2>
-      <p>令和8年度以降の支給月数を使用します。1回あたりの期末手当は、一般職員<strong>1.2625月</strong>、特定管理職員<strong>1.0625月</strong>、指定職職員<strong>0.675月</strong>です。6月期・12月期とも成績率と支給月数は同じですが、対象となる勤務期間を確認できるよう支給期を選択します。</p>
-      <p>勤勉手当の期間率は基準日前6か月の勤務期間に応じた0〜100%の率です。期末手当の在職期間別割合は、6か月100%、5か月以上6か月未満80%、3か月以上5か月未満60%、3か月未満30%から選択します。</p>
-      <p>期末手当の算定基礎には扶養手当とそれに対する地域手当等が含まれますが、勤勉手当の算定基礎には含まれません。入力した扶養手当と地域手当率から差額を自動計算して補正します。</p>
-      <p>実際の支給額には端数処理や休職等による期間率が反映されるため、通知された成績率とわずかに異なることがあります。</p>
-    </aside>
   </main>
+
+  <div class="disclaimer" id="disclaimer">
+    <strong>ご利用にあたって：</strong>
+    このツールは国家公務員給与の概算シミュレーターであり、計算結果の正確性を保証するものではありません。
+    本ツールを利用したことによって発生した不利益や損害について、運営者は一切責任を負いません。
+  </div>
 
   <footer class="site-footer compact-footer">
     <p><a href="../index.html">国家公務員給与計算機に戻る</a></p>

@@ -19,6 +19,9 @@
   const regionalPrefectureInput = document.getElementById("regional-prefecture");
   const regionalMunicipalityInput = document.getElementById("regional-municipality");
   const regionalRateInput = document.getElementById("regional-rate");
+  const regionalLocationInputs = document.getElementById("regional-location-inputs");
+  const regionalRateField = document.getElementById("regional-rate-input");
+  const STORAGE_KEY = "salary-calculator:kinben-seisekiritsu";
 
   const MERIT_CATEGORIES = {
     general: { notGoodMax: 93.75, good: 102.25, excellentMin: 113.75, excellentPlusMin: 125.25, max: 318.75 },
@@ -38,6 +41,55 @@
   function formatInput(input) {
     const amount = parseAmount(input.value);
     if (Number.isFinite(amount)) input.value = amount.toLocaleString("ja-JP");
+  }
+
+  function saveFormState() {
+    try {
+      const data = {};
+      form.querySelectorAll("input, select").forEach((input) => {
+        const key = input.id || input.name;
+        if (!key || (input.type === "radio" && !input.checked)) return;
+        data[input.type === "radio" ? input.name : key] = input.value;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // localStorageを使用できない環境では保存しない。
+    }
+  }
+
+  function restoreFormState() {
+    let saved;
+    try {
+      saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    } catch {
+      return;
+    }
+    if (!saved) return;
+
+    const applyValue = (input) => {
+      const key = input.type === "radio" ? input.name : input.id || input.name;
+      const value = saved[key];
+      if (value === undefined) return;
+      if (input.type === "radio") {
+        input.checked = input.value === value;
+      } else if (input.tagName === "SELECT") {
+        if (Array.from(input.options).some((option) => option.value === value && !option.disabled)) {
+          input.value = value;
+        }
+      } else {
+        input.value = value;
+      }
+    };
+
+    form.querySelectorAll("input, select").forEach((input) => {
+      if (input !== regionalMunicipalityInput) applyValue(input);
+    });
+    populateMunicipalities();
+    applyValue(regionalMunicipalityInput);
+    // 市区町村の復元で地域手当率を上書きせず、保存した直接選択値を優先する。
+    applyValue(regionalRateInput);
+    staffTypeField.hidden = salaryTableInput.value !== "administrative_1";
+    updateRegionalInputMethod();
   }
 
   function showError(input, message) {
@@ -89,6 +141,12 @@
     regionalMunicipalityInput.disabled = locations.length === 0;
   }
 
+  function updateRegionalInputMethod() {
+    const useLocation = form.elements["regional-input-method"].value !== "rate";
+    regionalLocationInputs.hidden = !useLocation;
+    regionalRateField.hidden = useLocation;
+  }
+
   function calculate(event) {
     event.preventDefault();
     const termAmount = parseAmount(termInput.value);
@@ -137,6 +195,7 @@
       `${meritAmount.toLocaleString("ja-JP")}円 ÷ {(${termAmount.toLocaleString("ja-JP")}円 ÷ (${termMonths}月 × ${serviceRatePercent}%) − ${dependentAllowance.toLocaleString("ja-JP")}円 − ${dependentRegionalAllowance.toLocaleString("ja-JP")}円) × ${periodRatePercent}%}`;
     emptyResult.hidden = true;
     calculatedResult.hidden = false;
+    saveFormState();
   }
 
   [termInput, meritInput, dependentBaseInput].forEach((input) => {
@@ -158,6 +217,12 @@
   });
   form.querySelectorAll('input[name="payment-period"]').forEach((input) => {
     input.addEventListener("change", resetResult);
+  });
+  form.querySelectorAll('input[name="regional-input-method"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      updateRegionalInputMethod();
+      resetResult();
+    });
   });
   [periodRateInput, serviceRateInput].forEach((input) => {
     input.addEventListener("input", () => {
@@ -188,7 +253,13 @@
     resetResult();
   });
 
+  form.addEventListener("input", saveFormState);
+  form.addEventListener("change", saveFormState);
+  form.addEventListener("focusout", saveFormState);
+
   populateRegionalInputs();
+  restoreFormState();
+  updateRegionalInputMethod();
 
   form.addEventListener("submit", calculate);
 })();
