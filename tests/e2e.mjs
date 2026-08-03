@@ -266,6 +266,34 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
+// index.html: 俸給の特別調整額三種は賞与上の特定管理職員・管理職加算の対象外
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "administrative_1");
+  await setReadonlyNumber(page, "#grade", 8);
+  await setReadonlyNumber(page, "#step", 8);
+  await setRegionalRate(page, "0.2");
+  await page.selectOption("#child-under15-count", "1");
+  await page.selectOption("#child-16to22-count", "1");
+  await page.check("#special-adjustment-type-manager");
+  await page.selectOption("#special-adjustment-category", "type3");
+  await page.check("#honsho-eligible-yes");
+  await selectMeritGrade(page, "june", "good");
+  await selectMeritGrade(page, "december", "good");
+  await page.waitForTimeout(300);
+  const bonusAnnualText = await page.textContent("#r-bonus-annual");
+  report(
+    "index.html: 8級8号・管理職三種・本省・地域20%・子2人・良好の年間賞与は3,381,038円",
+    bonusAnnualText.includes("3,381,038"),
+    `実際の表示: ${bonusAnnualText}`
+  );
+  await page.close();
+}
+
 // index.html: 超過勤務時間は−10/−1/+1/+10ボタンで増減でき、0未満にはならない
 {
   const page = await browser.newPage();

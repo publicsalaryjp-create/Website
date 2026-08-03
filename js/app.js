@@ -40,7 +40,10 @@ function updateVintageNote() {
 // 表示せず、常に指定職職員の区分を適用する。
 function currentMeritStaffTypeKey() {
   if (currentTableKey() === "designated") return "designated";
-  return isSpecialAdjustmentManager() ? "senior_manager" : "general";
+  const categoryKey = document.getElementById("special-adjustment-category").value;
+  return isSpecialAdjustmentManager() && (categoryKey === "type1" || categoryKey === "type2")
+    ? "senior_manager"
+    : "general";
 }
 
 function currentGrade() {

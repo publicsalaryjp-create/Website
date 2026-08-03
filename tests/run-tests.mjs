@@ -84,6 +84,13 @@ test("MERIT_RATE_CATEGORIES: 特に優秀の成績率に職員区分別の上限
   assert.equal(seniorManager.maxRate, 3.7875);
 });
 
+test("getManagementBonusAdditionRate: 一種25%・二種15%、三種以下は0%", () => {
+  assert.equal(context.getManagementBonusAdditionRate("type1"), 0.25);
+  assert.equal(context.getManagementBonusAdditionRate("type2"), 0.15);
+  assert.equal(context.getManagementBonusAdditionRate("type3"), 0);
+  assert.equal(context.getManagementBonusAdditionRate("type4"), 0);
+});
+
 // --- getSalaryAmount / getMaxStep -------------------------------------------------
 
 test("getSalaryAmount: 通常のインデックス", () => {
