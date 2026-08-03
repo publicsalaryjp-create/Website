@@ -393,7 +393,7 @@ const MERIT_RATE_CATEGORIES = {
   general: {
     label: "一般職員",
     grades: [
-      { key: "excellent_plus", label: "特に優秀（125.25/100以上、下限採用）", rate: 1.2525, minRate: 1.2525 },
+      { key: "excellent_plus", label: "特に優秀（125.25/100以上318.75/100以下、下限採用）", rate: 1.2525, minRate: 1.2525, maxRate: 3.1875 },
       { key: "excellent", label: "優秀（113.75/100以上125.25/100未満、下限採用）", rate: 1.1375, minRate: 1.1375, maxRate: 1.2524 },
       { key: "good", label: "良好（102.25/100）", rate: 1.0225, minRate: 1.0225, maxRate: 1.0225 },
       { key: "not_good", label: "良好でない（93.75/100以下）", rate: 0.9375, minRate: 0, maxRate: 0.9375 },
@@ -402,7 +402,7 @@ const MERIT_RATE_CATEGORIES = {
   senior_manager: {
     label: "特定管理職員（本府省課長等）",
     grades: [
-      { key: "excellent_plus", label: "特に優秀（149.25/100以上、下限採用）", rate: 1.4925, minRate: 1.4925 },
+      { key: "excellent_plus", label: "特に優秀（149.25/100以上378.75/100以下、下限採用）", rate: 1.4925, minRate: 1.4925, maxRate: 3.7875 },
       { key: "excellent", label: "優秀（134.75/100以上149.25/100未満、下限採用）", rate: 1.3475, minRate: 1.3475, maxRate: 1.4924 },
       { key: "good", label: "良好（122.25/100）", rate: 1.2225, minRate: 1.2225, maxRate: 1.2225 },
       { key: "not_good", label: "良好でない（112.75/100以下）", rate: 1.1275, minRate: 0, maxRate: 1.1275 },

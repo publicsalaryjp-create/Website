@@ -382,7 +382,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   const teishuExcellentPlus = await page.textContent("#r-teishu-june");
   report(
     "index.html: 成績区分を「良好」→「特に優秀」に変えると勤勉手当が増え、期末手当は変わらない",
-    kinbenExcellentPlus !== kinbenGood && teishuExcellentPlus === teishuGood,
+    !kinbenExcellentPlus.includes("NaN") && kinbenExcellentPlus !== kinbenGood && teishuExcellentPlus === teishuGood,
     `勤勉(良好)=${kinbenGood} 勤勉(特に優秀)=${kinbenExcellentPlus} 期末(良好)=${teishuGood} 期末(特に優秀)=${teishuExcellentPlus}`
   );
   await page.close();
@@ -411,6 +411,13 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.waitForTimeout(500);
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
+  await page.check("#special-adjustment-type-general");
+  await page.selectOption("#merit-grade-june", "excellent_plus");
+  const excellentPlusMin = await page.getAttribute("#merit-rate-june", "min");
+  const excellentPlusMax = await page.getAttribute("#merit-rate-june", "max");
+  await page.fill("#merit-rate-june", "999");
+  await page.locator("#merit-rate-june").blur();
+  const normalizedExcellentPlus = await page.inputValue("#merit-rate-june");
   await page.selectOption("#merit-grade-june", "good");
   const goodMin = await page.getAttribute("#merit-rate-june", "min");
   const goodMax = await page.getAttribute("#merit-rate-june", "max");
@@ -435,14 +442,17 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   const incrementedRate = await page.inputValue("#merit-rate-june");
   report(
     "index.html: 成績率は区分の範囲内に制限され、「良好でない」では0を入力できる",
-    goodMin === "102.25" &&
+    excellentPlusMin === "125.25" &&
+      excellentPlusMax === "318.75" &&
+      normalizedExcellentPlus === "318.75" &&
+      goodMin === "102.25" &&
       goodMax === "102.25" &&
       rateButtonCount === 4 &&
       normalizedGood === "102.25" &&
       zeroRate === "0" &&
       incrementedRate === "1" &&
       kinbenZero.includes("0"),
-    `良好の範囲=${goodMin}〜${goodMax} 正規化=${normalizedGood} 良好でない=${zeroRate}/${kinbenZero} 加算後=${incrementedRate}`
+    `特に優秀の範囲=${excellentPlusMin}〜${excellentPlusMax} 正規化=${normalizedExcellentPlus} 良好の範囲=${goodMin}〜${goodMax} 正規化=${normalizedGood} 良好でない=${zeroRate}/${kinbenZero} 加算後=${incrementedRate}`
   );
   await page.close();
 }
@@ -463,7 +473,7 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   const teishuDecember = await page.textContent("#r-teishu-december");
   report(
     "index.html: 6月期「特に優秀」・12月期「良好でない」で勤勉手当が期ごとに異なり、期末手当は変わらない",
-    kinbenJune !== kinbenDecember && teishuJune === teishuDecember,
+    !kinbenJune.includes("NaN") && kinbenJune !== kinbenDecember && teishuJune === teishuDecember,
     `勤勉(6月)=${kinbenJune} 勤勉(12月)=${kinbenDecember} 期末(6月)=${teishuJune} 期末(12月)=${teishuDecember}`
   );
   await page.close();

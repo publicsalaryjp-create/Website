@@ -62,7 +62,8 @@ function currentMeritRate(period) {
   if (!grade) return 1;
   if (!Number.isFinite(value)) return grade.rate;
   const rate = value / 100;
-  return Math.min(Math.max(rate, grade.minRate), grade.maxRate);
+  const maxRate = Number.isFinite(grade.maxRate) ? grade.maxRate : Infinity;
+  return Math.min(Math.max(rate, grade.minRate), maxRate);
 }
 
 // 管理職（俸給の特別調整額の対象・指定職職員）は超過勤務手当の支給対象外のため、時間を0として扱う。
@@ -245,7 +246,11 @@ function updateMeritRateConstraints(period) {
   const grade = currentMeritGrade(period);
   if (!input || !grade || grade.rate == null) return;
   input.min = String(grade.minRate * 100);
-  input.max = String(grade.maxRate * 100);
+  if (Number.isFinite(grade.maxRate)) {
+    input.max = String(grade.maxRate * 100);
+  } else {
+    input.removeAttribute("max");
+  }
 }
 
 /** 確定時に空欄・範囲外の成績率を、選択中の区分で許容される値に戻す。 */
@@ -255,7 +260,8 @@ function normalizeMeritRateInput(period) {
   if (!input || !grade || grade.rate == null) return;
   const value = Number(input.value);
   const rate = Number.isFinite(value) ? value / 100 : grade.rate;
-  input.value = Number((Math.min(Math.max(rate, grade.minRate), grade.maxRate) * 100).toFixed(4));
+  const maxRate = Number.isFinite(grade.maxRate) ? grade.maxRate : Infinity;
+  input.value = Number((Math.min(Math.max(rate, grade.minRate), maxRate) * 100).toFixed(4));
 }
 
 /** 現在選択中の勤務成績区分の成績率の詳細を、選択欄の下のヒントテキストに表示する */
@@ -482,7 +488,8 @@ function initForm() {
       if (!input || !grade || !Number.isFinite(delta)) return;
       const current = Number(input.value);
       const value = Number.isFinite(current) ? current / 100 : grade.rate;
-      const next = Math.min(Math.max(value + delta / 100, grade.minRate), grade.maxRate);
+      const maxRate = Number.isFinite(grade.maxRate) ? grade.maxRate : Infinity;
+      const next = Math.min(Math.max(value + delta / 100, grade.minRate), maxRate);
       input.value = Number((next * 100).toFixed(4));
       recalculate();
     });

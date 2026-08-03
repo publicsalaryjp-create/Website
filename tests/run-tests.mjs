@@ -77,6 +77,13 @@ function test(name, fn) {
   }
 }
 
+test("MERIT_RATE_CATEGORIES: 特に優秀の成績率に職員区分別の上限がある", () => {
+  const general = MERIT_RATE_CATEGORIES.general.grades.find((g) => g.key === "excellent_plus");
+  const seniorManager = MERIT_RATE_CATEGORIES.senior_manager.grades.find((g) => g.key === "excellent_plus");
+  assert.equal(general.maxRate, 3.1875);
+  assert.equal(seniorManager.maxRate, 3.7875);
+});
+
 // --- getSalaryAmount / getMaxStep -------------------------------------------------
 
 test("getSalaryAmount: 通常のインデックス", () => {
