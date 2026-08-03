@@ -182,8 +182,8 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.waitForTimeout(300);
   const bonusAnnualText = await page.textContent("#r-bonus-annual");
   report(
-    "index.html: 行政職(一)3級1号・地域手当20%・父母等1人・良好の年間賞与は1,590,990円",
-    bonusAnnualText.includes("1,590,990"),
+    "index.html: 行政職(一)3級1号・地域手当20%・父母等1人・良好の年間賞与は1,610,684円",
+    bonusAnnualText.includes("1,610,684"),
     `実際の表示: ${bonusAnnualText}`
   );
   await page.close();

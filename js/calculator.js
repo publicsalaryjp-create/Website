@@ -146,8 +146,7 @@ function calculateSalary(input) {
     baseSalary + regionalAllowance + dependentAllowance + housingAllowance + honshoAllowance + specialAdjustmentAllowance;
   const monthlyTotalWithOvertime = monthlyTotal + overtime.totalAllowance;
 
-  // 期末・勤勉手当の算定基礎額は簡略化し「俸給＋俸給に対する地域手当」とする。
-  // 扶養手当とそれに対応する地域手当、超過勤務手当は含まない。
+  // 期末手当には扶養手当とそれに対応する地域手当を含めるが、勤勉手当には含めない。
   // 期末手当 = 基礎額×各期の支給月数（成績率なし）。
   // 勤勉手当 = 基礎額×成績率（成績率自体が1回あたりの支給割合を表すため、月数は別途掛けない）。
   const bonusBase = baseSalary + baseSalaryRegionalAllowance;
@@ -159,8 +158,9 @@ function calculateSalary(input) {
 
   const bonusRoleStageAddition = Math.floor(bonusBase * bonusRoleStageAdditionRate);
   const adjustedBonusBase = bonusBase + bonusRoleStageAddition;
-  const teishuJune = Math.floor(adjustedBonusBase * teishuMonthsJune);
-  const teishuDecember = Math.floor(adjustedBonusBase * teishuMonthsDecember);
+  const teishuBonusBase = baseSalary + dependentAllowance + regionalAllowance + bonusRoleStageAddition;
+  const teishuJune = Math.floor(teishuBonusBase * teishuMonthsJune);
+  const teishuDecember = Math.floor(teishuBonusBase * teishuMonthsDecember);
   const kinbenJune = Math.floor(adjustedBonusBase * meritRateJune);
   const kinbenDecember = Math.floor(adjustedBonusBase * meritRateDecember);
   const bonusJune = teishuJune + kinbenJune;
@@ -186,6 +186,7 @@ function calculateSalary(input) {
     bonusBase,
     bonusRoleStageAddition,
     adjustedBonusBase,
+    teishuBonusBase,
     teishuJune,
     teishuDecember,
     kinbenJune,
