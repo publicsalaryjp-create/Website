@@ -367,6 +367,30 @@ test("calculateSalary: 扶養手当とそれに対応する地域手当は超過
   assert.equal(withDependent.overtimeAllowance, withoutDependent.overtimeAllowance);
 });
 
+test("calculateSalary: 扶養手当とそれに対応する地域手当は賞与の算定基礎に含まれない", () => {
+  const baseInput = {
+    tableKey: "test_graded",
+    grade: 1,
+    step: 1,
+    regionalRate: 0.2,
+    childUnder15Count: 0,
+    child16to22Count: 0,
+    parentCount: 0,
+    teishuMonthsJune: 1.2625,
+    teishuMonthsDecember: 1.2625,
+    bonusRoleStageAdditionRate: 0.05,
+    meritRateJune: 1.0225,
+    meritRateDecember: 1.0225,
+  };
+  const withoutDependent = context.calculateSalary(baseInput);
+  const withDependent = context.calculateSalary({ ...baseInput, parentCount: 1 });
+
+  assert.equal(withDependent.dependentAllowance, 6500);
+  assert.equal(withDependent.regionalAllowance, 21300);
+  assert.equal(withDependent.bonusBase, withoutDependent.bonusBase);
+  assert.equal(withDependent.bonusAnnual, withoutDependent.bonusAnnual);
+});
+
 // --- 期末・勤勉手当（6月/12月split・成績率） --------------------------------------
 
 test("calculateSalary: 期末手当は成績率の影響を受けず、勤勉手当だけに成績率がかかる", () => {

@@ -164,6 +164,31 @@ await checkNoConsoleErrors("/index.html", "index.html: コンソールエラー�
   await page.close();
 }
 
+// index.html: 扶養手当がある場合も、賞与には俸給に対応する地域手当だけを算入する
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await page.selectOption("#salary-table", "administrative_1");
+  await page.selectOption("#grade", "3");
+  await page.selectOption("#step", "1");
+  await setRegionalRate(page, "0.2");
+  await page.selectOption("#child-under15-count", "0");
+  await page.selectOption("#child-16to22-count", "0");
+  await page.selectOption("#parent-count", "1");
+  await page.check("#special-adjustment-type-general");
+  await page.selectOption("#merit-grade-june", "good");
+  await page.selectOption("#merit-grade-december", "good");
+  await page.waitForTimeout(300);
+  const bonusAnnualText = await page.textContent("#r-bonus-annual");
+  report(
+    "index.html: 行政職(一)3級1号・地域手当20%・父母等1人・良好の年間賞与は1,590,990円",
+    bonusAnnualText.includes("1,590,990"),
+    `実際の表示: ${bonusAnnualText}`
+  );
+  await page.close();
+}
+
 // index.html: 超過勤務時間は−10/−1/+1/+10ボタンで増減でき、0未満にはならない
 {
   const page = await browser.newPage();

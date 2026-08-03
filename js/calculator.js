@@ -146,10 +146,11 @@ function calculateSalary(input) {
     baseSalary + regionalAllowance + dependentAllowance + housingAllowance + honshoAllowance + specialAdjustmentAllowance;
   const monthlyTotalWithOvertime = monthlyTotal + overtime.totalAllowance;
 
-  // 期末・勤勉手当の算定基礎額は簡略化し「俸給+地域手当」とする（実際は扶養手当等も一部算入）。超過勤務手当は含まない。
+  // 期末・勤勉手当の算定基礎額は簡略化し「俸給＋俸給に対する地域手当」とする。
+  // 扶養手当とそれに対応する地域手当、超過勤務手当は含まない。
   // 期末手当 = 基礎額×各期の支給月数（成績率なし）。
   // 勤勉手当 = 基礎額×成績率（成績率自体が1回あたりの支給割合を表すため、月数は別途掛けない）。
-  const bonusBase = baseSalary + regionalAllowance;
+  const bonusBase = baseSalary + baseSalaryRegionalAllowance;
   const teishuMonthsJune = input.teishuMonthsJune || 0;
   const teishuMonthsDecember = input.teishuMonthsDecember || 0;
   const bonusRoleStageAdditionRate = input.bonusRoleStageAdditionRate || 0;
