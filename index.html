@@ -13,7 +13,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="description" content="国家公務員の俸給・地域手当・扶養手当・住居手当・本省手当・期末勤勉手当・超過勤務手当から月給と年収を概算するシミュレーターです。">
 <title>国家公務員給与計算機</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css?v=20260802-8">
+<link rel="stylesheet" href="css/style.css?v=20260806-1">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -222,7 +222,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <button type="button" class="counter-btn" data-target="housing-rent" data-delta="-10000" aria-label="家賃を1万円減らす">−1万</button>
               <button type="button" class="counter-btn" data-target="housing-rent" data-delta="-1000" aria-label="家賃を1千円減らす">−1千</button>
             </div>
-            <input type="number" id="housing-rent" name="housing-rent" min="0" step="1000" value="0">
+            <div class="counter-value">
+              <input type="number" id="housing-rent" name="housing-rent" min="0" step="1000" value="0" size="6">
+              <span class="counter-unit" aria-hidden="true">円</span>
+            </div>
             <div class="housing-rent-buttons">
               <button type="button" class="counter-btn" data-target="housing-rent" data-delta="1000" aria-label="家賃を1千円増やす">+1千</button>
               <button type="button" class="counter-btn" data-target="housing-rent" data-delta="10000" aria-label="家賃を1万円増やす">+1万</button>
@@ -275,7 +278,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="-10" aria-label="平日通常の時間外勤務を10時間減らす">−10</button>
               <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="-1" aria-label="平日通常の時間外勤務を1時間減らす">−1</button>
             </div>
-            <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="1" value="0">
+            <div class="counter-value">
+              <input type="number" id="ot-weekday-normal" name="ot-weekday-normal" min="0" step="1" value="0" size="3">
+              <span class="counter-unit" aria-hidden="true">時間</span>
+            </div>
             <div class="overtime-buttons">
               <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="1" aria-label="平日通常の時間外勤務を1時間増やす">+1</button>
               <button type="button" class="counter-btn" data-target="ot-weekday-normal" data-delta="10" aria-label="平日通常の時間外勤務を10時間増やす">+10</button>
@@ -290,7 +296,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="-10" aria-label="平日深夜の時間外勤務を10時間減らす">−10</button>
               <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="-1" aria-label="平日深夜の時間外勤務を1時間減らす">−1</button>
             </div>
-            <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="1" value="0">
+            <div class="counter-value">
+              <input type="number" id="ot-weekday-night" name="ot-weekday-night" min="0" step="1" value="0" size="3">
+              <span class="counter-unit" aria-hidden="true">時間</span>
+            </div>
             <div class="overtime-buttons">
               <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="1" aria-label="平日深夜の時間外勤務を1時間増やす">+1</button>
               <button type="button" class="counter-btn" data-target="ot-weekday-night" data-delta="10" aria-label="平日深夜の時間外勤務を10時間増やす">+10</button>
@@ -305,7 +314,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="-10" aria-label="休日通常の時間外勤務を10時間減らす">−10</button>
               <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="-1" aria-label="休日通常の時間外勤務を1時間減らす">−1</button>
             </div>
-            <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="1" value="0">
+            <div class="counter-value">
+              <input type="number" id="ot-holiday-normal" name="ot-holiday-normal" min="0" step="1" value="0" size="3">
+              <span class="counter-unit" aria-hidden="true">時間</span>
+            </div>
             <div class="overtime-buttons">
               <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="1" aria-label="休日通常の時間外勤務を1時間増やす">+1</button>
               <button type="button" class="counter-btn" data-target="ot-holiday-normal" data-delta="10" aria-label="休日通常の時間外勤務を10時間増やす">+10</button>
@@ -320,7 +332,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="-10" aria-label="休日深夜の時間外勤務を10時間減らす">−10</button>
               <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="-1" aria-label="休日深夜の時間外勤務を1時間減らす">−1</button>
             </div>
-            <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="1" value="0">
+            <div class="counter-value">
+              <input type="number" id="ot-holiday-night" name="ot-holiday-night" min="0" step="1" value="0" size="3">
+              <span class="counter-unit" aria-hidden="true">時間</span>
+            </div>
             <div class="overtime-buttons">
               <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="1" aria-label="休日深夜の時間外勤務を1時間増やす">+1</button>
               <button type="button" class="counter-btn" data-target="ot-holiday-night" data-delta="10" aria-label="休日深夜の時間外勤務を10時間増やす">+10</button>
@@ -436,12 +451,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <footer class="site-footer">
   <h2 class="footer-heading">関連資料</h2>
   <ul class="link-list">
-    <li><a href="https://www.jinji.go.jp/seisaku/kankoku/archive/r7/r7_top.html" target="_blank" rel="noopener">人事院 令和7年人事院勧告</a></li>
-    <li><a href="https://www.jinji.go.jp/content/000013374.pdf" target="_blank" rel="noopener">国家公務員の諸手当の概要 PDF - 人事院</a></li>
-    <li><a href="https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r08_kyuyo.pdf" target="_blank" rel="noopener">内閣人事局 国家公務員の給与（令和8年版）</a></li>
+    <li><a href="https://www.jinji.go.jp/seisaku/kankoku/archive/r7/r7_top.html" target="_blank" rel="noopener">令和7年人事院勧告</a> - 人事院</li>
+    <li><a href="https://www.jinji.go.jp/content/000013374.pdf" target="_blank" rel="noopener">国家公務員の諸手当の概要（PDF）</a> - 人事院</li>
+    <li><a href="https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r08_kyuyo.pdf" target="_blank" rel="noopener">国家公務員の給与（令和8年版）</a> - 内閣人事局</li>
   </ul>
   <p class="footer-note">
-    俸給表・諸手当の制度は随時改定が行われます。最新情報は上記リンク先の最新の法令・公表資料をご確認ください。
+    給与制度は随時改定が行われます。最新情報は上記リンク先の最新の公表資料をご確認ください。
   </p>
 </footer>
 

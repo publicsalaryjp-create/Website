@@ -410,6 +410,31 @@ input:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+/* 家賃・超過勤務時間の入力欄に単位（円・時間）を表示するためのラッパー。
+   扶養人数の「0人」のように、数値と単位を1つの塊として枠内中央に表示する。 */
+.counter-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.counter-value input[type="number"] {
+  flex: 0 1 auto;
+  min-width: 0;
+  text-align: right;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.counter-unit {
+  flex: 0 0 auto;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .counter-btn {
   flex: 0 0 auto;
   width: 38px;
@@ -436,6 +461,21 @@ input:focus-visible {
   border-color: var(--color-primary);
   color: #fff;
   transform: scale(0.94);
+}
+
+.counter-btn:disabled {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+  color: var(--color-border-strong);
+  cursor: not-allowed;
+}
+
+.counter-btn:disabled:hover,
+.counter-btn:disabled:active {
+  background: var(--color-bg);
+  border-color: var(--color-border);
+  color: var(--color-border-strong);
+  transform: none;
 }
 
 /* 成績率は4つの増減ボタンを並べるため、号俸と同じ高さを保ちつつ横幅を圧縮する。 */

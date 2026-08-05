@@ -259,6 +259,12 @@ function updateMeritRateConstraints(period) {
   } else {
     input.removeAttribute("max");
   }
+  // 良好等、上限・下限が同じ（＝固定値）の区分ではプラマイボタンを押しても値が変わらないため、
+  // 押せないことが分かるようにボタン自体を無効化する。
+  const isFixedRate = grade.minRate === grade.maxRate;
+  document.querySelectorAll(`.merit-rate-btn[data-period="${period}"]`).forEach((btn) => {
+    btn.disabled = isFixedRate;
+  });
 }
 
 /** 確定時に空欄・範囲外の成績率を、選択中の区分で許容される値に戻す。 */

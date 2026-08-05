@@ -70,9 +70,9 @@ GitHub Actions（`.github/workflows/ci.yml`）で `main` へのpushとPull Reque
 勤勉手当の成績率・支給月数はユーザー提供の人事院公表資料（令和8年度）に基づいています。
 制度は毎年改定されるため、最新の金額は人事院・内閣人事局の一次情報でご確認ください。
 
-- [俸給表（別表第一）PDF - 人事院](https://www.jinji.go.jp/content/900030877.pdf)
-- [人事院 令和7年人事院勧告](https://www.jinji.go.jp/seisaku/kankoku/archive/r7/r7_top.html)
-- [内閣人事局 国家公務員の給与（令和8年版）](https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r08_kyuyo.pdf)
+- [俸給表（別表第一）（PDF）](https://www.jinji.go.jp/content/900030877.pdf) - 人事院
+- [令和7年人事院勧告](https://www.jinji.go.jp/seisaku/kankoku/archive/r7/r7_top.html) - 人事院
+- [国家公務員の給与（令和8年版）](https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r08_kyuyo.pdf) - 内閣人事局
 
 超過勤務手当の割増率・算定方法は「一般職の職員の給与に関する法律」第16条・第19条及び人事院規則15-14を根拠にしています。
 時間単価の算定基礎（俸給＋地域手当＋扶養手当）や年間所定勤務時間（週38時間45分×52週）、月60時間超の取扱い（60時間を超えた分は

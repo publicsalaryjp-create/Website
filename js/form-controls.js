@@ -231,7 +231,7 @@ function updateHonshoAmountHint() {
     const gradeLabel = grade >= 7 ? `${grade}級（7級以上）` : `${grade}級`;
     hint.textContent = `${gradeLabel}の参考額: ${yen.format(amount)}`;
   } else {
-    hint.textContent = "職務の級が取得できないため自動計算できません（¥0として扱われます）。";
+    hint.textContent = `職務の級が取得できないため自動計算できません（${yen.format(0)}として扱われます）。`;
   }
 }
 
@@ -241,7 +241,7 @@ function updateParentAllowanceHint() {
   if (!hint) return;
   const grade = Number(document.getElementById("grade").value);
   const rate = getParentAllowanceRate(currentTableKey(), grade);
-  hint.textContent = `1人あたり${rate.toLocaleString("ja-JP")}円`;
+  hint.textContent = `1人あたり${yen.format(rate)}`;
 }
 
 /**
