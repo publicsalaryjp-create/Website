@@ -422,11 +422,17 @@ input:focus-visible {
 }
 
 .counter-value input[type="number"] {
-  flex: 0 1 auto;
+  flex: 0 1 70px;
+  width: 70px;
   min-width: 0;
   text-align: right;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+#housing-rent {
+  flex-basis: 110px;
+  width: 110px;
 }
 
 .counter-unit {
