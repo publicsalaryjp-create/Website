@@ -54,7 +54,15 @@ function currentMeritGrade(period) {
   const staffType = currentMeritStaffTypeKey();
   const gradeKey = radioValue(`merit-grade-${period}`);
   const category = MERIT_RATE_CATEGORIES[staffType];
-  return category && category.grades.find((g) => g.key === gradeKey);
+  const grade = category && category.grades.find((g) => g.key === gradeKey);
+  // 指定職俸給表8号（事務次官等）は「優秀」の成績率が107.5/100の固定値になる特例。
+  // 指定職俸給表は級の概念がないflat型で、号（document.getElementById("step")）が
+  // そのまま俸給表steps配列のインデックスに対応するため、grade（職務の級）ではなくstepを見る。
+  const designatedStep = Number(document.getElementById("step").value);
+  if (grade && staffType === "designated" && gradeKey === "excellent" && designatedStep === 8) {
+    return { ...grade, rate: DESIGNATED_STEP8_EXCELLENT_RATE, minRate: DESIGNATED_STEP8_EXCELLENT_RATE, maxRate: DESIGNATED_STEP8_EXCELLENT_RATE };
+  }
+  return grade;
 }
 
 /** 成績率の入力欄（100分率、例: 102.25）の値を、計算で使う倍率（例: 1.0225）に変換する */
@@ -130,7 +138,7 @@ function renderResult(result) {
   document.getElementById("r-bonus-annual").textContent = yen.format(result.bonusAnnual);
   document.getElementById("r-annual").textContent = yen.format(result.annualIncome);
   document.getElementById("r-annual-hero").textContent = yen.format(result.annualIncome);
-  document.getElementById("r-annual-floating").textContent = yen.format(result.annualIncome);
+  syncFloatingResult();
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
 }
 
@@ -330,6 +338,7 @@ let isApplyingPromotion = false;
 
 function updatePromotionControls() {
   const actions = document.getElementById("promotion-actions");
+  const promotionHint = document.getElementById("promotion-hint");
   const promoteButton = document.getElementById("promote-grade");
   const undoButton = document.getElementById("undo-promotion");
   const gradeSelect = document.getElementById("grade");
@@ -340,6 +349,7 @@ function updatePromotionControls() {
   const targetStep = getPromotionTargetStep(currentTableKey(), targetGrade, Number(stepSelect.value));
   const isAvailable = currentTableType() === "graded" && targetStep !== null;
   actions.hidden = !isAvailable && !promotionUndoState;
+  if (promotionHint) promotionHint.hidden = actions.hidden;
   promoteButton.disabled = !isAvailable;
   undoButton.hidden = !promotionUndoState;
 }
@@ -397,8 +407,8 @@ function initForm() {
   populateGradeOptions(saved && saved.grade);
   populateStepOptions();
   populateRegionalRateOptions();
-  populateRegionalPrefectureOptions();
-  populateRegionalMunicipalityOptions();
+  detailedRegionalAllowance.populatePrefectureOptions();
+  detailedRegionalAllowance.populateMunicipalityOptions();
   ["child-under15-count", "child-16to22-count", "parent-count"].forEach(populateDependentCountOptions);
 
   // 職員区分（ラジオボタン）は勤勉手当の成績率区分にも影響するため、
@@ -424,12 +434,12 @@ function initForm() {
     if (radio) radio.checked = true;
   }
   // 都道府県の復元後に市区町村等の選択肢を生成し直さないと、保存済みの市区町村等を選択できない。
-  populateRegionalMunicipalityOptions();
+  detailedRegionalAllowance.populateMunicipalityOptions();
   if (saved && saved["regional-municipality"]) {
     document.getElementById("regional-municipality").value = saved["regional-municipality"];
   }
   updateRegionalInputMethod();
-  updateRegionalRateStatus();
+  detailedRegionalAllowance.updateRateStatus();
   populateStepOptions(); // 復元した俸給表・級に対して号俸を範囲内にクランプし直す
   updateVisibility(); // 復元したhousing-eligible等の値を反映し直す
   updateSpecialAdjustmentVisibility(); // 復元したspecial-adjustment-typeの値を反映し直す
@@ -481,6 +491,14 @@ function initForm() {
       if (["salary-table", "grade", "step"].includes(e.target.id)) {
         updatePromotionControls();
       }
+      // 号（指定職俸給表の8号など）が変わると「優秀」の成績率の固定/範囲が変わりうるため、
+      // 入力欄の許容範囲と表示値を選択中の号に合わせて更新し直す。
+      if (e.target.id === "step") {
+        ["june", "december"].forEach((period) => {
+          updateMeritRateConstraints(period);
+          normalizeMeritRateInput(period);
+        });
+      }
     },
     onChangeExtra: handleVintageChange,
     onRecalculate: recalculate,
@@ -527,27 +545,94 @@ function initForm() {
     location.reload();
   });
 
-  initFloatingResultObserver();
   recalculate();
 }
 
+/** 現在表示中のモードの計算結果パネル（.result-hero等）を返す。 */
+function activePanelElement() {
+  return document.getElementById(activeMode() === "simple" ? "simple-mode-panel" : "detailed-mode-panel");
+}
+
 /**
- * スマホ版フローティング表示（年収概算）と、計算結果パネル内の実際の年収概算（.result-hero）が
- * 画面上で重複しないよう、実物が画面内に入っている間はフローティング側を隠す。
+ * スマホ版フローティング表示（年収概算）の金額を、現在表示中のモードの計算結果パネルの
+ * 年収に合わせる。かんたんモード・本格計算モードはそれぞれ自分の入力変更時にだけ再計算するため
+ * （非表示中のパネルの入力は操作できない）、ここでは再計算はせず、既に描画済みの値を読むだけでよい。
  */
-function initFloatingResultObserver() {
-  const floating = document.getElementById("mobile-floating-result");
-  const target = document.querySelector(".result-hero");
-  if (!floating || !target || !("IntersectionObserver" in window)) return;
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        floating.hidden = entry.isIntersecting;
-      });
-    },
-    { threshold: 0 }
-  );
-  observer.observe(target);
+function syncFloatingResult() {
+  const activePanel = activePanelElement();
+  const heroValue = activePanel && activePanel.querySelector(".result-hero-value");
+  const floatingValue = document.getElementById("r-annual-floating");
+  if (heroValue && floatingValue) floatingValue.textContent = heroValue.textContent;
+}
+
+/**
+ * スマホ版フローティング表示と、計算結果パネル内の実際の年収概算（.result-hero）が
+ * 画面上で重複しないよう、実物が画面内に入っている間はフローティング側を隠す。
+ * かんたんモード／本格計算モードで .result-hero がそれぞれ独立して存在するため、
+ * 監視対象は1つのIntersectionObserverのままタブ切替のたびに張り替える。
+ */
+const floatingResultObserver =
+  "IntersectionObserver" in window
+    ? new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            document.getElementById("mobile-floating-result").hidden = entry.isIntersecting;
+          });
+        },
+        { threshold: 0 }
+      )
+    : null;
+let observedResultHero = null;
+
+function observeActiveResultHero() {
+  if (!floatingResultObserver) return;
+  const activePanel = activePanelElement();
+  const target = activePanel && activePanel.querySelector(".result-hero");
+  if (target === observedResultHero) return;
+  if (observedResultHero) floatingResultObserver.unobserve(observedResultHero);
+  observedResultHero = target || null;
+  if (target) floatingResultObserver.observe(target);
+}
+
+const ACTIVE_TAB_STORAGE_KEY = "salary-calculator:active-tab";
+
+/**
+ * かんたんモード／本格計算モードを切り替える。選択状態はlocalStorageに保存し、次回アクセス時も復元する。
+ * 各モードは自分の入力が変わるたびに既に再計算・描画済みのため（非表示中は入力操作できない）、
+ * ここでは表示の切替とフローティング表示の同期だけを行い、再計算はしない。
+ */
+function switchMode(mode) {
+  const isSimple = mode === "simple";
+  document.getElementById("simple-mode-panel").hidden = !isSimple;
+  document.getElementById("detailed-mode-panel").hidden = isSimple;
+  document.getElementById("tab-simple").setAttribute("aria-selected", String(isSimple));
+  document.getElementById("tab-detailed").setAttribute("aria-selected", String(!isSimple));
+  document.getElementById("tab-simple").classList.toggle("is-active", isSimple);
+  document.getElementById("tab-detailed").classList.toggle("is-active", !isSimple);
+  try {
+    localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, mode);
+  } catch {
+    // プライベートブラウジング等でlocalStorageが使えない場合は記憶をあきらめる
+  }
+  syncFloatingResult();
+  observeActiveResultHero();
+}
+
+function initModeTabs() {
+  const tabSimple = document.getElementById("tab-simple");
+  const tabDetailed = document.getElementById("tab-detailed");
+  if (!tabSimple || !tabDetailed) return;
+  tabSimple.addEventListener("click", () => switchMode("simple"));
+  tabDetailed.addEventListener("click", () => switchMode("detailed"));
+
+  let initialMode = "simple";
+  try {
+    const saved = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY);
+    if (saved === "detailed" || saved === "simple") initialMode = saved;
+  } catch {
+    // 読み込めない場合は既定のかんたんモードのまま
+  }
+  switchMode(initialMode);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -558,6 +643,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     updateTableSourceNote();
     renderTerminalAllowanceRateNote();
     initForm();
+    initSimpleForm();
+    initModeTabs();
   } catch (error) {
     console.error(error);
     document.getElementById("terminal-allowance-rate-note").textContent =

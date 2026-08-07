@@ -1,0 +1,262 @@
+/* 各種手当の解説ページ（allowances.html）専用のスタイル。
+   レイアウトの土台（.subpage-layout, .tool-header, .breadcrumb, .eyebrow）は
+   kinben-seisekiritsu/style.css と共通の考え方だが、このページは計算ツールではなく
+   読み物中心のため、幅広めの1カラムレイアウトと解説向けの要素を独自に定義する。 */
+
+.tool-header {
+  padding-top: 30px;
+}
+
+.breadcrumb {
+  margin-bottom: -6px;
+  color: var(--color-muted);
+  font-size: 0.76rem;
+}
+
+.breadcrumb ol {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumb li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.breadcrumb li + li::before {
+  content: ">";
+  opacity: 0.65;
+}
+
+.breadcrumb a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.breadcrumb [aria-current="page"] {
+  color: var(--color-muted);
+}
+
+.allowances-layout {
+  width: min(100% - 32px, 760px);
+  margin: 28px auto 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+
+.section-heading {
+  margin-bottom: 0;
+}
+
+.section-heading h2 {
+  margin: 5px 0 6px;
+  color: var(--color-primary-dark);
+  font-size: 1.35rem;
+}
+
+.section-heading p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.section-heading p a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.toc {
+  padding: 16px 20px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+}
+
+.toc-heading {
+  margin: 0 0 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  letter-spacing: 0.04em;
+}
+
+.toc ol {
+  margin: 0;
+  padding: 0 0 0 1.1em;
+  columns: 2;
+  column-gap: 20px;
+}
+
+.toc li {
+  break-inside: avoid;
+  padding: 2px 0;
+  font-size: 0.86rem;
+}
+
+.toc a {
+  color: var(--color-primary-dark);
+  text-decoration: none;
+}
+
+.toc a:hover {
+  text-decoration: underline;
+}
+
+.allowance-section {
+  scroll-margin-top: 16px;
+}
+
+.allowance-section .eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.allowance-section h2 {
+  margin: 0 0 12px;
+  color: var(--color-primary-dark);
+  font-size: 1.2rem;
+}
+
+.allowance-section p {
+  margin: 0 0 12px;
+  font-size: 0.92rem;
+}
+
+.allowance-section p:last-child {
+  margin-bottom: 0;
+}
+
+.allowance-list {
+  margin: 0 0 14px;
+  padding-left: 1.2em;
+  font-size: 0.92rem;
+}
+
+.allowance-list li {
+  margin-bottom: 8px;
+}
+
+.allowance-list li:last-child {
+  margin-bottom: 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  margin: 0 0 14px;
+}
+
+.info-table {
+  width: 100%;
+  min-width: 320px;
+  border-collapse: collapse;
+}
+
+.info-table th,
+.info-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.85rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.info-table thead th {
+  color: var(--color-muted);
+  font-weight: 600;
+  background: var(--color-bg);
+}
+
+.info-table td {
+  font-variant-numeric: tabular-nums;
+}
+
+.source-note {
+  font-style: normal;
+  opacity: 0.85;
+}
+
+.allowances-links .footer-heading {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  color: var(--color-primary-dark);
+}
+
+.allowances-links .footer-note {
+  font-size: 0.82rem;
+}
+
+.allowances-links .footer-note a {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.compact-footer {
+  padding-top: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.back-to-top {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 50;
+}
+
+.back-to-top a {
+  display: block;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: var(--color-hero-bg);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: var(--shadow-md);
+  transition: opacity var(--transition-fast);
+}
+
+.back-to-top a:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 560px) {
+  .toc ol {
+    columns: 1;
+  }
+
+  .info-table th,
+  .info-table td {
+    white-space: normal;
+  }
+
+  .back-to-top {
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .back-to-top a {
+    padding: 9px 14px;
+    font-size: 0.78rem;
+  }
+}

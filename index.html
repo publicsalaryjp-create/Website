@@ -10,10 +10,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="国家公務員の俸給・地域手当・扶養手当・住居手当・本省手当・期末勤勉手当・超過勤務手当から月給と年収を概算するシミュレーターです。">
+<meta name="description" content="国家公務員の月給と年収を概算するシミュレーターです。">
 <title>国家公務員給与計算機</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css?v=20260806-2">
+<link rel="stylesheet" href="css/style.css?v=20260806-6">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -28,8 +28,134 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <h1>国家公務員給与計算機</h1>
   <p class="subtitle">月給・賞与・年収の概算計算ツール</p>
 </header>
+<nav class="site-nav" aria-label="サイト内ナビゲーション">
+  <a href="index.html" aria-current="page">計算機</a>
+  <a href="allowances.html">各種手当の解説</a>
+  <a href="kinben-seisekiritsu/">成績率を逆算</a>
+  <a href="about.html">このサイトについて</a>
+</nav>
 
-<main class="layout">
+<main>
+  <div class="mode-tabs" role="tablist" aria-label="入力モードの切り替え">
+    <button type="button" class="mode-tab" id="tab-simple" role="tab" aria-selected="true" aria-controls="simple-mode-panel">かんたんモード</button>
+    <button type="button" class="mode-tab" id="tab-detailed" role="tab" aria-selected="false" aria-controls="detailed-mode-panel">本格計算モード</button>
+  </div>
+  <p class="mode-tabs-hint">給与計算にあまり詳しくない方は「かんたんモード」がおすすめです。逆に、号俸や各種手当まで細かく設定したい方は「本格計算モード」をご利用ください。</p>
+
+  <div class="layout mode-panel" id="simple-mode-panel" role="tabpanel" aria-labelledby="tab-simple">
+    <form id="simple-calc-form" class="panel form-panel">
+      <p class="hint simple-intro">
+        いくつかの質問に答えるだけで、月収・年収の目安がわかります。俸給表は選んだ役職に応じた行政職俸給表(一)または指定職俸給表、
+        勤務成績は「良好」、住居手当はなしと仮定して計算します（本府省業務調整手当は東京都特別区を選んだ場合のみ加算されます）。
+      </p>
+
+      <fieldset>
+        <legend>役職・年齢の目安</legend>
+        <div class="field">
+          <label for="simple-role-level">役職・年齢の目安</label>
+          <div class="counter-input">
+            <button type="button" class="counter-btn" data-target="simple-role-level" data-delta="-1" aria-label="下げる">−</button>
+            <select id="simple-role-level" name="simple-role-level" class="select-center"></select>
+            <button type="button" class="counter-btn" data-target="simple-role-level" data-delta="1" aria-label="上げる">＋</button>
+          </div>
+          <p class="hint">人事院・内閣人事局公表の本府省モデル給与の代表的な役職・年齢の水準から選べます（実際の級・号俸は個人ごとに異なります）。</p>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>勤務地（地域手当）</legend>
+        <div class="regional-location-fields">
+          <div class="field">
+            <label for="simple-regional-prefecture">都道府県</label>
+            <select id="simple-regional-prefecture" name="simple-regional-prefecture" class="select-center"></select>
+          </div>
+          <div class="field">
+            <label for="simple-regional-municipality">市区町村</label>
+            <select id="simple-regional-municipality" name="simple-regional-municipality" class="select-center" disabled></select>
+          </div>
+        </div>
+        <p class="hint regional-rate-status" id="simple-regional-rate-status" aria-live="polite">市区町村を選ぶと、地域手当の支給割合が自動で設定されます。</p>
+        <input type="hidden" id="simple-regional-rate" name="simple-regional-rate" value="0">
+        <p class="hint">東京都特別区（霞が関等）を選ぶと、本府省業務調整手当（本省手当）も自動で加算されます。</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>扶養家族</legend>
+        <p class="hint" id="simple-dependent-exempt-note" hidden>
+          指定職職員は扶養手当の支給対象外です。
+        </p>
+        <div id="simple-dependent-field">
+          <div class="field">
+            <label for="simple-dependent-count">扶養家族の人数（お子さまなど）</label>
+            <div class="counter-input">
+              <button type="button" class="counter-btn" data-target="simple-dependent-count" data-delta="-1" aria-label="減らす">−</button>
+              <select id="simple-dependent-count" name="simple-dependent-count" class="select-center"></select>
+              <button type="button" class="counter-btn" data-target="simple-dependent-count" data-delta="1" aria-label="増やす">＋</button>
+            </div>
+            <p class="hint">1人あたり13,000円で概算します（実際の金額は年齢・続柄により異なります）。</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>残業の目安</legend>
+        <p class="hint" id="simple-ot-management-note" hidden>
+          管理職・指定職職員は超過勤務手当の支給対象外です。
+        </p>
+        <div id="simple-ot-hours-field">
+          <div class="field">
+            <label for="simple-overtime-hours">月あたりの残業時間（目安）</label>
+            <div class="counter-input overtime-input">
+              <div class="overtime-buttons">
+                <button type="button" class="counter-btn" data-target="simple-overtime-hours" data-delta="-10" aria-label="残業時間を10時間減らす">−10</button>
+                <button type="button" class="counter-btn" data-target="simple-overtime-hours" data-delta="-1" aria-label="残業時間を1時間減らす">−1</button>
+              </div>
+              <div class="counter-value">
+                <input type="number" id="simple-overtime-hours" name="simple-overtime-hours" min="0" step="1" value="0" size="3">
+                <span class="counter-unit" aria-hidden="true">時間</span>
+              </div>
+              <div class="overtime-buttons">
+                <button type="button" class="counter-btn" data-target="simple-overtime-hours" data-delta="1" aria-label="残業時間を1時間増やす">+1</button>
+                <button type="button" class="counter-btn" data-target="simple-overtime-hours" data-delta="10" aria-label="残業時間を10時間増やす">+10</button>
+              </div>
+            </div>
+            <p class="hint">平日の時間外勤務（割増125%）として概算します。</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <div class="form-actions">
+        <button type="button" id="simple-reset-saved-input" class="reset-button">保存した入力内容を削除して初期状態に戻す</button>
+        <p class="hint">入力内容はこの端末のブラウザ内（localStorage）に保存され、次回アクセス時に自動的に復元されます。サーバーには送信されません。</p>
+      </div>
+    </form>
+
+    <section class="panel result-panel" aria-live="polite">
+      <h2 class="result-panel-heading">計算結果（目安）</h2>
+      <div class="result-hero">
+        <span class="result-hero-label">年収 目安</span>
+        <span class="result-hero-value" id="simple-r-annual-hero">-</span>
+      </div>
+      <h3 class="result-detail-heading">内訳</h3>
+      <table class="result-table">
+        <tbody>
+          <tr><th>月収 目安（残業代込み）</th><td id="simple-r-monthly">-</td></tr>
+          <tr><th>うち本省手当</th><td id="simple-r-honsho">-</td></tr>
+          <tr><th>うち俸給の特別調整額</th><td id="simple-r-special-adjustment">-</td></tr>
+          <tr><th>うち残業代</th><td id="simple-r-overtime">-</td></tr>
+          <tr><th>賞与 目安（年2回合計）</th><td id="simple-r-bonus">-</td></tr>
+          <tr class="total-row grand-total"><th>年収 目安</th><td id="simple-r-annual">-</td></tr>
+        </tbody>
+      </table>
+      <p class="hint">
+        ※ 俸給表は選んだ役職に応じた行政職俸給表(一)または指定職俸給表、勤務成績は「良好」、住居手当はなしと仮定した概算です（本府省業務調整手当は東京都特別区を選んだ場合のみ加算）。
+        税・社会保険料等控除前の額面金額です。
+      </p>
+      <p class="hint"><button type="button" class="link-button" id="simple-go-detailed">本格計算モードで詳しく計算する →</button></p>
+    </section>
+  </div>
+
+  <div class="layout mode-panel" id="detailed-mode-panel" role="tabpanel" aria-labelledby="tab-detailed" hidden>
   <form id="calc-form" class="panel form-panel">
     <div class="field">
       <span class="field-label-text" id="salary-vintage-label">俸給表のバージョン</span>
@@ -66,11 +192,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button type="button" class="step-btn" data-delta="6">+6</button>
           <button type="button" class="step-btn" data-delta="8">+8</button>
         </div>
+        <p class="hint" id="step-buttons-hint">昇給時の成績区分（標準4、良好6、特に良好8）に応じて、号俸を上下できます。</p>
         <div class="promotion-actions" id="promotion-actions" role="group" aria-label="昇格シミュレーション">
           <button type="button" class="promotion-btn" id="promote-grade">昇格</button>
           <button type="button" class="promotion-btn promotion-undo-btn" id="undo-promotion" hidden>戻る</button>
         </div>
-        <p class="hint" id="step-buttons-hint">昇給の号俸数の目安（標準4、良好6、特に良好8）で号俸を上下できます。</p>
+        <p class="hint" id="promotion-hint">昇格ボタンを押すと、現在の俸給から昇格した際の号俸に切り替わります。</p>
       </div>
       <div class="field" id="special-adjustment-field">
         <span class="field-label-text">職員区分</span>
@@ -102,15 +229,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <fieldset>
       <legend>地域手当</legend>
-      <div class="hint-toggle">
-        <p class="hint hint-short">はじめに、支給割合の設定方法を選んでください。</p>
-        <button type="button" class="hint-toggle-btn" data-target="detail-region" aria-expanded="false" aria-controls="detail-region" aria-label="詳しい説明を表示">？</button>
-      </div>
-      <p class="hint hint-detail" id="detail-region" hidden>
-        人事院の公式給与シミュレーターに収録された令和8年度の市区町村等データに基づきます。
-        地域手当は「俸給＋俸給の特別調整額＋扶養手当」に支給割合を掛けて計算します。
-        本府省勤務かどうかは、地域手当ではなく本府省業務調整手当で設定してください。官署単位で指定される場合などは、下の支給割合を直接選択してください。
-      </p>
+      <p class="hint hint-short">地域手当の支給割合を設定します。勤務地を指定するか、割合を直接指定してください。</p>
       <div class="field">
         <span class="field-label-text">設定方法</span>
         <div class="radio-group" id="regional-input-method-group">
@@ -197,10 +316,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <button type="button" class="hint-toggle-btn" data-target="detail-housing" aria-expanded="false" aria-controls="detail-housing" aria-label="詳しい説明を表示">？</button>
         </div>
         <p class="hint hint-detail" id="detail-housing" hidden>
-          借家・借間に住み、実際に家賃を支払っている場合のみ支給されます。
-          持ち家の場合は支給されません（持家世帯向けの住居手当は廃止済み）。
-          家賃が16,000円超〜27,000円以下の場合は「家賃−16,000円」、27,000円超の場合は
-          「11,000円＋（家賃−27,000円）の半額」で計算し、100円未満を切り捨てます。支給額は最高28,000円です。
+          借家・借間に居住している場合に支給されます。持ち家の場合は支給されません。
         </p>
         <div class="field">
           <span class="field-label-text">支給の有無</span>
@@ -238,7 +354,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <fieldset>
       <legend>本府省業務調整手当（本省手当）</legend>
-      <p class="hint hint-short">本府省（霞が関）勤務の職員に支給される手当です。</p>
+      <p class="hint hint-short">霞が関などの本府省勤務の職員に支給される手当です。</p>
       <div class="field">
         <span class="field-label-text">支給の有無</span>
         <div class="radio-group" role="radiogroup" aria-label="本省手当の支給の有無">
@@ -438,8 +554,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </tbody>
     </table>
     <p class="hint" id="ot-warning" hidden>※ 入力された時間外勤務時間（休日を除く）が月60時間を超えています。超過分は割増率150%／深夜175%で計算しています。</p>
-    <p class="hint">※ 税・社会保険料等控除前の額面金額です。単身赴任手当・寒冷地手当等は含まれていません。年収概算は毎月同じ時間外勤務が続くと仮定した概算値です。</p>
+    <p class="hint">※ 税・社会保険料等控除前の額面金額です。年収概算は毎月同じ超過勤務が続くと仮定した概算値です。</p>
   </section>
+  </div>
 </main>
 
 <div class="disclaimer" id="disclaimer">
@@ -456,8 +573,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <li><a href="https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r08_kyuyo.pdf" target="_blank" rel="noopener">国家公務員の給与（令和8年版）</a> - 内閣人事局</li>
   </ul>
   <p class="footer-note">
-    給与制度は随時改定が行われます。最新情報は上記リンク先の最新の公表資料をご確認ください。
+    給与制度は随時改定が行われます。最新情報は人事院の公式資料も併せてご確認ください。
   </p>
+  <p class="footer-copyright">&copy; 2026 国家公務員給与計算機. 本サイトのコンテンツ・ソースコードの無断転載・複製を禁じます。</p>
 </footer>
 
 <script src="js/regional-allowance-locations.js"></script>
@@ -465,6 +583,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script src="js/data.js"></script>
 <script src="js/calculator.js"></script>
 <script src="js/form-controls.js"></script>
+<script src="js/simple-mode.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

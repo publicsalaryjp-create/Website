@@ -6,19 +6,25 @@
   <meta name="description" content="期末手当と勤勉手当の支給額から、国家公務員の勤勉手当の成績率を概算する計算機です。">
   <title>勤勉手当の成績率計算機｜国家公務員給与計算機</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="../css/style.css?v=20260802-7">
+  <link rel="stylesheet" href="../css/style.css?v=20260806-6">
   <link rel="stylesheet" href="style.css?v=20260802-1">
 </head>
 <body>
   <header class="site-header tool-header">
-    <h1>勤勉手当の成績率計算機</h1>
-    <p class="subtitle">ボーナスの支給額から成績率を逆算</p>
+    <h1><a href="../index.html">国家公務員給与計算機</a></h1>
+    <p class="subtitle">月給・賞与・年収の概算計算ツール</p>
   </header>
+  <nav class="site-nav" aria-label="サイト内ナビゲーション">
+    <a href="../index.html">計算機</a>
+    <a href="../allowances.html">各種手当の解説</a>
+    <a href="./" aria-current="page">成績率を逆算</a>
+    <a href="../about.html">このサイトについて</a>
+  </nav>
 
   <main class="subpage-layout">
     <nav class="breadcrumb" aria-label="パンくずリスト">
       <ol>
-        <li><a href="../index.html">国家公務員給与計算機</a></li>
+        <li><a href="../index.html">トップページ</a></li>
         <li aria-current="page">勤勉手当の成績率計算機</li>
       </ol>
     </nav>
@@ -68,18 +74,6 @@
         </fieldset>
 
         <h3 class="form-category-heading">期末手当</h3>
-        <div class="rate-fields single-rate-field">
-          <div class="amount-field">
-            <label for="service-rate">期末手当の在職期間別割合</label>
-            <select id="service-rate" name="service-rate">
-              <option value="100">6か月（100%）</option>
-              <option value="80">5か月以上6か月未満（80%）</option>
-              <option value="60">3か月以上5か月未満（60%）</option>
-              <option value="30">3か月未満（30%）</option>
-            </select>
-            <p class="input-error" id="service-rate-error" role="alert"></p>
-          </div>
-        </div>
 
         <div class="amount-field">
           <label for="dependent-base-addition">扶養手当（月額）</label>
@@ -186,6 +180,9 @@
   </div>
 
   <footer class="site-footer compact-footer">
+    <p class="footer-note">
+      給与制度は随時改定が行われます。最新情報は人事院の公式資料も併せてご確認ください。
+    </p>
     <p><a href="../index.html">国家公務員給与計算機に戻る</a></p>
   </footer>
 

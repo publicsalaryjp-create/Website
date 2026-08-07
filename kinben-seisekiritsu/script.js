@@ -14,7 +14,6 @@
   const emptyResult = document.getElementById("empty-result");
   const calculatedResult = document.getElementById("calculated-result");
   const periodRateInput = document.getElementById("period-rate");
-  const serviceRateInput = document.getElementById("service-rate");
   const dependentBaseInput = document.getElementById("dependent-base-addition");
   const regionalPrefectureInput = document.getElementById("regional-prefecture");
   const regionalMunicipalityInput = document.getElementById("regional-municipality");
@@ -148,25 +147,23 @@
   }
 
   function calculate(event) {
+    console.log("DEBUG calculate called");
     event.preventDefault();
     const termAmount = parseAmount(termInput.value);
     const meritAmount = parseAmount(meritInput.value);
     const dependentAllowance = parseAmount(dependentBaseInput.value);
     const regionalRate = Number(regionalRateInput.value);
     const periodRatePercent = Number(periodRateInput.value);
-    const serviceRatePercent = Number(serviceRateInput.value);
     const termValid = Number.isFinite(termAmount) && termAmount > 0;
     const meritValid = Number.isFinite(meritAmount) && meritAmount >= 0;
     const dependentBaseValid = Number.isFinite(dependentAllowance) && dependentAllowance >= 0;
     const periodRateValid = Number.isFinite(periodRatePercent) && periodRatePercent > 0 && periodRatePercent <= 100;
-    const serviceRateValid = Number.isFinite(serviceRatePercent) && serviceRatePercent > 0 && serviceRatePercent <= 100;
 
     showError(termInput, termValid ? "" : "1円以上の期末手当を入力してください。" );
     showError(meritInput, meritValid ? "" : "0円以上の勤勉手当を入力してください。" );
     showError(dependentBaseInput, dependentBaseValid ? "" : "0円以上の加算額を入力してください。" );
     showError(periodRateInput, periodRateValid ? "" : "0%を超え100%以下で入力してください。" );
-    showError(serviceRateInput, serviceRateValid ? "" : "0%を超え100%以下で入力してください。" );
-    if (!termValid || !meritValid || !dependentBaseValid || !periodRateValid || !serviceRateValid) return;
+    if (!termValid || !meritValid || !dependentBaseValid || !periodRateValid) return;
 
     formatInput(termInput);
     formatInput(meritInput);
@@ -177,8 +174,7 @@
       : form.elements["staff-type"].value;
     const termMonths = TERM_MONTHS[staffType];
     const periodRate = periodRatePercent / 100;
-    const serviceRate = serviceRatePercent / 100;
-    const estimatedTermBase = termAmount / (termMonths * serviceRate);
+    const estimatedTermBase = termAmount / termMonths;
     const dependentRegionalAllowance = Math.floor(dependentAllowance * regionalRate);
     const dependentBaseAddition = dependentAllowance + dependentRegionalAllowance;
     const estimatedMeritBase = estimatedTermBase - dependentBaseAddition;
@@ -192,7 +188,7 @@
     document.getElementById("result-category").textContent = classifyMeritRate(meritRate, staffType);
     document.getElementById("result-base").textContent = `${Math.round(estimatedMeritBase).toLocaleString("ja-JP")}円`;
     document.getElementById("result-formula").textContent =
-      `${meritAmount.toLocaleString("ja-JP")}円 ÷ {(${termAmount.toLocaleString("ja-JP")}円 ÷ (${termMonths}月 × ${serviceRatePercent}%) − ${dependentAllowance.toLocaleString("ja-JP")}円 − ${dependentRegionalAllowance.toLocaleString("ja-JP")}円) × ${periodRatePercent}%}`;
+      `${meritAmount.toLocaleString("ja-JP")}円 ÷ {(${termAmount.toLocaleString("ja-JP")}円 ÷ ${termMonths}月 − ${dependentAllowance.toLocaleString("ja-JP")}円 − ${dependentRegionalAllowance.toLocaleString("ja-JP")}円) × ${periodRatePercent}%}`;
     emptyResult.hidden = true;
     calculatedResult.hidden = false;
     saveFormState();
@@ -224,13 +220,11 @@
       resetResult();
     });
   });
-  [periodRateInput, serviceRateInput].forEach((input) => {
-    input.addEventListener("input", () => {
-      showError(input, "");
-      resetResult();
-    });
-    input.addEventListener("change", resetResult);
+  periodRateInput.addEventListener("input", () => {
+    showError(periodRateInput, "");
+    resetResult();
   });
+  periodRateInput.addEventListener("change", resetResult);
 
   regionalPrefectureInput.addEventListener("change", () => {
     populateMunicipalities();
@@ -262,4 +256,5 @@
   updateRegionalInputMethod();
 
   form.addEventListener("submit", calculate);
+  console.log("DEBUG init complete");
 })();

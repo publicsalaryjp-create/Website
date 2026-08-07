@@ -76,6 +76,13 @@ async function selectMeritGrade(page, period, value) {
   await page.check(`input[name="merit-grade-${period}"][value="${value}"]`);
 }
 
+// index.htmlの既定タブは「かんたんモード」なので、詳細フォーム(#calc-form)の項目を
+// 直接操作するテストは、先にこれで「本格計算モード」タブへ切り替えてから操作する。
+async function goToDetailedTab(page) {
+  await page.click("#tab-detailed");
+  await page.waitForTimeout(150);
+}
+
 async function checkNoConsoleErrors(pathName, label) {
   const page = await browser.newPage();
   const errors = [];
@@ -191,6 +198,7 @@ await checkNoConsoleErrors(
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   const juneGood = await page.isChecked('input[name="merit-grade-june"][value="good"]');
   const decemberGood = await page.isChecked('input[name="merit-grade-december"][value="good"]');
   report(
@@ -208,6 +216,7 @@ await checkNoConsoleErrors(
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
   await page.waitForTimeout(300);
@@ -227,6 +236,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "designated");
   await page.waitForTimeout(300);
   const gradeFieldHidden = await page.isHidden("#grade-field");
@@ -245,6 +255,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await page.selectOption("#grade", "3");
   await page.waitForTimeout(300);
@@ -263,6 +274,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
   await page.click('.counter-btn[data-target="child-under15-count"][data-delta="1"]');
@@ -283,6 +295,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await page.selectOption("#grade", "4");
   await page.selectOption("#step", "1");
@@ -308,6 +321,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await page.selectOption("#grade", "3");
   await page.selectOption("#step", "1");
@@ -335,6 +349,7 @@ await checkNoConsoleErrors(
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await setReadonlyNumber(page, "#grade", 10);
   await setReadonlyNumber(page, "#step", 8);
@@ -364,6 +379,7 @@ await checkNoConsoleErrors(
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await setReadonlyNumber(page, "#grade", 8);
   await setReadonlyNumber(page, "#step", 8);
@@ -390,6 +406,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   const plusTen = page.getByRole("button", { name: "平日通常の時間外勤務を10時間増やす", exact: true });
   const plusOne = page.getByRole("button", { name: "平日通常の時間外勤務を1時間増やす", exact: true });
   const minusOne = page.getByRole("button", { name: "平日通常の時間外勤務を1時間減らす", exact: true });
@@ -414,6 +431,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await setReadonlyNumber(page, "#step", "10");
   await page.click('.step-btn[data-delta="4"]');
   await page.waitForTimeout(150);
@@ -434,6 +452,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#grade", "2");
   await page.selectOption("#step", "50");
   await page.click("#promote-grade");
@@ -459,6 +478,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   const defaultChecked = await page.isChecked("#housing-eligible-no");
   const defaultHousingText = await page.textContent("#r-housing");
   const amountFieldHiddenByDefault = await page.isHidden("#housing-amount-field");
@@ -484,6 +504,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "100000");
   await page.waitForTimeout(200);
@@ -501,6 +522,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.check("#housing-eligible-yes");
   await page.click('.counter-btn[data-target="housing-rent"][data-delta="1000"]');
   await page.click('.counter-btn[data-target="housing-rent"][data-delta="10000"]');
@@ -522,6 +544,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "20000");
   await page.waitForTimeout(200);
@@ -542,6 +565,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   const defaultChecked = await page.isChecked("#honsho-eligible-no");
   const defaultHonshoText = await page.textContent("#r-honsho");
   await page.selectOption("#salary-table", "administrative_1");
@@ -566,6 +590,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
   await selectMeritGrade(page, "june", "good");
@@ -589,6 +614,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "designated");
   await page.waitForTimeout(200);
   const gradeOptions = await page.$$eval('input[name="merit-grade-june"]', (inputs) => inputs.map((input) => input.value));
@@ -605,6 +631,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
   await page.check("#special-adjustment-type-general");
@@ -658,6 +685,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.selectOption("#salary-table", "administrative_1");
   await setRegionalRate(page, "0");
   await selectMeritGrade(page, "june", "excellent_plus");
@@ -680,6 +708,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.click('.counter-btn[data-target="parent-count"][data-delta="-1"]');
   await page.waitForTimeout(150);
   const afterDecrementAtZero = await page.inputValue("#parent-count");
@@ -700,6 +729,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   const options = await page.$$eval('#salary-vintage-group input[name="salary-vintage"]', (opts) =>
     opts.map((o) => ({ value: o.value, disabled: o.disabled }))
   );
@@ -718,6 +748,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   const locationInitiallyVisible = await page.isVisible("#regional-location-inputs");
   const rateInitiallyHidden = await page.isHidden("#regional-rate-input");
   await page.selectOption("#regional-prefecture", "東京都");
@@ -747,6 +778,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "23000");
   await setRegionalRate(page, "0.12");
@@ -769,6 +801,7 @@ await checkNoConsoleErrors(
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
   await page.waitForTimeout(500);
+  await goToDetailedTab(page);
   await page.check("#housing-eligible-yes");
   await page.fill("#housing-rent", "23000");
   await page.waitForTimeout(200);

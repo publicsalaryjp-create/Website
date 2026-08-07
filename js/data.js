@@ -405,8 +405,8 @@ const MERIT_RATE_CATEGORIES = {
   general: {
     label: "一般職員",
     grades: [
-      { key: "excellent_plus", label: "特に優秀（125.25/100以上318.75/100以下、下限採用）", rate: 1.2525, minRate: 1.2525, maxRate: 3.1875 },
-      { key: "excellent", label: "優秀（113.75/100以上125.25/100未満、下限採用）", rate: 1.1375, minRate: 1.1375, maxRate: 1.2524 },
+      { key: "excellent_plus", label: "特に優秀（125.25/100以上318.75/100以下）", rate: 1.2525, minRate: 1.2525, maxRate: 3.1875 },
+      { key: "excellent", label: "優秀（113.75/100以上125.25/100未満）", rate: 1.1375, minRate: 1.1375, maxRate: 1.2524 },
       { key: "good", label: "良好（102.25/100）", rate: 1.0225, minRate: 1.0225, maxRate: 1.0225 },
       { key: "not_good", label: "良好でない（93.75/100以下）", rate: 0.9375, minRate: 0, maxRate: 0.9375 },
     ],
@@ -414,8 +414,8 @@ const MERIT_RATE_CATEGORIES = {
   senior_manager: {
     label: "特定管理職員（本府省課長等）",
     grades: [
-      { key: "excellent_plus", label: "特に優秀（149.25/100以上378.75/100以下、下限採用）", rate: 1.4925, minRate: 1.4925, maxRate: 3.7875 },
-      { key: "excellent", label: "優秀（134.75/100以上149.25/100未満、下限採用）", rate: 1.3475, minRate: 1.3475, maxRate: 1.4924 },
+      { key: "excellent_plus", label: "特に優秀（149.25/100以上378.75/100以下）", rate: 1.4925, minRate: 1.4925, maxRate: 3.7875 },
+      { key: "excellent", label: "優秀（134.75/100以上149.25/100未満）", rate: 1.3475, minRate: 1.3475, maxRate: 1.4924 },
       { key: "good", label: "良好（122.25/100）", rate: 1.2225, minRate: 1.2225, maxRate: 1.2225 },
       { key: "not_good", label: "良好でない（112.75/100以下）", rate: 1.1275, minRate: 0, maxRate: 1.1275 },
     ],
@@ -424,9 +424,12 @@ const MERIT_RATE_CATEGORIES = {
     label: "指定職職員",
     grades: [
       { key: "excellent_plus", label: "特に優秀（該当なし）", rate: null },
-      { key: "excellent", label: "優秀（115/100以上215/100以下、下限採用）", rate: 1.15, minRate: 1.15, maxRate: 2.15 },
-      { key: "good", label: "良好（101.5/100。事務次官等は107.5/100）", rate: 1.015, minRate: 1.015, maxRate: 1.015 },
+      { key: "excellent", label: "優秀（115/100以上215/100以下。8号は107.5/100固定）", rate: 1.15, minRate: 1.15, maxRate: 2.15 },
+      { key: "good", label: "良好（101.5/100）", rate: 1.015, minRate: 1.015, maxRate: 1.015 },
       { key: "not_good", label: "良好でない（93/100以下）", rate: 0.93, minRate: 0, maxRate: 0.93 },
     ],
   },
 };
+
+// 指定職俸給表8号（事務次官等）は「優秀」の成績率が固定値107.5/100となる特例。
+const DESIGNATED_STEP8_EXCELLENT_RATE = 1.075;

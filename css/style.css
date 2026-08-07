@@ -40,6 +40,14 @@
   box-sizing: border-box;
 }
 
+/* [hidden]属性はブラウザ標準でdisplay:noneになるが、同じ詳細度を持つクラス
+   （.layout, .hint-toggle, .step-buttons, .mobile-floating-result等のdisplay:flex/grid指定）が
+   後から読み込まれる分だけ勝ってしまい、隠したはずの要素がレイアウトされたまま残ることがある。
+   要素ごとに個別の[hidden]上書きを書く代わりに、ここで一元的に!importantで確実に隠す。 */
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   font-family: "Noto Sans JP", "Noto Sans", system-ui, sans-serif;
@@ -125,6 +133,49 @@ h1, h2, h3 {
   opacity: 0.85;
 }
 
+.site-nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 16px 20px;
+  background: var(--color-panel);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+.site-nav a {
+  padding: 8px 18px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.site-nav a:hover {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.site-nav a[aria-current="page"] {
+  background: var(--color-primary);
+  border-color: var(--color-primary-dark);
+  color: #fff;
+}
+
+.site-header h1 a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.site-header h1 a:hover {
+  text-decoration: underline;
+}
+
 /* ---------------------------------------------------------------------- */
 /* 免責事項                                                               */
 /* ---------------------------------------------------------------------- */
@@ -163,6 +214,78 @@ h1, h2, h3 {
   .layout {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---------------------------------------------------------------------- */
+/* モード切替タブ（かんたんモード／本格計算モード）                       */
+/* ---------------------------------------------------------------------- */
+
+.mode-tabs {
+  display: flex;
+  gap: 8px;
+  max-width: 1000px;
+  margin: 28px auto 0;
+  padding: 0 20px;
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.mode-tab:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+
+.mode-tab.is-active {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.mode-tabs-hint {
+  max-width: 1000px;
+  margin: 10px auto 20px;
+  padding: 0 20px;
+  font-size: 0.82rem;
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.simple-intro {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--color-primary-dark);
 }
 
 .panel {
@@ -378,13 +501,14 @@ input:focus-visible {
 }
 
 .merit-grade-radio-group {
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   margin-top: 0.35rem;
   margin-bottom: 0.35rem;
 }
 
 .merit-grade-radio-group .radio-option {
-  min-width: 7rem;
+  white-space: nowrap;
 }
 
 .counter-input {
@@ -411,34 +535,69 @@ input:focus-visible {
 }
 
 /* 家賃・超過勤務時間の入力欄に単位（円・時間）を表示するためのラッパー。
-   扶養人数の「0人」のように、数値と単位を1つの塊として枠内中央に表示する。 */
+   扶養人数の「0人」の見た目と揃えるため、枠線・背景・パディングをこの
+   ラッパー側に持たせ、内側のinputは枠のない透明な要素として数値と単位を
+   1つの枠の中に一体で表示する。 */
 .counter-value {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: center;
   flex: 1;
   min-width: 0;
   gap: 2px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.counter-value:hover {
+  border-color: var(--color-border-strong);
+}
+
+.counter-value:focus-within {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-light);
 }
 
 .counter-value input[type="number"] {
-  flex: 0 1 70px;
-  width: 70px;
+  flex: 0 1 50px;
+  width: 50px;
   min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   text-align: right;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  appearance: textfield;
+}
+
+/* ネイティブのスピンボタン（上下矢印）を非表示にする。表示されたままだと
+   その分の余白が数値の右側に確保され、右揃えの数字と単位ラベルの間に
+   不自然な空白が生じてしまうため。増減は独自の+1/+10ボタンで行う。 */
+.counter-value input[type="number"]::-webkit-outer-spin-button,
+.counter-value input[type="number"]::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.counter-value input[type="number"]:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 #housing-rent {
-  flex-basis: 110px;
-  width: 110px;
+  flex-basis: 80px;
+  width: 80px;
 }
 
 .counter-unit {
   flex: 0 0 auto;
   font-weight: 700;
   white-space: nowrap;
+  color: var(--color-text);
 }
 
 .counter-btn {
@@ -545,10 +704,6 @@ input:focus-visible {
 .promotion-undo-btn {
   background: #fff;
   color: var(--color-primary-dark);
-}
-
-.step-buttons[hidden] {
-  display: none;
 }
 
 .step-btn {
@@ -685,6 +840,7 @@ input:focus-visible {
 .result-hero {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 6px;
   padding: 20px;
   margin-bottom: 20px;
@@ -693,6 +849,7 @@ input:focus-visible {
   box-shadow: var(--shadow-md);
   color: #fff;
   font-family: var(--font-hero);
+  text-align: center;
 }
 
 .result-hero-label {
@@ -738,10 +895,6 @@ input:focus-visible {
     box-shadow: 0 -4px 16px rgba(0, 23, 193, 0.35);
     color: #fff;
     font-family: var(--font-hero);
-  }
-
-  .mobile-floating-result[hidden] {
-    display: none;
   }
 
   .mobile-floating-result-label {
@@ -869,4 +1022,12 @@ input:focus-visible {
 .footer-note {
   max-width: 720px;
   margin: 0;
+}
+
+.footer-copyright {
+  max-width: 720px;
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid #e2e6eb;
+  font-size: 0.75rem;
 }

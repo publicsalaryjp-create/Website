@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-NDJ339KS');</script>
+<!-- End Google Tag Manager -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="国家公務員の俸給・地域手当・扶養手当・住居手当・本省手当・期末勤勉手当・超過勤務手当など、給与を構成する各種手当の仕組みと計算方法をわかりやすく解説します。">
+<title>各種手当の解説｜国家公務員給与計算機</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css?v=20260806-6">
+<link rel="stylesheet" href="css/allowances.css?v=20260806-5">
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NDJ339KS"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
+
+<header class="site-header tool-header" id="page-top">
+  <h1><a href="index.html">国家公務員給与計算機</a></h1>
+  <p class="subtitle">月給・賞与・年収の概算計算ツール</p>
+</header>
+<nav class="site-nav" aria-label="サイト内ナビゲーション">
+  <a href="index.html">計算機</a>
+  <a href="allowances.html" aria-current="page">各種手当の解説</a>
+  <a href="kinben-seisekiritsu/">成績率を逆算</a>
+  <a href="about.html">このサイトについて</a>
+</nav>
+
+<main class="subpage-layout allowances-layout">
+  <nav class="breadcrumb" aria-label="パンくずリスト">
+    <ol>
+      <li><a href="index.html">トップページ</a></li>
+      <li aria-current="page">各種手当の解説</li>
+    </ol>
+  </nav>
+
+  <section class="panel section-heading">
+    <span class="eyebrow">各種手当の解説</span>
+    <h2>給与を構成する手当の仕組み</h2>
+    <p>
+      国家公務員の給与は、基本給にあたる「俸給」に、下記のような複数の手当を組み合わせて計算されます。
+      ここでは<a href="index.html">給与計算機</a>で使われている各手当を、
+      それぞれ「誰に」「どのように」支給されるのかという観点でまとめました。金額・割合は
+      令和8年度時点の参考値であり、制度改定により変わることがあります。最新情報は
+      ページ下部の「関連資料」からご確認ください。
+    </p>
+  </section>
+
+  <nav class="toc" aria-label="目次">
+    <p class="toc-heading">目次</p>
+    <ol>
+      <li><a href="#salary">俸給</a></li>
+      <li><a href="#special-adjustment">俸給の特別調整額（管理職手当）</a></li>
+      <li><a href="#regional">地域手当</a></li>
+      <li><a href="#dependent">扶養手当</a></li>
+      <li><a href="#housing">住居手当</a></li>
+      <li><a href="#honsho">本府省業務調整手当（本省手当）</a></li>
+      <li><a href="#bonus">期末手当・勤勉手当（賞与）</a></li>
+      <li><a href="#overtime">超過勤務手当（残業代）</a></li>
+    </ol>
+  </nav>
+
+  <section id="salary" class="panel allowance-section">
+    <span class="eyebrow">給与の基礎</span>
+    <h2>俸給</h2>
+    <p>
+      国家公務員の給与算定の基礎となる金額です。金額は「俸給表」と呼ばれる給与テーブルの中で、
+      「職務の級」（役割の重さ・責任の大きさに応じた区分）と「号俸」（同じ級内のより細かい段階）の組み合わせによって決まります。
+    </p>
+    <p>
+      号俸は、年に一度、１月１日に「昇給」が行われます。勤務成績が標準の「良好」であれば4号俸昇給し、「優秀」なら6号俸、
+      「特に優秀」なら8号俸というように、評価が高いほど昇給幅が大きくなります。
+      昇格（職務の級が上がること）が行われると、役職が上がるとともに新しい級の中での号俸に読み替えられます。
+    </p>
+    <p>
+      俸給表には行政職俸給表(一)（多くの事務系職員が対象）のほか、指定職俸給表（事務次官・局長級など）、
+      公安職・教育職・医療職・研究職などの俸給表があり、職種によって適用される表が異なります。
+      本計算機は、現時点で行政職俸給表（一）と指定職俸給表に対応しています。詳細は人事院の公表資料をご参照ください。</p>
+  </section>
+
+  <section id="special-adjustment" class="panel allowance-section">
+    <span class="eyebrow">管理監督職員向け</span>
+    <h2>俸給の特別調整額（管理職手当）</h2>
+    <p>
+      本府省の課長・室長級以上など、管理監督の立場にある職員に、支給される定額の手当です（人事院規則九―一七）。<br>
+      この手当を受け取る職員は、原則として超過勤務手当の支給対象外になります。
+    </p>
+    <p>
+      行政職俸給表(一)の4級以上の職員が対象で、区分（一種〜五種）に応じて金額が決まります。
+      1〜3級には支給対象区分がなく、この手当は支給されません。
+    </p>
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>職務の級</th><th>区分（金額の高い順）</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>10級</td><td>一種 139,300円</td></tr>
+          <tr><td>9級</td><td>一種 130,300円／二種 104,200円</td></tr>
+          <tr><td>8級</td><td>一種 117,500円／二種 94,000円／三種 82,200円</td></tr>
+          <tr><td>7級</td><td>二種 88,500円／三種 77,400円／四種 66,400円</td></tr>
+          <tr><td>6級</td><td>三種 72,700円／四種 62,300円／五種 51,900円</td></tr>
+          <tr><td>5級</td><td>四種 59,500円／五種 49,600円</td></tr>
+          <tr><td>4級</td><td>四種 55,500円／五種 46,300円</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint source-note">出典: 人事院規則九―一七（俸給の特別調整額）別表第一 一 行政職俸給表（一）</p>
+  </section>
+
+  <section id="regional" class="panel allowance-section">
+    <span class="eyebrow">勤務地による差を調整</span>
+    <h2>地域手当</h2>
+    <p>
+      民間賃金の地域差を給与に反映するための手当です。物価や民間賃金水準が高い地域ほど
+      支給割合が高くなり、勤務地ごとに6段階の「級地区分」が定められています。
+      東京都特別区（霞が関等）は最も割合の高い1級地です。
+    </p>
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>級地区分</th><th>支給割合</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1級地</td><td>20%</td></tr>
+          <tr><td>2級地</td><td>16%</td></tr>
+          <tr><td>3級地</td><td>12%</td></tr>
+          <tr><td>4級地</td><td>8%</td></tr>
+          <tr><td>5級地</td><td>4%</td></tr>
+          <tr><td>非支給地</td><td>0%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      地域手当額 ＝（俸給 ＋ 俸給の特別調整額 ＋ 扶養手当） × 支給割合（小数点以下切り捨て）で
+      計算します。本府省（霞が関）勤務かどうかは地域手当ではなく、下記の本省手当で別に判定します。
+    </p>
+    <p class="hint source-note">出典: 人事院規則9-49。令和8年度は制度見直しの経過措置期間中のため、
+      市区町村単位で1%刻みの割合が設定されている場合があります。</p>
+  </section>
+
+  <section id="dependent" class="panel allowance-section">
+    <h2>扶養手当</h2>
+    <p>
+      子や父母等を扶養している職員に支給される手当です。子は年齢によって金額が異なり、16歳以上22歳以下
+      の子には加算があります。
+      なお、配偶者に対する手当は既に廃止されています。
+    </p>
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>対象</th><th>手当額（1人あたり月額）</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>子（15歳以下）</td><td>13,000円</td></tr>
+          <tr><td>子（16歳以上22歳以下）</td><td>18,000円（基本額13,000円＋加算5,000円）</td></tr>
+          <tr><td>父母等</td><td>6,500円</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      父母等の手当額は、行政職俸給表(一)の8級職員は3,500円に減額され、9級以上の職員には支給されません。
+    </p>
+  </section>
+
+  <section id="housing" class="panel allowance-section">
+    <h2>住居手当</h2>
+    <p>
+      借家・借間に住み、実際に家賃を支払っている職員に支給される手当です。持ち家の場合は対象外です。<br>
+      毎月の家賃額に応じて、次の式で計算します（支給額の上限は28,000円で、100円未満切り捨て）。</p>
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>家賃（月額）</th><th>金額</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>16,000円以下</td><td>0円（支給なし）</td></tr>
+          <tr><td>16,000円超〜27,000円以下</td><td>家賃 − 16,000円</td></tr>
+          <tr><td>27,000円超</td><td>11,000円 ＋（家賃 − 27,000円）× 1/2（上限28,000円）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="honsho" class="panel allowance-section">
+    <h2>本府省業務調整手当（本省手当）</h2>
+    <p>
+      霞が関などの本府省で勤務する職員に支給される手当です。
+      職務の級に応じて金額が決まります。
+    </p>
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>職務の級</th><th>金額</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1級</td><td>9,200円</td></tr>
+          <tr><td>2級</td><td>10,800円</td></tr>
+          <tr><td>3級</td><td>19,500円</td></tr>
+          <tr><td>4級</td><td>24,100円</td></tr>
+          <tr><td>5級</td><td>47,400円</td></tr>
+          <tr><td>6級</td><td>49,200円</td></tr>
+          <tr><td>7級以上、指定職</td><td>51,800円</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="bonus" class="panel allowance-section">
+    <span class="eyebrow">ボーナスに相当</span>
+    <h2>期末手当・勤勉手当（賞与）</h2>
+    <p>
+      合わせて「ボーナス」と通称される手当で、6月と12月の年2回、期末手当と勤勉手当を
+      それぞれ計算して支給します。両者は性格が異なります。
+    </p>
+    <ul class="allowance-list">
+      <li><strong>期末手当</strong>：在職期間に応じて一律に支給される部分です。支給月数は
+        職員区分（一般職員／特定管理職員／指定職職員）ごとに異なり、令和8年度は6月期・12月期
+        いずれも一般職員1.2625月、特定管理職員1.0625月、指定職職員0.675月です。</li>
+      <li><strong>勤勉手当</strong>：人事評価（勤務成績）に応じて支給割合（成績率）が変わる
+        部分です。成績区分は「特に優秀」「優秀」「良好」「良好でない」の4段階があり、区分は
+        6月期・12月期でそれぞれ別に評価されます。</li>
+    </ul>
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>成績区分</th><th>一般職員</th><th>特定管理職員</th><th>指定職職員</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>特に優秀</td><td>125.25/100〜</td><td>149.25/100〜</td><td>該当なし</td></tr>
+          <tr><td>優秀</td><td>113.75/100〜</td><td>134.75/100〜</td><td>115/100〜</td></tr>
+          <tr><td>良好</td><td>102.25/100</td><td>122.25/100</td><td>101.5/100</td></tr>
+          <tr><td>良好でない</td><td>93.75/100以下</td><td>112.75/100以下</td><td>93/100以下</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      「特定管理職員」とは、俸給の特別調整額の区分が一種・二種の職員（本府省課長等）を指します。
+      指定職以外で三種以下の職員は、賞与の計算上は一般職員の支給月数・成績率が適用されます。
+    </p>
+    <p class="hint">
+      給与明細の支給額から成績率を逆算したい場合は
+      <a href="kinben-seisekiritsu/">勤勉手当の成績率計算機</a>もあわせてご利用ください。
+    </p>
+    <p class="hint source-note">出典: 人事院「国家公務員の諸手当の概要」（令和8年度）</p>
+  </section>
+
+  <section id="overtime" class="panel allowance-section">
+    <h2>超過勤務手当（残業代）</h2>
+    <p>
+      正規の勤務時間を超えて働いた分に対して支給される、いわゆる残業代です。時間単価は
+      「（俸給＋<u><strong>俸給に対する</strong></u>地域手当）×12か月 ÷ 年間所定勤務時間（週38時間45分×52週＝2,015時間）」
+      で計算し、勤務した区分（平日／休日、深夜／深夜以外）に応じた割増率を掛けます。また、月の超勤時間が
+      60時間を超えた場合には、60時間を超えてからの超勤時間分の割増率が上昇します。
+      なお、超勤手当の計算で用いられる地域手当額には、扶養手当分が含まれていないことに注意が必要です。
+    </p>
+    <div class="table-scroll">
+      <table class="info-table">
+        <thead>
+          <tr><th>区分</th><th>月60時間以下</th><th>月60時間超</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>平日の時間外（22時まで）</td><td>125%</td><td>150%</td></tr>
+          <tr><td>平日の時間外・深夜（22時〜翌5時）</td><td>150%</td><td>175%</td></tr>
+          <tr><td>休日勤務（22時まで）</td><td>135%</td><td>150%</td></tr>
+          <tr><td>休日勤務・深夜</td><td>160%</td><td>175%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="hint source-note">
+      ※60時間超の勤務時間を４区分に分けて入力するのは煩雑なため、本シミュレーターでは一律で平日の22時以前とみなして計算しています。
+      なお、平日22時以前と22時以降ではいずれも割増率が25%で変わらないため、どちらにカウントしても四捨五入の差を除いて同じ結果になります。
+    </p>
+    <p>
+      「俸給の特別調整額（管理職手当）」を受け取っている管理監督職員は、
+      超過勤務手当の支給対象外です。ただし、管理監督職員が休日や深夜に勤務した場合には
+      「管理職員特別勤務手当」が支給されることがあります。
+    </p>
+  </section>
+
+  <section class="panel allowance-section allowances-links">
+    <h2 class="footer-heading">関連資料</h2>
+    <ul class="link-list">
+      <li><a href="https://www.jinji.go.jp/seisaku/kankoku/archive/r7/r7_top.html" target="_blank" rel="noopener">令和7年人事院勧告</a> - 人事院</li>
+      <li><a href="https://www.jinji.go.jp/content/000013374.pdf" target="_blank" rel="noopener">国家公務員の諸手当の概要（PDF）</a> - 人事院</li>
+      <li><a href="https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r08_kyuyo.pdf" target="_blank" rel="noopener">国家公務員の給与（令和8年版）</a> - 内閣人事局</li>
+    </ul>
+    <p class="footer-note">
+      給与制度は随時改定が行われます。最新情報は人事院の公式資料も併せてご確認ください。
+    </p>
+  </section>
+</main>
+
+<footer class="site-footer compact-footer">
+  <p><a href="index.html">← 給与計算機トップに戻る</a></p>
+  <p class="footer-copyright">&copy; 2026 国家公務員給与計算機. 本サイトのコンテンツ・ソースコードの無断転載・複製を禁じます。</p>
+</footer>
+
+<nav class="back-to-top" aria-label="ページ操作">
+  <a href="#page-top">↑ 先頭へ戻る</a>
+</nav>
+
+</body>
+</html>

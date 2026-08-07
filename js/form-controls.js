@@ -8,9 +8,17 @@
  * honsho-eligible-yes, honsho-amount-hint, table-source-note,
  * r-base, r-regional, r-dependent, r-housing, r-honsho, r-monthly-total。
  * 期末・勤勉手当の入力は js/app.js 側で扱う。
+ * activeMode()・createRegionalAllowanceController() はかんたんモード（js/simple-mode.js）
+ * とも共有しており、detailed-mode-panel の存在も前提にする。
  */
 
 const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" });
+
+/** 現在表示中のモード（"simple" または "detailed"）を返す。かんたんモード・本格計算モードの切替に使う。 */
+function activeMode() {
+  const detailedPanel = document.getElementById("detailed-mode-panel");
+  return detailedPanel && !detailedPanel.hidden ? "detailed" : "simple";
+}
 
 /** name属性で指定したラジオボタングループの、チェック済み要素のvalueを返す（未チェック時はnull） */
 function radioValue(name) {
@@ -137,43 +145,105 @@ function populateRegionalRateOptions() {
   select.value = "0"; // デフォルトは非支給地（0%）
 }
 
-function populateRegionalPrefectureOptions() {
-  const select = document.getElementById("regional-prefecture");
-  if (!select) return;
-  const currentValue = select.value;
-  select.innerHTML = "";
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "都道府県を選ぶ";
-  select.appendChild(placeholder);
-  [...new Set(REGIONAL_ALLOWANCE_LOCATIONS.map((location) => location.prefecture))].forEach((prefecture) => {
-    const opt = document.createElement("option");
-    opt.value = prefecture;
-    opt.textContent = prefecture;
-    select.appendChild(opt);
-  });
-  select.value = currentValue;
+/**
+ * 地域手当の「都道府県→市区町村→支給割合」の入力を制御するコントローラを作る。
+ * 詳細モード（regional-*）・かんたんモード（simple-regional-*）のように、同じ地域データ
+ * （REGIONAL_ALLOWANCE_LOCATIONS）を使うが要素idの異なるフォームが複数存在するため、
+ * id指定だけで使い回せるようにしている。
+ *
+ * @param {Object} ids
+ * @param {string} ids.prefecture 都道府県セレクトのid
+ * @param {string} ids.municipality 市区町村セレクトのid
+ * @param {string} ids.rate 支給割合の値を保持する要素のid（<select>または<input type="hidden">。
+ *   .value に0〜0.2の数値文字列を保持していればよい）
+ * @param {string} [ids.rateStatus] 「設定された支給割合: X%」を表示するヒント要素のid（省略時は更新しない）
+ * @param {boolean} [ids.resetRateOnClear] 市区町村の選択を解除したときに支給割合を0にリセットするか
+ *   （詳細モードは「支給割合を直接選ぶ」への切替を妨げないようfalse、かんたんモードは
+ *   地域選択以外に支給割合を設定する手段がないためtrueにする）
+ */
+function createRegionalAllowanceController(ids) {
+  function populatePrefectureOptions() {
+    const select = document.getElementById(ids.prefecture);
+    if (!select) return;
+    const currentValue = select.value;
+    select.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = "都道府県を選ぶ";
+    select.appendChild(placeholder);
+    [...new Set(REGIONAL_ALLOWANCE_LOCATIONS.map((location) => location.prefecture))].forEach((prefecture) => {
+      const opt = document.createElement("option");
+      opt.value = prefecture;
+      opt.textContent = prefecture;
+      select.appendChild(opt);
+    });
+    select.value = currentValue;
+  }
+
+  /** 地域から選んだ場合に、自動設定された支給割合を明示する。 */
+  function updateRateStatus() {
+    if (!ids.rateStatus) return;
+    const status = document.getElementById(ids.rateStatus);
+    const municipalitySelect = document.getElementById(ids.municipality);
+    const rateElement = document.getElementById(ids.rate);
+    if (!status || !municipalitySelect || !rateElement) return;
+    if (!municipalitySelect.value) {
+      status.textContent = "市区町村を選ぶと、地域手当の支給割合が自動で設定されます。";
+      status.classList.remove("is-selected");
+      return;
+    }
+    status.textContent = `設定された支給割合: ${regionalRateLabel({ value: Number(rateElement.value) })}`;
+    status.classList.add("is-selected");
+  }
+
+  function populateMunicipalityOptions() {
+    const prefectureSelect = document.getElementById(ids.prefecture);
+    const municipalitySelect = document.getElementById(ids.municipality);
+    if (!prefectureSelect || !municipalitySelect) return;
+    const locations = REGIONAL_ALLOWANCE_LOCATIONS.filter((location) => location.prefecture === prefectureSelect.value);
+    municipalitySelect.innerHTML = "";
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = prefectureSelect.value ? "市区町村等を選ぶ" : "先に都道府県を選ぶ";
+    municipalitySelect.appendChild(placeholder);
+    locations.forEach((location) => {
+      const opt = document.createElement("option");
+      opt.value = location.code;
+      opt.textContent = location.municipality;
+      municipalitySelect.appendChild(opt);
+    });
+    municipalitySelect.disabled = locations.length === 0;
+    updateRateStatus();
+  }
+
+  /** 市区町村等の選択を地域手当率に反映する。 */
+  function applyMunicipalitySelection() {
+    const municipalitySelect = document.getElementById(ids.municipality);
+    const rateElement = document.getElementById(ids.rate);
+    if (!municipalitySelect || !rateElement) return;
+    if (!municipalitySelect.value) {
+      if (ids.resetRateOnClear) {
+        rateElement.value = "0";
+        updateRateStatus();
+      }
+      return;
+    }
+    const location = REGIONAL_ALLOWANCE_LOCATIONS.find((item) => item.code === municipalitySelect.value);
+    if (!location) return;
+    rateElement.value = location.rate;
+    updateRateStatus();
+    rateElement.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  return { populatePrefectureOptions, populateMunicipalityOptions, updateRateStatus, applyMunicipalitySelection };
 }
 
-function populateRegionalMunicipalityOptions() {
-  const prefectureSelect = document.getElementById("regional-prefecture");
-  const municipalitySelect = document.getElementById("regional-municipality");
-  if (!prefectureSelect || !municipalitySelect) return;
-  const locations = REGIONAL_ALLOWANCE_LOCATIONS.filter((location) => location.prefecture === prefectureSelect.value);
-  municipalitySelect.innerHTML = "";
-  const placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = prefectureSelect.value ? "市区町村等を選ぶ" : "先に都道府県を選ぶ";
-  municipalitySelect.appendChild(placeholder);
-  locations.forEach((location) => {
-    const opt = document.createElement("option");
-    opt.value = location.code;
-    opt.textContent = location.municipality;
-    municipalitySelect.appendChild(opt);
-  });
-  municipalitySelect.disabled = locations.length === 0;
-  updateRegionalRateStatus();
-}
+const detailedRegionalAllowance = createRegionalAllowanceController({
+  prefecture: "regional-prefecture",
+  municipality: "regional-municipality",
+  rate: "regional-rate",
+  rateStatus: "regional-rate-status",
+});
 
 /** 地域手当の設定方法に応じて、地域選択か支給割合選択の一方だけを表示する。 */
 function updateRegionalInputMethod() {
@@ -182,35 +252,7 @@ function updateRegionalInputMethod() {
   const rateInput = document.getElementById("regional-rate-input");
   if (locationInputs) locationInputs.hidden = !useLocation;
   if (rateInput) rateInput.hidden = useLocation;
-  updateRegionalRateStatus();
-}
-
-/** 地域から選んだ場合に、自動設定された支給割合を明示する。 */
-function updateRegionalRateStatus() {
-  const status = document.getElementById("regional-rate-status");
-  const municipalitySelect = document.getElementById("regional-municipality");
-  const rateSelect = document.getElementById("regional-rate");
-  if (!status || !municipalitySelect || !rateSelect) return;
-  if (!municipalitySelect.value) {
-    status.textContent = "市区町村を選ぶと、支給割合が自動で設定されます。";
-    status.classList.remove("is-selected");
-    return;
-  }
-  const selectedOption = rateSelect.options[rateSelect.selectedIndex];
-  status.textContent = `設定された支給割合: ${selectedOption ? selectedOption.textContent : "-"}`;
-  status.classList.add("is-selected");
-}
-
-/** 市区町村等の選択を地域手当率に反映する。 */
-function applyRegionalMunicipalitySelection() {
-  const municipalitySelect = document.getElementById("regional-municipality");
-  const rateSelect = document.getElementById("regional-rate");
-  if (!municipalitySelect || !municipalitySelect.value) return;
-  const location = REGIONAL_ALLOWANCE_LOCATIONS.find((item) => item.code === municipalitySelect.value);
-  if (!location) return;
-  rateSelect.value = location.rate;
-  updateRegionalRateStatus();
-  rateSelect.dispatchEvent(new Event("input", { bubbles: true }));
+  detailedRegionalAllowance.updateRateStatus();
 }
 
 /** 本省手当の「支給あり」選択時に、現在の級から自動計算される参考額をヒント表示する */
@@ -516,10 +558,10 @@ function wireCommonFormEvents(form, { onInputExtra, onChangeExtra, onRecalculate
 
   form.addEventListener("change", async (e) => {
     if (e.target.id === "regional-prefecture") {
-      populateRegionalMunicipalityOptions();
+      detailedRegionalAllowance.populateMunicipalityOptions();
     }
     if (e.target.id === "regional-municipality") {
-      applyRegionalMunicipalitySelection();
+      detailedRegionalAllowance.applyMunicipalitySelection();
     }
     updateHonshoAmountHint();
     updateHousingAmountHint();
