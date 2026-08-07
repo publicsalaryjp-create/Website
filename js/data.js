@@ -2,8 +2,8 @@
  * data.js
  * 国家公務員給与計算に使う各種データ（俸給表・手当額・支給率）を定義する。
  *
- * 俸給表は data/salary-tables.json（ユーザー提供の公式データ、行政職・公安職・
- * 教育職・医療職など20表）を読み込んで使用する。何らかの理由で読み込みに失敗
+ * 俸給表は data/salary-tables-r8.json（ユーザー提供の公式データ、行政職・公安職・
+ * 教育職・医療職など19表）を読み込んで使用する。何らかの理由で読み込みに失敗
  * した場合（file:// で開いた等）は、行政職俸給表(一)のみ簡易な参考値で代替する。
  *
  * 出典（数値を直接確認したい場合）:
@@ -17,7 +17,7 @@
 // 1. 俸給表
 // ---------------------------------------------------------------------------
 
-// data/salary-tables.json が読み込めなかった場合の最終フォールバック（行政職(一)のみ、参考値）
+// data/salary-tables-r8.json が読み込めなかった場合の最終フォールバック（行政職(一)のみ、参考値）
 const FALLBACK_GRADE_SEED = {
   1: { base: 145600, steps: 125 },
   2: { base: 177100, steps: 125 },
@@ -58,14 +58,14 @@ const FALLBACK_CATALOG = {
   },
 };
 
-// 俸給表カタログ（全俸給表を保持）。読み込み完了後に data/salary-tables.json の内容へ差し替わる。
+// 俸給表カタログ（全俸給表を保持）。読み込み完了後に data/salary-tables-r8.json の内容へ差し替わる。
 let SALARY_CATALOG = FALLBACK_CATALOG;
 let SALARY_CATALOG_IS_OFFICIAL = false;
 let SALARY_CATALOG_SOURCE_NOTE = "";
 
 // 俸給表のバージョン（現行／人事院勧告後など）一覧。data/vintages.json から読み込む。
 const FALLBACK_VINTAGES = [
-  { key: "current", label: "現行", file: "salary-tables.json", effectiveDate: null, available: true },
+  { key: "current", label: "現行", file: "salary-tables-r8.json", effectiveDate: null, available: true },
 ];
 let SALARY_VINTAGES = FALLBACK_VINTAGES;
 let CURRENT_VINTAGE_KEY = "current";
@@ -92,7 +92,7 @@ function getVintage(vintageKey) {
 }
 
 /**
- * data/salary-tables.json（またはバージョンごとのファイル）を読み込んで SALARY_CATALOG を差し替える。
+ * data/salary-tables-r8.json（またはバージョンごとのファイル）を読み込んで SALARY_CATALOG を差し替える。
  * 期待するJSON形式:
  * {
  *   "source": "...", "note": "...", "effectiveDate": "YYYY-MM-DD",
@@ -106,11 +106,11 @@ function getVintage(vintageKey) {
  * }
  * file:// で開いている場合など fetch できない環境では黙ってフォールバックを使い続ける。
  *
- * @param {string} [file] 読み込むファイル名（省略時は "salary-tables.json"）
+ * @param {string} [file] 読み込むファイル名（省略時は "salary-tables-r8.json"）
  */
 async function loadOfficialSalaryTable(file) {
   try {
-    const res = await fetch(`data/${file || "salary-tables.json"}`, { cache: "no-store" });
+    const res = await fetch(`data/${file || "salary-tables-r8.json"}`, { cache: "no-store" });
     if (!res.ok) return false;
     const json = await res.json();
     if (!json || typeof json.tables !== "object") return false;
@@ -135,6 +135,33 @@ async function switchVintage(vintageKey) {
   return ok;
 }
 
+// 「現行」（令和8年4月1日施行）の俸給表カタログを、選択中のバージョンとは独立に保持する。
+// 人事院勧告反映後（またはそれ以外の非現行バージョン）を選んだ際に、「勧告前からいくら
+// 増えたか」を計算結果に併記するための比較基準として使う。
+let BASELINE_SALARY_CATALOG = null;
+
+/** 「現行」バージョンの俸給表データを読み込み、BASELINE_SALARY_CATALOGにキャッシュする。 */
+async function loadBaselineSalaryTable() {
+  const baseline = getVintage("current");
+  if (!baseline || !baseline.file) return false;
+  try {
+    const res = await fetch(`data/${baseline.file}`, { cache: "no-store" });
+    if (!res.ok) return false;
+    const json = await res.json();
+    if (!json || typeof json.tables !== "object") return false;
+    BASELINE_SALARY_CATALOG = json;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/** 選択中の俸給表バージョンが「現行」以外で、比較基準データも読み込み済みかどうか。
+ * trueのときだけ計算結果に「勧告前との差額」を表示する。 */
+function hasVintageComparison() {
+  return CURRENT_VINTAGE_KEY !== "current" && !!BASELINE_SALARY_CATALOG;
+}
+
 function getTableKeys() {
   return SALARY_CATALOG.order && SALARY_CATALOG.order.length
     ? SALARY_CATALOG.order
@@ -146,7 +173,7 @@ function getTable(tableKey) {
 }
 
 // 選択肢に表示する俸給表を一旦、行政職俸給表(一)・指定職俸給表の2表に絞る
-// （ユーザー指示。data/salary-tables.json自体は全19表を保持したまま）。
+// （ユーザー指示。俸給表データファイル自体は各バージョンとも全19表を保持したまま）。
 const VISIBLE_TABLE_KEYS = ["administrative_1", "designated"];
 
 function getVisibleTableKeys() {

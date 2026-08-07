@@ -3,38 +3,6 @@
  * index.html 固有のDOM配線。共通のフォーム制御・表示ロジックは js/form-controls.js を使う。
  */
 
-function populateVintageOptions() {
-  const group = document.getElementById("salary-vintage-group");
-  group.innerHTML = "";
-  SALARY_VINTAGES.forEach((v) => {
-    const label = document.createElement("label");
-    label.className = "radio-option";
-    const input = document.createElement("input");
-    input.type = "radio";
-    input.name = "salary-vintage";
-    input.id = `salary-vintage-${v.key}`;
-    input.value = v.key;
-    input.disabled = !v.available;
-    input.checked = v.key === CURRENT_VINTAGE_KEY;
-    label.appendChild(input);
-    label.appendChild(document.createTextNode(v.label));
-    group.appendChild(label);
-  });
-  updateVintageNote();
-}
-
-function updateVintageNote() {
-  const note = document.getElementById("vintage-note");
-  const vintage = getVintage(CURRENT_VINTAGE_KEY);
-  if (vintage && !vintage.available) {
-    note.textContent = "このバージョンのデータはまだ登録されていません。現行の俸給表で計算しています。";
-  } else if (vintage && vintage.note) {
-    note.textContent = vintage.note;
-  } else {
-    note.textContent = "";
-  }
-}
-
 // 職員区分は「職員区分」ラジオボタン（一般職員／特定管理職員）で、俸給の特別調整額・
 // 期末勤勉手当の両方に共通して使用する。指定職俸給表を選んでいる場合はラジオボタンを
 // 表示せず、常に指定職職員の区分を適用する。
@@ -125,19 +93,16 @@ function renderOvertimeRateHints(overtimeHourlyWage) {
   });
 }
 
-function renderResult(result) {
+/**
+ * @param {Object} result 選択中の俸給表バージョンでの計算結果
+ * @param {Object|null} [baselineResult] 比較基準（現行）バージョンでの計算結果。
+ *   渡すと各項目に「現行（勧告前）」との差額を併記する（hasVintageComparison参照）。
+ */
+function renderResult(result, baselineResult) {
   renderTerminalAllowanceRateNote();
-  renderCommonResult(result);
+  renderSalaryResult("r-", result, baselineResult);
   renderOvertimeRateHints(result.overtimeHourlyWage);
-  document.getElementById("r-ot-allowance").textContent = yen.format(result.overtimeAllowance);
-  document.getElementById("r-monthly-total-ot").textContent = yen.format(result.monthlyTotalWithOvertime);
-  document.getElementById("r-teishu-june").textContent = yen.format(result.teishuJune);
-  document.getElementById("r-kinben-june").textContent = yen.format(result.kinbenJune);
-  document.getElementById("r-teishu-december").textContent = yen.format(result.teishuDecember);
-  document.getElementById("r-kinben-december").textContent = yen.format(result.kinbenDecember);
-  document.getElementById("r-bonus-annual").textContent = yen.format(result.bonusAnnual);
-  document.getElementById("r-annual").textContent = yen.format(result.annualIncome);
-  document.getElementById("r-annual-hero").textContent = yen.format(result.annualIncome);
+  updateDiffNote("vintage-diff-note", "result-table", !!baselineResult);
   syncFloatingResult();
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
 }
@@ -302,23 +267,23 @@ function recalculate() {
   updateOvertimeVisibility();
   const input = readInput();
   const result = calculateSalary(input);
-  renderResult(result);
+  const baselineResult = hasVintageComparison() ? calculateSalary(input, BASELINE_SALARY_CATALOG) : null;
+  renderResult(result, baselineResult);
 }
 
 // ---------------------------------------------------------------------------
 // 初期化
 // ---------------------------------------------------------------------------
 
-async function handleVintageChange(e) {
-  if (e.target.name !== "salary-vintage") return;
-  const selectedKey = e.target.value;
-  const switched = await switchVintage(selectedKey);
-  if (!switched) {
-    // 未登録バージョンは選べないので元に戻す
-    const original = document.getElementById(`salary-vintage-${CURRENT_VINTAGE_KEY}`);
-    if (original) original.checked = true;
-  }
-  updateVintageNote();
+/**
+ * 俸給表バージョンの切替（CURRENT_VINTAGE_KEYの変更）を受けて、詳細モードの表示・選択肢を
+ * 作り直す。かんたんモード側での切替（js/simple-mode.jsのhandleSimpleVintageChange）からも呼ぶため、
+ * 独立した関数にしている。呼び出し側で再計算（recalculate()）まで行うこと
+ * （詳細モード自身のラジオ操作ではwireCommonFormEvents()側が自動で呼ぶため、ここでは呼ばない）。
+ */
+function syncDetailedFormAfterVintageChange() {
+  populateVintageOptions("salary-vintage-group", "salary-vintage");
+  updateVintageNote("vintage-note");
   updateTableSourceNote();
   populateSalaryTableOptions();
   populateGradeOptions();
@@ -330,6 +295,21 @@ async function handleVintageChange(e) {
     populateMeritGradeOptions(period);
   });
   updateSpecialAdjustmentAmountHint();
+}
+
+async function handleVintageChange(e) {
+  if (e.target.name !== "salary-vintage") return;
+  const selectedKey = e.target.value;
+  const switched = await switchVintage(selectedKey);
+  if (!switched) {
+    // 未登録バージョンは選べないので元に戻す
+    const original = document.getElementById(`salary-vintage-${CURRENT_VINTAGE_KEY}`);
+    if (original) original.checked = true;
+  }
+  syncDetailedFormAfterVintageChange();
+  // 俸給表バージョンはページ全体で共有する1つのデータ（CURRENT_VINTAGE_KEY）のため、
+  // かんたんモード側の選択状態・注記・計算結果も合わせて同期する。
+  syncSimpleFormAfterVintageChange();
 }
 
 // 昇格操作は直前の1回分だけ戻せる。ページ再読込後や手動変更後は保持しない。
@@ -402,7 +382,8 @@ function initForm() {
   const saved = loadFormState("index");
   const form = document.getElementById("calc-form");
 
-  populateVintageOptions();
+  populateVintageOptions("salary-vintage-group", "salary-vintage");
+  updateVintageNote("vintage-note");
   populateSalaryTableOptions(saved && saved["salary-table"]);
   populateGradeOptions(saved && saved.grade);
   populateStepOptions();
@@ -635,11 +616,30 @@ function initModeTabs() {
   switchMode(initialMode);
 }
 
+/**
+ * localStorageに保存された俸給表バージョンの選択（詳細モード・かんたんモードいずれかの
+ * ラジオ）をCURRENT_VINTAGE_KEYに反映する。populateVintageOptions()等でフォームを初期化する
+ * 前に呼ぶ必要がある。復元後にラジオのchecked属性だけを書き換えても（applySavedFormValues）
+ * 実際のデータ切替（switchVintage）は伴わないため、ここで先にCURRENT_VINTAGE_KEYを正しい値に
+ * しておくことで、以降の初期読み込みが最初から選択済みバージョンのデータで行われるようにする。
+ * 保存データがない、または現在選べないバージョンの場合は何もしない（既定の「現行」のまま）。
+ */
+function restoreSavedVintageKey() {
+  const savedIndex = loadFormState("index");
+  const savedSimple = loadFormState("simple");
+  const savedKey = (savedIndex && savedIndex["salary-vintage"]) || (savedSimple && savedSimple["simple-salary-vintage"]);
+  const vintage = savedKey && getVintage(savedKey);
+  if (vintage && vintage.available && vintage.file) {
+    CURRENT_VINTAGE_KEY = savedKey;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   try {
     await Promise.all([loadVintages(), loadAllowanceRates()]);
+    restoreSavedVintageKey();
     const initialVintage = getVintage(CURRENT_VINTAGE_KEY);
-    await loadOfficialSalaryTable(initialVintage && initialVintage.file);
+    await Promise.all([loadOfficialSalaryTable(initialVintage && initialVintage.file), loadBaselineSalaryTable()]);
     updateTableSourceNote();
     renderTerminalAllowanceRateNote();
     initForm();

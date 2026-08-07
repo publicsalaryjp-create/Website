@@ -28,6 +28,16 @@
         <li aria-current="page">勤勉手当の成績率計算機</li>
       </ol>
     </nav>
+    <section class="panel section-heading">
+      <span class="eyebrow">このツールについて</span>
+      <h2>成績率逆算機の意義</h2>
+      <p>
+        勤勉手当の成績率（人事評価の結果を反映する割合）は、給与明細に直接記載されないことが多く、
+        自分の評価区分を正確に把握しづらいのが実情です。このツールは、実際に支給された期末手当・
+        勤勉手当の金額から成績率を逆算し、「良好」「優秀」「特に優秀」などの区分のどこに位置するかを
+        確認するための概算ツールです。人事評価の結果を客観的な数値で把握する手がかりとしてご活用ください。
+      </p>
+    </section>
     <section class="panel calculator-card" aria-labelledby="calculator-heading">
       <div class="section-heading">
         <span class="eyebrow">支給条件と金額から逆算</span>
@@ -86,7 +96,7 @@
 
         <fieldset class="staff-type-field regional-fields">
           <legend>地域手当</legend>
-          <p class="hint">はじめに、支給割合の設定方法を選んでください。</p>
+          <p class="hint">地域手当の支給割合を設定します。勤務地を指定するか、割合を直接指定してください。</p>
           <div class="staff-type-options regional-input-method-options">
             <label>
               <input type="radio" name="regional-input-method" value="location" checked>
@@ -99,16 +109,17 @@
           </div>
           <div id="regional-location-inputs">
             <div class="amount-field">
-              <label for="regional-prefecture">勤務地の都道府県</label>
+              <label for="regional-prefecture">都道府県</label>
               <select id="regional-prefecture" name="regional-prefecture"></select>
             </div>
             <div class="amount-field">
-              <label for="regional-municipality">勤務地の市区町村等</label>
+              <label for="regional-municipality">市区町村</label>
               <select id="regional-municipality" name="regional-municipality" disabled></select>
             </div>
+            <p class="hint regional-rate-status" id="regional-rate-status" aria-live="polite">市区町村を選ぶと、支給割合が自動で設定されます。</p>
           </div>
           <div class="amount-field" id="regional-rate-input" hidden>
-            <label for="regional-rate">地域手当の支給割合</label>
+            <label for="regional-rate">支給割合</label>
             <select id="regional-rate" name="regional-rate"></select>
           </div>
         </fieldset>
@@ -187,6 +198,6 @@
   </footer>
 
   <script src="../js/regional-allowance-locations.js"></script>
-  <script src="script.js?v=20260802-2"></script>
+  <script src="script.js?v=20260807-1"></script>
 </body>
 </html>

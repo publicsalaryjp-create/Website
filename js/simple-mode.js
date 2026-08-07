@@ -5,12 +5,17 @@
  * 「役職・年齢の目安」で選んだ代表的な役職に応じた俸給表・級・号俸・職員区分・
  * 俸給の特別調整額を自動で適用する（SIMPLE_ROLE_LEVELS参照）。住居手当はなしと仮定する
  * （本府省業務調整手当は東京都特別区を選んだ場合のみ加算）。
- * 前提にするDOM ID: simple-calc-form, simple-role-level, simple-regional-prefecture,
- * simple-regional-municipality, simple-regional-rate, simple-regional-rate-status,
- * simple-dependent-count, simple-dependent-field, simple-dependent-exempt-note,
- * simple-overtime-hours, simple-ot-hours-field, simple-ot-management-note, simple-r-monthly,
- * simple-r-honsho, simple-r-special-adjustment, simple-r-overtime, simple-r-bonus,
- * simple-r-annual, simple-r-annual-hero, simple-reset-saved-input, simple-go-detailed。
+ * 前提にするDOM ID: simple-calc-form, simple-salary-vintage-group, simple-vintage-note,
+ * simple-role-level, simple-role-level-status, simple-regional-prefecture,
+ * simple-regional-municipality, simple-regional-rate, simple-regional-rate-status, simple-dependent-count,
+ * simple-dependent-field, simple-dependent-exempt-note, simple-overtime-hours,
+ * simple-ot-hours-field, simple-ot-management-note, simple-reset-saved-input, simple-go-detailed,
+ * simple-vintage-diff-note。結果の描画先id（simple-r-base〜simple-r-annual-hero）は
+ * js/form-controls.jsのrenderSalaryResult()・SALARY_RESULT_ID_SUFFIXESが前提にする
+ * 詳細モードと共通の命名規則（"simple-r-"+項目名）に従う。
+ * 俸給表バージョン（CURRENT_VINTAGE_KEY）はページ全体で共有するデータのため、
+ * js/app.js（詳細モード）と相互に同期する（syncDetailedFormAfterVintageChange /
+ * syncSimpleFormAfterVintageChange）。
  */
 
 // 人事院・内閣人事局公表のモデル給与（本府省）の代表的な役職・年齢の水準。
@@ -84,6 +89,43 @@ function updateSimpleFieldVisibility() {
   const dependentExemptNote = document.getElementById("simple-dependent-exempt-note");
   if (dependentField) dependentField.hidden = isDesignated;
   if (dependentExemptNote) dependentExemptNote.hidden = !isDesignated;
+
+  // 選択中の役職・年齢の目安に対応する級・号俸を、地域手当の支給割合と同じ見た目（緑地）で明示する。
+  const roleLevelStatus = document.getElementById("simple-role-level-status");
+  if (roleLevelStatus) {
+    roleLevelStatus.textContent = isDesignated
+      ? `設定された号俸: 指定職${role.step}号`
+      : `設定された級・号俸: ${role.grade}級${role.step}号`;
+    roleLevelStatus.classList.add("is-selected");
+  }
+}
+
+/** 俸給表バージョンの切替（js/app.jsのhandleVintageChange）を受けて、かんたんモードの
+ * ラジオ選択・注記・計算結果を再同期する。 */
+function syncSimpleFormAfterVintageChange() {
+  populateVintageOptions("simple-salary-vintage-group", "simple-salary-vintage");
+  updateVintageNote("simple-vintage-note");
+  simpleRecalculate();
+}
+
+/**
+ * かんたんモードの俸給表バージョンのラジオボタンの変更を受けて、全モード共通のバージョン
+ * （CURRENT_VINTAGE_KEY）を切り替える。詳細モード側の選択状態・注記・計算結果も合わせて同期する
+ * （js/app.jsのhandleVintageChangeと対になる処理）。
+ */
+async function handleSimpleVintageChange(e) {
+  if (e.target.name !== "simple-salary-vintage") return;
+  const selectedKey = e.target.value;
+  const switched = await switchVintage(selectedKey);
+  if (!switched) {
+    // 未登録バージョンは選べないので元に戻す
+    const original = document.getElementById(`simple-salary-vintage-${CURRENT_VINTAGE_KEY}`);
+    if (original) original.checked = true;
+  }
+  populateVintageOptions("simple-salary-vintage-group", "simple-salary-vintage");
+  updateVintageNote("simple-vintage-note");
+  syncDetailedFormAfterVintageChange();
+  recalculate();
 }
 
 // 都道府県→市区町村→支給割合の入力ロジックは詳細モードと共通（js/form-controls.jsの
@@ -144,21 +186,24 @@ function readSimpleInput() {
   };
 }
 
-function renderSimpleResult(result) {
-  document.getElementById("simple-r-monthly").textContent = yen.format(result.monthlyTotalWithOvertime);
-  document.getElementById("simple-r-honsho").textContent = yen.format(result.honshoAllowance);
-  document.getElementById("simple-r-special-adjustment").textContent = yen.format(result.specialAdjustmentAllowance);
-  document.getElementById("simple-r-overtime").textContent = yen.format(result.overtimeAllowance);
-  document.getElementById("simple-r-bonus").textContent = yen.format(result.bonusAnnual);
-  document.getElementById("simple-r-annual").textContent = yen.format(result.annualIncome);
-  document.getElementById("simple-r-annual-hero").textContent = yen.format(result.annualIncome);
+/**
+ * @param {Object} result 選択中の俸給表バージョンでの計算結果
+ * @param {Object|null} [baselineResult] 比較基準（現行）バージョンでの計算結果。
+ *   渡すと各項目に「現行（勧告前）」との差額を併記する（hasVintageComparison参照）。
+ */
+function renderSimpleResult(result, baselineResult) {
+  renderSalaryResult("simple-r-", result, baselineResult);
+  updateDiffNote("simple-vintage-diff-note", "simple-result-table", !!baselineResult);
   syncFloatingResult();
 }
 
 function simpleRecalculate() {
   saveFormState("simple", document.getElementById("simple-calc-form"));
   updateSimpleFieldVisibility();
-  renderSimpleResult(calculateSalary(readSimpleInput()));
+  const input = readSimpleInput();
+  const result = calculateSalary(input);
+  const baselineResult = hasVintageComparison() ? calculateSalary(input, BASELINE_SALARY_CATALOG) : null;
+  renderSimpleResult(result, baselineResult);
 }
 
 function initSimpleForm() {
@@ -166,6 +211,8 @@ function initSimpleForm() {
   if (!form) return;
   const saved = loadFormState("simple");
 
+  populateVintageOptions("simple-salary-vintage-group", "simple-salary-vintage");
+  updateVintageNote("simple-vintage-note");
   populateSimpleRoleLevelOptions();
   simpleRegionalAllowance.populatePrefectureOptions();
   populateDependentCountOptions("simple-dependent-count");
@@ -182,13 +229,14 @@ function initSimpleForm() {
 
   form.addEventListener("input", () => simpleRecalculate());
 
-  form.addEventListener("change", (e) => {
+  form.addEventListener("change", async (e) => {
     if (e.target.id === "simple-regional-prefecture") {
       simpleRegionalAllowance.populateMunicipalityOptions();
     }
     if (e.target.id === "simple-regional-municipality") {
       simpleRegionalAllowance.applyMunicipalitySelection();
     }
+    await handleSimpleVintageChange(e);
     simpleRecalculate();
   });
 

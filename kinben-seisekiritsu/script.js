@@ -20,6 +20,7 @@
   const regionalRateInput = document.getElementById("regional-rate");
   const regionalLocationInputs = document.getElementById("regional-location-inputs");
   const regionalRateField = document.getElementById("regional-rate-input");
+  const regionalRateStatus = document.getElementById("regional-rate-status");
   const STORAGE_KEY = "salary-calculator:kinben-seisekiritsu";
 
   const MERIT_CATEGORIES = {
@@ -111,6 +112,10 @@
     return "区分を特定できません";
   }
 
+  function regionalRateLabel(rate) {
+    return rate === 0 ? "0%（非支給地）" : `${Math.round(rate * 100)}%`;
+  }
+
   function populateRegionalInputs() {
     const prefectures = [...new Set(REGIONAL_ALLOWANCE_LOCATIONS.map((location) => location.prefecture))];
     regionalPrefectureInput.innerHTML = '<option value="">都道府県を選ぶ</option>';
@@ -122,8 +127,7 @@
       .sort((a, b) => b - a);
     regionalRateInput.innerHTML = "";
     rates.forEach((rate) => {
-      const label = rate === 0 ? "0%（非支給地）" : `${Math.round(rate * 100)}%`;
-      regionalRateInput.add(new Option(label, String(rate)));
+      regionalRateInput.add(new Option(regionalRateLabel(rate), String(rate)));
     });
     regionalRateInput.value = "0";
     populateMunicipalities();
@@ -140,6 +144,16 @@
     regionalMunicipalityInput.disabled = locations.length === 0;
   }
 
+  function updateRegionalRateStatus() {
+    if (!regionalMunicipalityInput.value) {
+      regionalRateStatus.textContent = "市区町村を選ぶと、支給割合が自動で設定されます。";
+      regionalRateStatus.classList.remove("is-selected");
+      return;
+    }
+    regionalRateStatus.textContent = `設定された支給割合: ${regionalRateLabel(Number(regionalRateInput.value))}`;
+    regionalRateStatus.classList.add("is-selected");
+  }
+
   function updateRegionalInputMethod() {
     const useLocation = form.elements["regional-input-method"].value !== "rate";
     regionalLocationInputs.hidden = !useLocation;
@@ -147,7 +161,6 @@
   }
 
   function calculate(event) {
-    console.log("DEBUG calculate called");
     event.preventDefault();
     const termAmount = parseAmount(termInput.value);
     const meritAmount = parseAmount(meritInput.value);
@@ -228,6 +241,7 @@
 
   regionalPrefectureInput.addEventListener("change", () => {
     populateMunicipalities();
+    updateRegionalRateStatus();
     resetResult();
   });
   regionalMunicipalityInput.addEventListener("change", () => {
@@ -235,6 +249,7 @@
       (item) => item.code === regionalMunicipalityInput.value
     );
     if (location) regionalRateInput.value = String(location.rate);
+    updateRegionalRateStatus();
     resetResult();
   });
   regionalRateInput.addEventListener("change", () => {
@@ -244,6 +259,7 @@
     if (location && String(location.rate) !== regionalRateInput.value) {
       regionalMunicipalityInput.value = "";
     }
+    updateRegionalRateStatus();
     resetResult();
   });
 
@@ -254,7 +270,7 @@
   populateRegionalInputs();
   restoreFormState();
   updateRegionalInputMethod();
+  updateRegionalRateStatus();
 
   form.addEventListener("submit", calculate);
-  console.log("DEBUG init complete");
 })();

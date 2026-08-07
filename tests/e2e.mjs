@@ -724,7 +724,7 @@ await checkNoConsoleErrors(
   await page.close();
 }
 
-// index.html: 俸給表バージョンのプルダウンで「現行」が選択可能・「人事院勧告後」は選択不可
+// index.html: 俸給表バージョンのプルダウンで「現行」「人事院勧告反映後」がともに選択可能
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
@@ -736,9 +736,91 @@ await checkNoConsoleErrors(
   const current = options.find((o) => o.value === "current");
   const postRecommendation = options.find((o) => o.value === "post_recommendation");
   report(
-    "index.html: 俸給表バージョンは現行のみ選択可能、人事院勧告後は選択不可",
-    current && !current.disabled && postRecommendation && postRecommendation.disabled,
+    "index.html: 俸給表バージョンは現行・人事院勧告反映後のどちらも選択可能",
+    current && !current.disabled && postRecommendation && !postRecommendation.disabled,
     JSON.stringify(options)
+  );
+  await page.close();
+}
+
+// index.html: 「人事院勧告反映後」に切り替えると令和9年4月1日施行の俸給額が反映される
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await goToDetailedTab(page);
+  await page.selectOption("#grade", "1");
+  await page.selectOption("#step", "1");
+  await page.waitForTimeout(150);
+  const salaryBefore = await page.textContent("#r-base");
+  await page.check("#salary-vintage-post_recommendation");
+  await page.waitForTimeout(300);
+  const salaryAfter = await page.textContent("#r-base");
+  const note = await page.textContent("#vintage-note");
+  report(
+    "index.html: 人事院勧告反映後に切り替えると俸給月額が変わり、施行日の注記が表示される",
+    salaryBefore !== salaryAfter && note.includes("令和9年4月1日"),
+    `切替前=${salaryBefore} 切替後=${salaryAfter} note=${note}`
+  );
+  await page.close();
+}
+
+// index.html: 「人事院勧告反映後」では現行との差額が併記され、「現行」に戻すと消える
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.waitForTimeout(500);
+  await goToDetailedTab(page);
+  await page.selectOption("#salary-table", "administrative_1");
+  await page.selectOption("#grade", "1");
+  await page.selectOption("#step", "1");
+  await page.waitForTimeout(150);
+  const diffHiddenOnCurrent = await page.isHidden("#r-base-diff");
+
+  await page.check("#salary-vintage-post_recommendation");
+  await page.waitForTimeout(300);
+  const diffVisibleOnPostRecommendation = await page.isVisible("#r-base-diff");
+  const baseDiffText = await page.textContent("#r-base-diff");
+  const annualDiffText = await page.textContent("#r-annual-diff");
+  const heroDiffText = await page.textContent("#r-annual-hero-diff");
+  const noteVisible = await page.isVisible("#vintage-diff-note");
+
+  await page.check("#salary-vintage-current");
+  await page.waitForTimeout(300);
+  const diffHiddenAfterRevert = await page.isHidden("#r-base-diff");
+
+  report(
+    "index.html: 人事院勧告反映後では俸給月額・年収に現行との差額（+9,500円等）が併記され、現行に戻すと消える",
+    diffHiddenOnCurrent &&
+      diffVisibleOnPostRecommendation &&
+      baseDiffText === "+￥9,500" &&
+      annualDiffText.startsWith("+") &&
+      heroDiffText.startsWith("+") &&
+      noteVisible &&
+      diffHiddenAfterRevert,
+    `現行時hidden=${diffHiddenOnCurrent} 勧告後visible=${diffVisibleOnPostRecommendation} 俸給差額=${baseDiffText} 年収差額=${annualDiffText} hero差額=${heroDiffText} note表示=${noteVisible} 復帰後hidden=${diffHiddenAfterRevert}`
+  );
+  await page.close();
+}
+
+// index.html（かんたんモード）: 「人事院勧告反映後」では年収目安に現行との差額が併記される
+{
+  const page = await browser.newPage();
+  await page.goto(`${base}/index.html`);
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.waitForTimeout(500);
+  const diffHiddenOnCurrent = await page.isHidden("#simple-r-annual-hero-diff");
+
+  await page.check("#simple-salary-vintage-post_recommendation");
+  await page.waitForTimeout(300);
+  const diffVisibleOnPostRecommendation = await page.isVisible("#simple-r-annual-hero-diff");
+  const heroDiffText = await page.textContent("#simple-r-annual-hero-diff");
+
+  report(
+    "index.html（かんたんモード）: 人事院勧告反映後では年収目安に現行との差額が併記される",
+    diffHiddenOnCurrent && diffVisibleOnPostRecommendation && heroDiffText.startsWith("+"),
+    `現行時hidden=${diffHiddenOnCurrent} 勧告後visible=${diffVisibleOnPostRecommendation} hero差額=${heroDiffText}`
   );
   await page.close();
 }

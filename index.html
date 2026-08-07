@@ -45,19 +45,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="layout mode-panel" id="simple-mode-panel" role="tabpanel" aria-labelledby="tab-simple">
     <form id="simple-calc-form" class="panel form-panel">
       <p class="hint simple-intro">
-        いくつかの質問に答えるだけで、月収・年収の目安がわかります。俸給表は選んだ役職に応じた行政職俸給表(一)または指定職俸給表、
-        勤務成績は「良好」、住居手当はなしと仮定して計算します（本府省業務調整手当は東京都特別区を選んだ場合のみ加算されます）。
+        人事院・内閣人事局公表のモデルケースから選んで試算できます。
       </p>
+
+      <div class="field">
+        <span class="field-label-text" id="simple-salary-vintage-label">俸給表のバージョン</span>
+        <div class="radio-group" role="radiogroup" aria-labelledby="simple-salary-vintage-label" id="simple-salary-vintage-group"></div>
+        <p class="hint" id="simple-vintage-note"></p>
+      </div>
 
       <fieldset>
         <legend>役職・年齢の目安</legend>
         <div class="field">
-          <label for="simple-role-level">役職・年齢の目安</label>
           <div class="counter-input">
             <button type="button" class="counter-btn" data-target="simple-role-level" data-delta="-1" aria-label="下げる">−</button>
             <select id="simple-role-level" name="simple-role-level" class="select-center"></select>
             <button type="button" class="counter-btn" data-target="simple-role-level" data-delta="1" aria-label="上げる">＋</button>
           </div>
+          <p class="hint regional-rate-status" id="simple-role-level-status" aria-live="polite"></p>
           <p class="hint">人事院・内閣人事局公表の本府省モデル給与の代表的な役職・年齢の水準から選べます（実際の級・号俸は個人ごとに異なります）。</p>
         </div>
       </fieldset>
@@ -135,16 +140,26 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="result-hero">
         <span class="result-hero-label">年収 目安</span>
         <span class="result-hero-value" id="simple-r-annual-hero">-</span>
+        <span class="result-hero-diff" id="simple-r-annual-hero-diff" hidden></span>
       </div>
       <h3 class="result-detail-heading">内訳</h3>
-      <table class="result-table">
+      <p class="hint result-diff-note" id="simple-vintage-diff-note" hidden>右側の数値は現行（令和8年4月1日施行、人事院勧告前）との差額です。</p>
+      <table class="result-table" id="simple-result-table">
         <tbody>
-          <tr><th>月収 目安（残業代込み）</th><td id="simple-r-monthly">-</td></tr>
-          <tr><th>うち本省手当</th><td id="simple-r-honsho">-</td></tr>
-          <tr><th>うち俸給の特別調整額</th><td id="simple-r-special-adjustment">-</td></tr>
-          <tr><th>うち残業代</th><td id="simple-r-overtime">-</td></tr>
-          <tr><th>賞与 目安（年2回合計）</th><td id="simple-r-bonus">-</td></tr>
-          <tr class="total-row grand-total"><th>年収 目安</th><td id="simple-r-annual">-</td></tr>
+          <tr><th>俸給月額</th><td id="simple-r-base">-</td><td class="result-diff" id="simple-r-base-diff" hidden></td></tr>
+          <tr><th>地域手当</th><td id="simple-r-regional">-</td><td class="result-diff" id="simple-r-regional-diff" hidden></td></tr>
+          <tr><th>扶養手当</th><td id="simple-r-dependent">-</td><td class="result-diff" id="simple-r-dependent-diff" hidden></td></tr>
+          <tr><th>本省手当</th><td id="simple-r-honsho">-</td><td class="result-diff" id="simple-r-honsho-diff" hidden></td></tr>
+          <tr><th>俸給の特別調整額</th><td id="simple-r-special-adjustment">-</td><td class="result-diff" id="simple-r-special-adjustment-diff" hidden></td></tr>
+          <tr class="total-row"><th>月額支給額 合計（残業代除く）</th><td id="simple-r-monthly-total">-</td><td class="result-diff" id="simple-r-monthly-total-diff" hidden></td></tr>
+          <tr><th>超過勤務手当</th><td id="simple-r-ot-allowance">-</td><td class="result-diff" id="simple-r-ot-allowance-diff" hidden></td></tr>
+          <tr class="total-row"><th>月額支給額 合計（残業代込み）</th><td id="simple-r-monthly-total-ot">-</td><td class="result-diff" id="simple-r-monthly-total-ot-diff" hidden></td></tr>
+          <tr><th>期末手当（6月期）</th><td id="simple-r-teishu-june">-</td><td class="result-diff" id="simple-r-teishu-june-diff" hidden></td></tr>
+          <tr><th>勤勉手当（6月期）</th><td id="simple-r-kinben-june">-</td><td class="result-diff" id="simple-r-kinben-june-diff" hidden></td></tr>
+          <tr><th>期末手当（12月期）</th><td id="simple-r-teishu-december">-</td><td class="result-diff" id="simple-r-teishu-december-diff" hidden></td></tr>
+          <tr><th>勤勉手当（12月期）</th><td id="simple-r-kinben-december">-</td><td class="result-diff" id="simple-r-kinben-december-diff" hidden></td></tr>
+          <tr><th>賞与（年間合計）</th><td id="simple-r-bonus-annual">-</td><td class="result-diff" id="simple-r-bonus-annual-diff" hidden></td></tr>
+          <tr class="total-row grand-total"><th>年収 目安</th><td id="simple-r-annual">-</td><td class="result-diff" id="simple-r-annual-diff" hidden></td></tr>
         </tbody>
       </table>
       <p class="hint">
@@ -532,25 +547,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="result-hero">
       <span class="result-hero-label">年収 概算</span>
       <span class="result-hero-value" id="r-annual-hero">-</span>
+      <span class="result-hero-diff" id="r-annual-hero-diff" hidden></span>
     </div>
     <h3 class="result-detail-heading">内訳</h3>
-    <table class="result-table">
+    <p class="hint result-diff-note" id="vintage-diff-note" hidden>右側の数値は現行（令和8年4月1日施行、人事院勧告前）との差額です。</p>
+    <table class="result-table" id="result-table">
       <tbody>
-        <tr><th>俸給月額</th><td id="r-base">-</td></tr>
-        <tr><th>地域手当</th><td id="r-regional">-</td></tr>
-        <tr><th>扶養手当</th><td id="r-dependent">-</td></tr>
-        <tr><th>住居手当</th><td id="r-housing">-</td></tr>
-        <tr><th>本省手当</th><td id="r-honsho">-</td></tr>
-        <tr><th>俸給の特別調整額</th><td id="r-special-adjustment">-</td></tr>
-        <tr class="total-row"><th>月額支給額 合計（残業代除く）</th><td id="r-monthly-total">-</td></tr>
-        <tr><th>超過勤務手当</th><td id="r-ot-allowance">-</td></tr>
-        <tr class="total-row"><th>月額支給額 合計（残業代込み）</th><td id="r-monthly-total-ot">-</td></tr>
-        <tr><th>期末手当（6月期）</th><td id="r-teishu-june">-</td></tr>
-        <tr><th>勤勉手当（6月期）</th><td id="r-kinben-june">-</td></tr>
-        <tr><th>期末手当（12月期）</th><td id="r-teishu-december">-</td></tr>
-        <tr><th>勤勉手当（12月期）</th><td id="r-kinben-december">-</td></tr>
-        <tr><th>賞与（年間合計）</th><td id="r-bonus-annual">-</td></tr>
-        <tr class="total-row grand-total"><th>年収 概算</th><td id="r-annual">-</td></tr>
+        <tr><th>俸給月額</th><td id="r-base">-</td><td class="result-diff" id="r-base-diff" hidden></td></tr>
+        <tr><th>地域手当</th><td id="r-regional">-</td><td class="result-diff" id="r-regional-diff" hidden></td></tr>
+        <tr><th>扶養手当</th><td id="r-dependent">-</td><td class="result-diff" id="r-dependent-diff" hidden></td></tr>
+        <tr><th>住居手当</th><td id="r-housing">-</td><td class="result-diff" id="r-housing-diff" hidden></td></tr>
+        <tr><th>本省手当</th><td id="r-honsho">-</td><td class="result-diff" id="r-honsho-diff" hidden></td></tr>
+        <tr><th>俸給の特別調整額</th><td id="r-special-adjustment">-</td><td class="result-diff" id="r-special-adjustment-diff" hidden></td></tr>
+        <tr class="total-row"><th>月額支給額 合計（残業代除く）</th><td id="r-monthly-total">-</td><td class="result-diff" id="r-monthly-total-diff" hidden></td></tr>
+        <tr><th>超過勤務手当</th><td id="r-ot-allowance">-</td><td class="result-diff" id="r-ot-allowance-diff" hidden></td></tr>
+        <tr class="total-row"><th>月額支給額 合計（残業代込み）</th><td id="r-monthly-total-ot">-</td><td class="result-diff" id="r-monthly-total-ot-diff" hidden></td></tr>
+        <tr><th>期末手当（6月期）</th><td id="r-teishu-june">-</td><td class="result-diff" id="r-teishu-june-diff" hidden></td></tr>
+        <tr><th>勤勉手当（6月期）</th><td id="r-kinben-june">-</td><td class="result-diff" id="r-kinben-june-diff" hidden></td></tr>
+        <tr><th>期末手当（12月期）</th><td id="r-teishu-december">-</td><td class="result-diff" id="r-teishu-december-diff" hidden></td></tr>
+        <tr><th>勤勉手当（12月期）</th><td id="r-kinben-december">-</td><td class="result-diff" id="r-kinben-december-diff" hidden></td></tr>
+        <tr><th>賞与（年間合計）</th><td id="r-bonus-annual">-</td><td class="result-diff" id="r-bonus-annual-diff" hidden></td></tr>
+        <tr class="total-row grand-total"><th>年収 概算</th><td id="r-annual">-</td><td class="result-diff" id="r-annual-diff" hidden></td></tr>
       </tbody>
     </table>
     <p class="hint" id="ot-warning" hidden>※ 入力された時間外勤務時間（休日を除く）が月60時間を超えています。超過分は割増率150%／深夜175%で計算しています。</p>
@@ -568,7 +585,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <footer class="site-footer">
   <h2 class="footer-heading">関連資料</h2>
   <ul class="link-list">
-    <li><a href="https://www.jinji.go.jp/seisaku/kankoku/archive/r7/r7_top.html" target="_blank" rel="noopener">令和7年人事院勧告</a> - 人事院</li>
+    <li><a href="https://www.jinji.go.jp/seisaku/kankoku/archive/r8/r8_top.html" target="_blank" rel="noopener">令和8年人事院勧告</a> - 人事院</li>
     <li><a href="https://www.jinji.go.jp/content/000013374.pdf" target="_blank" rel="noopener">国家公務員の諸手当の概要（PDF）</a> - 人事院</li>
     <li><a href="https://www.cas.go.jp/jp/gaiyou/jimu/jinjikyoku/pdf/r08_kyuyo.pdf" target="_blank" rel="noopener">国家公務員の給与（令和8年版）</a> - 内閣人事局</li>
   </ul>
@@ -578,12 +595,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <p class="footer-copyright">&copy; 2026 国家公務員給与計算機. 本サイトのコンテンツ・ソースコードの無断転載・複製を禁じます。</p>
 </footer>
 
-<script src="js/regional-allowance-locations.js"></script>
-<script src="js/promotion-step-mapping.js"></script>
-<script src="js/data.js"></script>
-<script src="js/calculator.js"></script>
-<script src="js/form-controls.js"></script>
-<script src="js/simple-mode.js"></script>
-<script src="js/app.js"></script>
+<script src="js/regional-allowance-locations.js?v=20260807-3"></script>
+<script src="js/promotion-step-mapping.js?v=20260807-3"></script>
+<script src="js/data.js?v=20260807-3"></script>
+<script src="js/calculator.js?v=20260807-3"></script>
+<script src="js/form-controls.js?v=20260807-3"></script>
+<script src="js/simple-mode.js?v=20260807-3"></script>
+<script src="js/app.js?v=20260807-3"></script>
 </body>
 </html>

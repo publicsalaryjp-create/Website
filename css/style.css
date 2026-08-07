@@ -22,6 +22,8 @@
   --color-warning-border: #edd48a;
   --color-warning-text: #6b4e05;
   --color-hero-bg: #0017c1;
+  --color-positive: #096b4c;
+  --color-negative: #b3261e;
   --font-hero: "Noto Sans", "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
 
   --shadow-xs: 0 1px 2px rgba(20, 30, 50, 0.05);
@@ -865,6 +867,23 @@ input:focus-visible {
   letter-spacing: -0.01em;
 }
 
+/* 俸給表バージョン比較（人事院勧告前後の差額）のバッジ・注記・テーブル列。
+   選択中バージョンが「現行」以外で、比較基準データも読み込めている場合のみ表示する
+   （js/data.jsのhasVintageComparison、js/form-controls.jsのrenderResultDiffs参照）。 */
+.result-hero-diff {
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-diff-note {
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+
 /* ---------------------------------------------------------------------- */
 /* スマホ版: 年収概算のフローティング表示                                 */
 /* position: stickyだけでは「ページ上部にいる間から」表示することはできない */
@@ -949,6 +968,21 @@ input:focus-visible {
   color: var(--color-text);
 }
 
+/* 俸給表バージョン比較の差額列。既定では非表示（各td自体にhidden属性）で、
+   人事院勧告反映後を選んでいるときだけ.show-diffが付いて表示される
+   （js/app.js・js/simple-mode.jsのrenderResult/renderSimpleResult参照）。 */
+.result-table td.result-diff {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-positive);
+  padding-left: 10px;
+  white-space: nowrap;
+}
+
+.result-table td.result-diff.is-negative {
+  color: var(--color-negative);
+}
+
 .result-table .total-row th,
 .result-table .total-row td {
   background: var(--color-total-bg);
@@ -959,7 +993,15 @@ input:focus-visible {
   border-radius: var(--radius-sm) 0 0 var(--radius-sm);
 }
 
-.result-table .total-row td {
+.result-table .total-row td:not(.result-diff) {
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.result-table.show-diff .total-row td:not(.result-diff) {
+  border-radius: 0;
+}
+
+.result-table.show-diff .total-row td.result-diff {
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
 }
 
@@ -968,6 +1010,14 @@ input:focus-visible {
   background: var(--color-accent-light);
   color: var(--color-accent);
   font-size: 1rem;
+}
+
+.result-table .grand-total td.result-diff {
+  color: var(--color-positive);
+}
+
+.result-table .grand-total td.result-diff.is-negative {
+  color: var(--color-negative);
 }
 
 /* ---------------------------------------------------------------------- */

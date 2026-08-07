@@ -110,7 +110,7 @@ function loadWebCalculator() {
   vm.createContext(context);
   vm.runInContext(readFileSync(path.join(root, "js/data.js"), "utf8"), context, { filename: "js/data.js" });
   vm.runInContext(readFileSync(path.join(root, "js/calculator.js"), "utf8"), context, { filename: "js/calculator.js" });
-  const catalog = JSON.parse(readFileSync(path.join(root, "data/salary-tables.json"), "utf8"));
+  const catalog = JSON.parse(readFileSync(path.join(root, "data/salary-tables-r8.json"), "utf8"));
   vm.runInContext(`SALARY_CATALOG = ${JSON.stringify(catalog)};`, context);
   context.teishuMonths = vm.runInContext("TEISHU_MONTHS", context);
   return context;

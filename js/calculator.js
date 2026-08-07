@@ -3,18 +3,28 @@
  * 入力値から各種給与項目を計算する純粋関数群。DOM には触れない。
  */
 
-function getStepAmounts(tableKey, grade) {
-  const table = getTable(tableKey);
+/** 任意の俸給表カタログ（SALARY_CATALOG形式のオブジェクト）から号俸配列を取得する。
+ * 俸給表バージョン間（現行／人事院勧告反映後）の金額比較に使う。 */
+function getStepAmountsFromCatalog(catalog, tableKey, grade) {
+  const table = catalog && catalog.tables && catalog.tables[tableKey];
   if (!table) return [];
   if (table.type === "flat") return table.steps || [];
   return (table.grades && table.grades[String(grade)]) || [];
 }
 
-function getSalaryAmount(tableKey, grade, step) {
-  const amounts = getStepAmounts(tableKey, grade);
+function getStepAmounts(tableKey, grade) {
+  return getStepAmountsFromCatalog(SALARY_CATALOG, tableKey, grade);
+}
+
+function getSalaryAmountFromCatalog(catalog, tableKey, grade, step) {
+  const amounts = getStepAmountsFromCatalog(catalog, tableKey, grade);
   if (!amounts.length) return 0;
   const index = Math.min(Math.max(step - 1, 0), amounts.length - 1);
   return amounts[index];
+}
+
+function getSalaryAmount(tableKey, grade, step) {
+  return getSalaryAmountFromCatalog(SALARY_CATALOG, tableKey, grade, step);
 }
 
 function getMaxStep(tableKey, grade) {
@@ -108,9 +118,12 @@ function calculateOvertimeAllowance(hourlyWage, hours) {
  * @param {number} input.weekdayNightHours 平日の時間外勤務時間のうち深夜（22時〜翌5時）
  * @param {number} input.holidayNormalHours 休日勤務時間（深夜を除く月間合計）
  * @param {number} input.holidayNightHours 休日勤務時間のうち深夜（22時〜翌5時）
+ * @param {Object} [catalog] 俸給月額の参照元となる俸給表カタログ（省略時はSALARY_CATALOG）。
+ *   俸給表バージョン間（現行／人事院勧告反映後）の差額を計算する際に、比較先のカタログを
+ *   明示的に渡すために使う。
  */
-function calculateSalary(input) {
-  const baseSalary = getSalaryAmount(input.tableKey, input.grade, input.step);
+function calculateSalary(input, catalog = SALARY_CATALOG) {
+  const baseSalary = getSalaryAmountFromCatalog(catalog, input.tableKey, input.grade, input.step);
 
   // 指定職職員は扶養手当・住居手当・俸給の特別調整額の支給対象外のため、
   // 入力値に関わらず0円とする。

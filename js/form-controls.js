@@ -8,11 +8,63 @@
  * honsho-eligible-yes, honsho-amount-hint, table-source-note,
  * r-base, r-regional, r-dependent, r-housing, r-honsho, r-monthly-total。
  * 期末・勤勉手当の入力は js/app.js 側で扱う。
- * activeMode()・createRegionalAllowanceController() はかんたんモード（js/simple-mode.js）
- * とも共有しており、detailed-mode-panel の存在も前提にする。
+ * activeMode()・createRegionalAllowanceController()・populateVintageOptions()・
+ * updateVintageNote() はかんたんモード（js/simple-mode.js）とも共有しており、
+ * detailed-mode-panel の存在も前提にする。
  */
 
 const yen = new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY" });
+const yenPlain = new Intl.NumberFormat("ja-JP");
+
+/**
+ * 俸給表バージョン比較（人事院勧告前後の差額）を1項目分表示する。
+ * 金額表示要素（id）の隣に置かれた差額表示要素（id + "-diff"）に「+9,500円」のように書き込む。
+ * 差額がない（比較していない、または金額が同じ）場合は差額欄を隠す。
+ *
+ * @param {string} id 金額を表示している要素のid（差額欄は `${id}-diff` を前提にする）
+ * @param {number|null} diff 差額（勧告後の金額 − 勧告前の金額）。比較しない場合はnull。
+ */
+function renderDiffValue(id, diff) {
+  const el = document.getElementById(`${id}-diff`);
+  if (!el) return;
+  if (!diff) {
+    el.hidden = true;
+    el.textContent = "";
+    el.classList.remove("is-negative");
+    return;
+  }
+  el.hidden = false;
+  el.textContent = `${diff > 0 ? "+" : "－"}${yen.format(Math.abs(diff))}`;
+  el.classList.toggle("is-negative", diff < 0);
+}
+
+/**
+ * 複数項目分の差額をまとめて表示する。
+ *
+ * @param {Object<string, string>} idToResultKey 金額表示要素のid → calculateSalary()結果のキー、の対応表
+ * @param {Object} result 現在表示中の俸給表バージョンでの計算結果
+ * @param {Object|null} baselineResult 比較基準（現行）バージョンでの計算結果。nullなら比較しない。
+ */
+function renderResultDiffs(idToResultKey, result, baselineResult) {
+  Object.entries(idToResultKey).forEach(([id, key]) => {
+    renderDiffValue(id, baselineResult ? result[key] - baselineResult[key] : null);
+  });
+}
+
+/**
+ * 「人事院勧告前との差額を表示しています」等の注記の表示有無と、結果テーブルの差額列
+ * （.result-diff）の表示有無をまとめて切り替える。
+ *
+ * @param {string} noteId 注記要素（<p>）のid
+ * @param {string} tableId 結果テーブル（<table class="result-table">）のid
+ * @param {boolean} hasComparison 比較を表示するかどうか（hasVintageComparison参照）
+ */
+function updateDiffNote(noteId, tableId, hasComparison) {
+  const note = document.getElementById(noteId);
+  if (note) note.hidden = !hasComparison;
+  const table = document.getElementById(tableId);
+  if (table) table.classList.toggle("show-diff", hasComparison);
+}
 
 /** 現在表示中のモード（"simple" または "detailed"）を返す。かんたんモード・本格計算モードの切替に使う。 */
 function activeMode() {
@@ -24,6 +76,45 @@ function activeMode() {
 function radioValue(name) {
   const checked = document.querySelector(`input[name="${name}"]:checked`);
   return checked ? checked.value : null;
+}
+
+/**
+ * 俸給表のバージョン（現行／人事院勧告後等）選択用のラジオボタン群（groupId、name=radioName）に
+ * 選択肢を生成する。俸給表バージョンはSALARY_CATALOG・CURRENT_VINTAGE_KEYというページ全体で
+ * 共有する1つのデータに対する切替のため、詳細モード・かんたんモードの両方に同じ選択肢を表示できるよう
+ * id指定だけで使い回せるようにしている（詳細は js/data.js の switchVintage() 参照）。
+ */
+function populateVintageOptions(groupId, radioName) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  group.innerHTML = "";
+  SALARY_VINTAGES.forEach((v) => {
+    const label = document.createElement("label");
+    label.className = "radio-option";
+    const input = document.createElement("input");
+    input.type = "radio";
+    input.name = radioName;
+    input.id = `${radioName}-${v.key}`;
+    input.value = v.key;
+    input.disabled = !v.available;
+    input.checked = v.key === CURRENT_VINTAGE_KEY;
+    label.append(input, document.createTextNode(v.label));
+    group.appendChild(label);
+  });
+}
+
+/** 選択中の俸給表バージョンの補足注記を、指定した要素（noteId）に表示する。 */
+function updateVintageNote(noteId) {
+  const note = document.getElementById(noteId);
+  if (!note) return;
+  const vintage = getVintage(CURRENT_VINTAGE_KEY);
+  if (vintage && !vintage.available) {
+    note.textContent = "このバージョンのデータはまだ登録されていません。現行の俸給表で計算しています。";
+  } else if (vintage && vintage.note) {
+    note.textContent = vintage.note;
+  } else {
+    note.textContent = "";
+  }
 }
 
 function currentTableKey() {
@@ -283,7 +374,7 @@ function updateParentAllowanceHint() {
   if (!hint) return;
   const grade = Number(document.getElementById("grade").value);
   const rate = getParentAllowanceRate(currentTableKey(), grade);
-  hint.textContent = `1人あたり${yen.format(rate)}`;
+  hint.textContent = `1人あたり${yenPlain.format(rate)}円`;
 }
 
 /**
@@ -489,15 +580,42 @@ function readCommonInput() {
   };
 }
 
-/** calculateSalary() の結果のうち共通で表示する項目（俸給〜月額支給額合計）を描画する */
-function renderCommonResult(result) {
-  document.getElementById("r-base").textContent = yen.format(result.baseSalary);
-  document.getElementById("r-regional").textContent = yen.format(result.regionalAllowance);
-  document.getElementById("r-dependent").textContent = yen.format(result.dependentAllowance);
-  document.getElementById("r-housing").textContent = yen.format(result.housingAllowance);
-  document.getElementById("r-honsho").textContent = yen.format(result.honshoAllowance);
-  document.getElementById("r-special-adjustment").textContent = yen.format(result.specialAdjustmentAllowance);
-  document.getElementById("r-monthly-total").textContent = yen.format(result.monthlyTotal);
+// calculateSalary() の結果の項目名 → id接尾辞（"r-"や"simple-r-"等のidプレフィックスの後に続く部分）。
+// 詳細モード・かんたんモードの両方で同じ内訳表示にできるよう、renderSalaryResult()で共通利用する。
+const SALARY_RESULT_ID_SUFFIXES = {
+  base: "baseSalary",
+  regional: "regionalAllowance",
+  dependent: "dependentAllowance",
+  housing: "housingAllowance",
+  honsho: "honshoAllowance",
+  "special-adjustment": "specialAdjustmentAllowance",
+  "monthly-total": "monthlyTotal",
+  "ot-allowance": "overtimeAllowance",
+  "monthly-total-ot": "monthlyTotalWithOvertime",
+  "teishu-june": "teishuJune",
+  "kinben-june": "kinbenJune",
+  "teishu-december": "teishuDecember",
+  "kinben-december": "kinbenDecember",
+  "bonus-annual": "bonusAnnual",
+  annual: "annualIncome",
+  "annual-hero": "annualIncome",
+};
+
+/**
+ * calculateSalary() の全項目（俸給〜年収）を、指定したidプレフィックス（詳細モードは"r-"、
+ * かんたんモードは"simple-r-"）を持つ一連の要素に描画する。両モードで同じ内訳表示にできるよう
+ * 共通化している。baselineResultを渡すと、各項目に「現行（勧告前）」との差額も併記する
+ * （人事院勧告反映後バージョンを選んでいる場合のみ。js/data.jsのhasVintageComparison参照）。
+ */
+function renderSalaryResult(idPrefix, result, baselineResult) {
+  const idToResultKey = {};
+  Object.entries(SALARY_RESULT_ID_SUFFIXES).forEach(([suffix, key]) => {
+    const id = `${idPrefix}${suffix}`;
+    const el = document.getElementById(id);
+    if (el) el.textContent = yen.format(result[key]);
+    idToResultKey[id] = key;
+  });
+  renderResultDiffs(idToResultKey, result, baselineResult);
 }
 
 /** 俸給表データが公式データか参考値かを画面上部に表示する */

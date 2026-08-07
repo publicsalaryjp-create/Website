@@ -1,8 +1,16 @@
-# data/salary-tables.json について
+# data/salary-tables-r8.json について
 
 このアプリが読み込む俸給表データ本体です。ユーザーから提供された公式の俸給表xlsx
 （行政職・公安職・教育職・医療職など19表を含む）から `scripts/extract-salary-tables.py`
-で抽出しました。
+で抽出しました。令和8年4月1日施行の俸給表（`data/vintages.json` の `current`）です。
+
+## data/salary-tables-r9.json について
+
+令和8年人事院勧告で公表された、令和9年4月1日から適用される俸給表です
+（`data/vintages.json` の `post_recommendation`）。シート構成が異なる別ファイルの
+xlsx（`行（一）`等の略記シート名、号俸ヘッダーの位置が異なる指定職・任期付職員シート）
+から同じ `scripts/extract-salary-tables.py` で抽出しています。19表の構成
+（俸給表の種類・級ごとの号俸数）は現行と同一で、金額のみ改定されています。
 
 読み込みには `fetch` を使うため、簡易HTTPサーバー経由（例: `python3 -m http.server`）で
 アクセスしている必要があります。`file://` で直接開いた場合は読み込みに失敗し、
@@ -41,15 +49,22 @@
 
 ## データを更新・再生成する
 
-同じシート構成（各職種のシートに「職務の級」ヘッダーと号俸ごとの俸給月額表がある形式）の
-公式xlsxを入手した場合は、以下で再生成できます。
+各職種のシートに「職務の級」ヘッダーと号俸ごとの俸給月額表がある形式の公式xlsxを
+入手した場合は、以下で再生成できます（シート名の表記ゆれ「行政職（一）」「行（一）」
+などは `GRADED_SHEETS` の候補リストで吸収します）。
 
 ```bash
-python3 scripts/extract-salary-tables.py path/to/official-salary-tables.xlsx
+python3 scripts/extract-salary-tables.py path/to/official-salary-tables.xlsx \
+  data/salary-tables-r8.json 2026-04-01 "出典の説明"
 ```
 
-シート名や列レイアウトが異なる場合は `scripts/extract-salary-tables.py` 内の
-`GRADED_SHEETS` 等を実際のファイルに合わせて修正してください。
+引数は xlsxパス・出力先・`effectiveDate`・`source` の順（出力先以降は省略可、
+省略時は `data/salary-tables-r8.json` に本日日付で書き込む）。新しいバージョン
+（施行日違い）を追加する場合は出力先を別ファイル名にし、`data/vintages.json` に
+`key`/`label`/`note`/`file`/`effectiveDate`/`available: true` のエントリを追加してください。
+
+シート名や列レイアウトが大きく異なる場合は `scripts/extract-salary-tables.py` 内の
+`GRADED_SHEETS` 等の定義を実際のファイルに合わせて修正してください。
 
 ## `allowance-rates.json` について
 
