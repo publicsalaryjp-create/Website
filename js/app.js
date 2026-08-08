@@ -3,6 +3,8 @@
  * index.html 固有のDOM配線。共通のフォーム制御・表示ロジックは js/form-controls.js を使う。
  */
 
+const BONUS_PERIODS = ["june", "december"];
+
 // 職員区分は「職員区分」ラジオボタン（一般職員／特定管理職員）で、俸給の特別調整額・
 // 期末勤勉手当の両方に共通して使用する。指定職俸給表を選んでいる場合はラジオボタンを
 // 表示せず、常に指定職職員の区分を適用する。
@@ -324,7 +326,7 @@ function syncDetailedFormAfterVintageChange() {
   updateVisibility();
   populateSpecialAdjustmentCategoryOptions();
   updateSpecialAdjustmentVisibility();
-  ["june", "december"].forEach((period) => {
+  BONUS_PERIODS.forEach((period) => {
     populateMeritGradeOptions(period);
   });
   updateSpecialAdjustmentAmountHint();
@@ -436,7 +438,7 @@ function initForm() {
   }
   populateSpecialAdjustmentCategoryOptions();
   updateSpecialAdjustmentVisibility(); // 復元した級・区分の組み合わせが無効なら一般職員に戻す
-  ["june", "december"].forEach((period) => {
+  BONUS_PERIODS.forEach((period) => {
     populateMeritGradeOptions(period);
   });
   updateVisibility();
@@ -464,7 +466,7 @@ function initForm() {
   updateSpecialAdjustmentAmountHint();
   updateMeritGradeNote("june"); // 復元した勤務成績区分の値を反映し直す
   updateMeritGradeNote("december");
-  ["june", "december"].forEach((period) => {
+  BONUS_PERIODS.forEach((period) => {
     updateMeritRateConstraints(period);
     normalizeMeritRateInput(period);
   });
@@ -492,15 +494,14 @@ function initForm() {
         e.target.name === "special-adjustment-type" ||
         wasManager !== isSpecialAdjustmentManager();
       if (categoryMayHaveChanged) {
-        ["june", "december"].forEach((period) => populateMeritGradeOptions(period));
+        BONUS_PERIODS.forEach(populateMeritGradeOptions);
       }
-      if (e.target.name === "merit-grade-june") {
-        updateMeritGradeNote("june");
-        updateMeritRateInput("june");
-      }
-      if (e.target.name === "merit-grade-december") {
-        updateMeritGradeNote("december");
-        updateMeritRateInput("december");
+      const meritPeriod = e.target.name?.startsWith("merit-grade-")
+        ? e.target.name.slice("merit-grade-".length)
+        : null;
+      if (BONUS_PERIODS.includes(meritPeriod)) {
+        updateMeritGradeNote(meritPeriod);
+        updateMeritRateInput(meritPeriod);
       }
       if (["salary-table", "grade", "step"].includes(e.target.id)) {
         updatePromotionControls();
@@ -508,7 +509,7 @@ function initForm() {
       // 号（指定職俸給表の8号など）が変わると「優秀」の成績率の固定/範囲が変わりうるため、
       // 入力欄の許容範囲と表示値を選択中の号に合わせて更新し直す。
       if (e.target.id === "step") {
-        ["june", "december"].forEach((period) => {
+        BONUS_PERIODS.forEach((period) => {
           updateMeritRateConstraints(period);
           normalizeMeritRateInput(period);
         });
@@ -518,7 +519,7 @@ function initForm() {
     onRecalculate: recalculate,
   });
 
-  ["june", "december"].forEach((period) => {
+  BONUS_PERIODS.forEach((period) => {
     document.getElementById(`merit-rate-${period}`).addEventListener("change", () => {
       normalizeMeritRateInput(period);
       recalculate();
