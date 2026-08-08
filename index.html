@@ -143,8 +143,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span class="result-hero-diff" id="simple-r-annual-hero-diff" hidden></span>
       </div>
       <h3 class="result-detail-heading">内訳</h3>
-      <p class="hint result-diff-note" id="simple-vintage-diff-note" hidden>右側の数値は現行（令和8年4月1日施行、人事院勧告前）との差額です。</p>
       <table class="result-table" id="simple-result-table">
+        <thead>
+          <tr class="result-diff-header-row" id="simple-result-table-diff-header" hidden>
+            <th></th>
+            <th id="simple-result-table-amount-header"></th>
+            <th>現行との差額</th>
+          </tr>
+        </thead>
         <tbody>
           <tr><th>俸給月額</th><td id="simple-r-base">-</td><td class="result-diff" id="simple-r-base-diff" hidden></td></tr>
           <tr><th>地域手当</th><td id="simple-r-regional">-</td><td class="result-diff" id="simple-r-regional-diff" hidden></td></tr>
@@ -327,7 +333,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </p>
       <div id="housing-fields">
         <div class="hint-toggle">
-          <p class="hint hint-short">借家・借間のみ対象。家賃16,000円超から支給され、最高28,000円です。</p>
+          <p class="hint hint-short">借家・借間のみ対象。家賃16,000円超から支給され、最大28,000円です。</p>
           <button type="button" class="hint-toggle-btn" data-target="detail-housing" aria-expanded="false" aria-controls="detail-housing" aria-label="詳しい説明を表示">？</button>
         </div>
         <p class="hint hint-detail" id="detail-housing" hidden>
@@ -550,8 +556,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span class="result-hero-diff" id="r-annual-hero-diff" hidden></span>
     </div>
     <h3 class="result-detail-heading">内訳</h3>
-    <p class="hint result-diff-note" id="vintage-diff-note" hidden>右側の数値は現行（令和8年4月1日施行、人事院勧告前）との差額です。</p>
     <table class="result-table" id="result-table">
+      <thead>
+        <tr class="result-diff-header-row" id="result-table-diff-header" hidden>
+          <th></th>
+          <th id="result-table-amount-header"></th>
+          <th>現行との差額</th>
+        </tr>
+      </thead>
       <tbody>
         <tr><th>俸給月額</th><td id="r-base">-</td><td class="result-diff" id="r-base-diff" hidden></td></tr>
         <tr><th>地域手当</th><td id="r-regional">-</td><td class="result-diff" id="r-regional-diff" hidden></td></tr>

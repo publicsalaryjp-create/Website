@@ -743,7 +743,7 @@ await checkNoConsoleErrors(
   await page.close();
 }
 
-// index.html: 「人事院勧告反映後」に切り替えると令和9年4月1日施行の俸給額が反映される
+// index.html: 「人事院勧告反映後」に切り替えると令和8年人事院勧告反映後の俸給額が反映される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
@@ -758,8 +758,8 @@ await checkNoConsoleErrors(
   const salaryAfter = await page.textContent("#r-base");
   const note = await page.textContent("#vintage-note");
   report(
-    "index.html: 人事院勧告反映後に切り替えると俸給月額が変わり、施行日の注記が表示される",
-    salaryBefore !== salaryAfter && note.includes("令和9年4月1日"),
+    "index.html: 人事院勧告反映後に切り替えると俸給月額が変わり、人事院勧告の注記が表示される",
+    salaryBefore !== salaryAfter && note.includes("令和8年人事院勧告"),
     `切替前=${salaryBefore} 切替後=${salaryAfter} note=${note}`
   );
   await page.close();
@@ -783,7 +783,7 @@ await checkNoConsoleErrors(
   const baseDiffText = await page.textContent("#r-base-diff");
   const annualDiffText = await page.textContent("#r-annual-diff");
   const heroDiffText = await page.textContent("#r-annual-hero-diff");
-  const noteVisible = await page.isVisible("#vintage-diff-note");
+  const noteVisible = await page.isVisible("#result-table-diff-header");
 
   await page.check("#salary-vintage-current");
   await page.waitForTimeout(300);

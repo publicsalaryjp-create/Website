@@ -879,9 +879,20 @@ input:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
-.result-diff-note {
-  margin-top: -8px;
-  margin-bottom: 12px;
+.result-diff-header-row th {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.result-diff-header-row th:nth-child(2) {
+  text-align: right;
+}
+
+.result-diff-header-row th:nth-child(3) {
+  text-align: right;
+  padding-left: 10px;
 }
 
 /* ---------------------------------------------------------------------- */

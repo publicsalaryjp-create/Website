@@ -1,5 +1,5 @@
 /* このサイトについて（about.html）専用のスタイル。
-   レイアウトの土台（.tool-header, .breadcrumb, .eyebrow, .section-heading）は
+   レイアウトの土台（.tool-header, .breadcrumb, .section-heading）は
    allowances.css / kinben-seisekiritsu/style.css と同じ考え方だが、このページは
    読み物のみで表・目次を持たないため、必要なクラスだけを独自に定義する。 */
 
@@ -72,24 +72,8 @@
   font-size: 0.9rem;
 }
 
-.section-heading p a {
-  color: var(--color-primary);
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
 .content-section {
   scroll-margin-top: 16px;
-}
-
-.content-section .eyebrow {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--color-primary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
 }
 
 .content-section h2 {
@@ -122,6 +106,52 @@
 }
 
 .content-section li:last-child {
+  margin-bottom: 0;
+}
+
+.feature-list {
+  list-style: none;
+  margin: 0;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feature-list li {
+  margin-bottom: 0;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+}
+
+.content-section .feature-list .feature-title {
+  margin: 0 0 5px;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+}
+
+.content-section .feature-list .feature-desc {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+
+.notes-list {
+  list-style: disc;
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 0.78rem;
+  color: var(--color-muted);
+  line-height: 1.55;
+}
+
+.notes-list li {
+  margin-bottom: 5px;
+}
+
+.notes-list li:last-child {
   margin-bottom: 0;
 }
 

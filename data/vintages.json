@@ -12,7 +12,7 @@
     {
       "key": "post_recommendation",
       "label": "人事院勧告反映後",
-      "note": "令和9年4月1日施行（令和8年人事院勧告）",
+      "note": "令和8年人事院勧告",
       "file": "salary-tables-r9.json",
       "effectiveDate": "2027-04-01",
       "available": true

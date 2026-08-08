@@ -10,7 +10,8 @@
  * simple-regional-municipality, simple-regional-rate, simple-regional-rate-status, simple-dependent-count,
  * simple-dependent-field, simple-dependent-exempt-note, simple-overtime-hours,
  * simple-ot-hours-field, simple-ot-management-note, simple-reset-saved-input, simple-go-detailed,
- * simple-vintage-diff-note。結果の描画先id（simple-r-base〜simple-r-annual-hero）は
+ * simple-result-table-diff-header, simple-result-table-amount-header。結果の描画先id
+ * （simple-r-base〜simple-r-annual-hero）は
  * js/form-controls.jsのrenderSalaryResult()・SALARY_RESULT_ID_SUFFIXESが前提にする
  * 詳細モードと共通の命名規則（"simple-r-"+項目名）に従う。
  * 俸給表バージョン（CURRENT_VINTAGE_KEY）はページ全体で共有するデータのため、
@@ -193,7 +194,12 @@ function readSimpleInput() {
  */
 function renderSimpleResult(result, baselineResult) {
   renderSalaryResult("simple-r-", result, baselineResult);
-  updateDiffNote("simple-vintage-diff-note", "simple-result-table", !!baselineResult);
+  updateDiffHeader(
+    "simple-result-table-diff-header",
+    "simple-result-table-amount-header",
+    "simple-result-table",
+    !!baselineResult
+  );
   syncFloatingResult();
 }
 

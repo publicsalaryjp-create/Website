@@ -52,16 +52,23 @@ function renderResultDiffs(idToResultKey, result, baselineResult) {
 }
 
 /**
- * 「人事院勧告前との差額を表示しています」等の注記の表示有無と、結果テーブルの差額列
- * （.result-diff）の表示有無をまとめて切り替える。
+ * 結果テーブルの差額列見出し行（.result-diff-header-row）の表示有無と、金額列の見出し
+ * （選択中バージョンのlabel、例:「人事院勧告反映後」）、差額列（.result-diff）の表示有無を
+ * まとめて切り替える。
  *
- * @param {string} noteId 注記要素（<p>）のid
+ * @param {string} headerRowId 見出し行（<tr class="result-diff-header-row">）のid
+ * @param {string} amountHeaderId 金額列の見出し（<th>）のid
  * @param {string} tableId 結果テーブル（<table class="result-table">）のid
  * @param {boolean} hasComparison 比較を表示するかどうか（hasVintageComparison参照）
  */
-function updateDiffNote(noteId, tableId, hasComparison) {
-  const note = document.getElementById(noteId);
-  if (note) note.hidden = !hasComparison;
+function updateDiffHeader(headerRowId, amountHeaderId, tableId, hasComparison) {
+  const headerRow = document.getElementById(headerRowId);
+  if (headerRow) headerRow.hidden = !hasComparison;
+  if (hasComparison) {
+    const amountHeader = document.getElementById(amountHeaderId);
+    const vintage = getVintage(CURRENT_VINTAGE_KEY);
+    if (amountHeader) amountHeader.textContent = vintage ? vintage.label : "";
+  }
   const table = document.getElementById(tableId);
   if (table) table.classList.toggle("show-diff", hasComparison);
 }
@@ -359,12 +366,12 @@ function updateHonshoAmountHint() {
   const grade = Number(document.getElementById("grade").value);
   const amount = getHonshoAllowanceAmountForTable(tableKey, grade);
   if (!isGraded) {
-    hint.textContent = `指定職の参考額: ${yen.format(amount)}`;
+    hint.textContent = `指定職: ${yenPlain.format(amount)}円`;
   } else if (amount > 0) {
     const gradeLabel = grade >= 7 ? `${grade}級（7級以上）` : `${grade}級`;
-    hint.textContent = `${gradeLabel}の参考額: ${yen.format(amount)}`;
+    hint.textContent = `${gradeLabel}: ${yenPlain.format(amount)}円`;
   } else {
-    hint.textContent = `職務の級が取得できないため自動計算できません（${yen.format(0)}として扱われます）。`;
+    hint.textContent = `職務の級が取得できないため自動計算できません（${yenPlain.format(0)}円として扱われます）。`;
   }
 }
 

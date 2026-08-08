@@ -102,7 +102,7 @@ function renderResult(result, baselineResult) {
   renderTerminalAllowanceRateNote();
   renderSalaryResult("r-", result, baselineResult);
   renderOvertimeRateHints(result.overtimeHourlyWage);
-  updateDiffNote("vintage-diff-note", "result-table", !!baselineResult);
+  updateDiffHeader("result-table-diff-header", "result-table-amount-header", "result-table", !!baselineResult);
   syncFloatingResult();
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
 }
