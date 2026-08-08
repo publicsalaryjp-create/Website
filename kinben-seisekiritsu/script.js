@@ -13,7 +13,6 @@
   const meritInput = document.getElementById("merit-amount");
   const emptyResult = document.getElementById("empty-result");
   const calculatedResult = document.getElementById("calculated-result");
-  const periodRateInput = document.getElementById("period-rate");
   const dependentBaseInput = document.getElementById("dependent-base-addition");
   const regionalPrefectureInput = document.getElementById("regional-prefecture");
   const regionalMunicipalityInput = document.getElementById("regional-municipality");
@@ -166,17 +165,14 @@
     const meritAmount = parseAmount(meritInput.value);
     const dependentAllowance = parseAmount(dependentBaseInput.value);
     const regionalRate = Number(regionalRateInput.value);
-    const periodRatePercent = Number(periodRateInput.value);
     const termValid = Number.isFinite(termAmount) && termAmount > 0;
     const meritValid = Number.isFinite(meritAmount) && meritAmount >= 0;
     const dependentBaseValid = Number.isFinite(dependentAllowance) && dependentAllowance >= 0;
-    const periodRateValid = Number.isFinite(periodRatePercent) && periodRatePercent > 0 && periodRatePercent <= 100;
 
     showError(termInput, termValid ? "" : "1円以上の期末手当を入力してください。" );
     showError(meritInput, meritValid ? "" : "0円以上の勤勉手当を入力してください。" );
     showError(dependentBaseInput, dependentBaseValid ? "" : "0円以上の加算額を入力してください。" );
-    showError(periodRateInput, periodRateValid ? "" : "0%を超え100%以下で入力してください。" );
-    if (!termValid || !meritValid || !dependentBaseValid || !periodRateValid) return;
+    if (!termValid || !meritValid || !dependentBaseValid) return;
 
     formatInput(termInput);
     formatInput(meritInput);
@@ -186,7 +182,6 @@
       ? "designated"
       : form.elements["staff-type"].value;
     const termMonths = TERM_MONTHS[staffType];
-    const periodRate = periodRatePercent / 100;
     const estimatedTermBase = termAmount / termMonths;
     const dependentRegionalAllowance = Math.floor(dependentAllowance * regionalRate);
     const dependentBaseAddition = dependentAllowance + dependentRegionalAllowance;
@@ -195,13 +190,13 @@
       showError(dependentBaseInput, "期末手当から推定される算定基礎額より小さい金額を入力してください。" );
       return;
     }
-    const meritRate = (meritAmount / (estimatedMeritBase * periodRate)) * 100;
+    const meritRate = (meritAmount / estimatedMeritBase) * 100;
 
     document.getElementById("result-rate").textContent = meritRate.toFixed(2);
     document.getElementById("result-category").textContent = classifyMeritRate(meritRate, staffType);
     document.getElementById("result-base").textContent = `${Math.round(estimatedMeritBase).toLocaleString("ja-JP")}円`;
     document.getElementById("result-formula").textContent =
-      `${meritAmount.toLocaleString("ja-JP")}円 ÷ {(${termAmount.toLocaleString("ja-JP")}円 ÷ ${termMonths}月 − ${dependentAllowance.toLocaleString("ja-JP")}円 − ${dependentRegionalAllowance.toLocaleString("ja-JP")}円) × ${periodRatePercent}%}`;
+      `${meritAmount.toLocaleString("ja-JP")}円 ÷ (${termAmount.toLocaleString("ja-JP")}円 ÷ ${termMonths}月 − ${dependentAllowance.toLocaleString("ja-JP")}円 − ${dependentRegionalAllowance.toLocaleString("ja-JP")}円)`;
     emptyResult.hidden = true;
     calculatedResult.hidden = false;
     saveFormState();
@@ -233,12 +228,6 @@
       resetResult();
     });
   });
-  periodRateInput.addEventListener("input", () => {
-    showError(periodRateInput, "");
-    resetResult();
-  });
-  periodRateInput.addEventListener("change", resetResult);
-
   regionalPrefectureInput.addEventListener("change", () => {
     populateMunicipalities();
     updateRegionalRateStatus();

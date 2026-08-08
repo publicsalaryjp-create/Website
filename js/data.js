@@ -126,19 +126,28 @@ async function loadOfficialSalaryTable(file) {
 /**
  * 俸給表バージョンを切り替える。指定バージョンにデータファイルが登録されていない
  * (available: false または file: null) 場合は切り替えず false を返す。
+ * 俸給表データ（vintage.file）と手当率データ（vintage.allowanceFile）の両方を
+ * 読み込めた場合のみ切り替える（期末手当の支給月数はバージョンごとに異なりうるため）。
  */
 async function switchVintage(vintageKey) {
   const vintage = getVintage(vintageKey);
   if (!vintage || !vintage.available || !vintage.file) return false;
-  const ok = await loadOfficialSalaryTable(vintage.file);
-  if (ok) CURRENT_VINTAGE_KEY = vintageKey;
-  return ok;
+  const okSalary = await loadOfficialSalaryTable(vintage.file);
+  if (!okSalary) return false;
+  try {
+    await loadAllowanceRates(vintage.allowanceFile);
+  } catch (e) {
+    return false;
+  }
+  CURRENT_VINTAGE_KEY = vintageKey;
+  return true;
 }
 
-// 「現行」（令和8年4月1日施行）の俸給表カタログを、選択中のバージョンとは独立に保持する。
-// 人事院勧告反映後（またはそれ以外の非現行バージョン）を選んだ際に、「勧告前からいくら
-// 増えたか」を計算結果に併記するための比較基準として使う。
+// 「現行」（令和8年4月1日施行）の俸給表カタログ・手当率データを、選択中のバージョンとは
+// 独立に保持する。人事院勧告反映後（またはそれ以外の非現行バージョン）を選んだ際に、
+// 「勧告前からいくら増えたか」を計算結果に併記するための比較基準として使う。
 let BASELINE_SALARY_CATALOG = null;
+let BASELINE_ALLOWANCE_RATES = null;
 
 /** 「現行」バージョンの俸給表データを読み込み、BASELINE_SALARY_CATALOGにキャッシュする。 */
 async function loadBaselineSalaryTable() {
@@ -150,6 +159,22 @@ async function loadBaselineSalaryTable() {
     const json = await res.json();
     if (!json || typeof json.tables !== "object") return false;
     BASELINE_SALARY_CATALOG = json;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/** 「現行」バージョンの手当率データを読み込み、BASELINE_ALLOWANCE_RATESにキャッシュする。 */
+async function loadBaselineAllowanceRates() {
+  const baseline = getVintage("current");
+  if (!baseline) return false;
+  try {
+    const res = await fetch(`data/${baseline.allowanceFile || "allowance-rates-r8.json"}`, { cache: "no-store" });
+    if (!res.ok) return false;
+    const json = await res.json();
+    if (!json || typeof json.terminalAllowance !== "object") return false;
+    BASELINE_ALLOWANCE_RATES = json;
     return true;
   } catch (e) {
     return false;
@@ -394,17 +419,20 @@ const OVERTIME_RATES = {
 
 const OVERTIME_MONTHLY_THRESHOLD_HOURS = 60; // これを超えた時間外勤務（休日勤務を除く）から割増率が上がる
 
-// 期末手当の支給月数。実データは data/allowance-rates.json から読み込む。
+// 期末手当の支給月数。実データは data/allowance-rates-r8.json（またはバージョンごとのファイル）
+// から読み込む。俸給表と同様、バージョン（現行／人事院勧告反映後）ごとに支給月数が異なりうる
+// ため、選択中バージョンのファイルは data/vintages.json の allowanceFile を参照する。
 let ALLOWANCE_RATES = null;
 
-async function loadAllowanceRates() {
-  const res = await fetch("data/allowance-rates.json", { cache: "no-store" });
+/** @param {string} [file] 読み込むファイル名（省略時は "allowance-rates-r8.json"） */
+async function loadAllowanceRates(file) {
+  const res = await fetch(`data/${file || "allowance-rates-r8.json"}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`手当率データを読み込めませんでした（HTTP ${res.status}）`);
   const json = await res.json();
   const terminal = json && json.terminalAllowance;
   const roleStageRates = json && json.bonusRoleStageAdditionRates;
   const staffTypes = ["general", "senior_manager", "designated"];
-  const periods = ["2026-06", "2026-12"];
+  const periods = ["june", "december"];
   if (!terminal || !roleStageRates || !Number.isFinite(roleStageRates.designated) ||
     !roleStageRates.administrative_1 || staffTypes.some((type) =>
     !terminal[type] || periods.some((period) => !Number.isFinite(terminal[type][period]))
@@ -425,8 +453,10 @@ function getBonusRoleStageAdditionRate(tableKey, grade) {
 // 7. 勤勉手当の成績率（令和8年度、人事院公表資料に基づく）
 // ---------------------------------------------------------------------------
 
-// 出典: 人事院「国家公務員の諸手当の概要」（令和8年度）成績率表。
-// 6月期・12月期で率は同一。階級幅がある区分（特に優秀・優秀）は下限値を採用している。
+// 出典: 人事院「国家公務員の諸手当の概要」（令和8年度）成績率表。この表自体は6月期・12月期で
+// 率が同一（現行バージョンではどちらの支給期にもそのまま使う）。俸給表バージョン
+// 「人事院勧告反映後」を選んでいる場合の12月期は、下のMERIT_RATE_CATEGORIES_POST_RECOMMENDATION_
+// DECEMBERを使う（getMeritCategory参照）。階級幅がある区分（特に優秀・優秀）は下限値を採用している。
 // rate: null の区分（指定職の「特に優秀」）は該当なしのため選択肢から除外する。
 const MERIT_RATE_CATEGORIES = {
   general: {
@@ -460,3 +490,115 @@ const MERIT_RATE_CATEGORIES = {
 
 // 指定職俸給表8号（事務次官等）は「優秀」の成績率が固定値107.5/100となる特例。
 const DESIGNATED_STEP8_EXCELLENT_RATE = 1.075;
+
+// 上記MERIT_RATE_CATEGORIESの各区分のrate/maxRateに一律+0.025したもの（区分の下限が
+// 0（良好でない）の区分はminRateを0のまま据え置く。良好でない区分の実質的な下限は
+// 制度上0のため、この0自体は「率」ではなく「範囲の下限」を表す）。
+// ユーザー提供の情報により、俸給表バージョン「人事院勧告反映後」を選んでいる場合、
+// 12月期の勤勉手当の成績率は全区分で+0.025（6月期・期間率は据え置き）。
+const MERIT_RATE_CATEGORIES_POST_RECOMMENDATION_DECEMBER = {
+  general: {
+    label: "一般職員",
+    grades: [
+      { key: "excellent_plus", label: "特に優秀（127.75/100以上321.25/100以下）", rate: 1.2775, minRate: 1.2775, maxRate: 3.2125 },
+      { key: "excellent", label: "優秀（116.25/100以上127.75/100未満）", rate: 1.1625, minRate: 1.1625, maxRate: 1.2774 },
+      { key: "good", label: "良好（104.75/100）", rate: 1.0475, minRate: 1.0475, maxRate: 1.0475 },
+      { key: "not_good", label: "良好でない（96.25/100以下）", rate: 0.9625, minRate: 0, maxRate: 0.9625 },
+    ],
+  },
+  senior_manager: {
+    label: "特定管理職員（本府省課長等）",
+    grades: [
+      { key: "excellent_plus", label: "特に優秀（151.75/100以上381.25/100以下）", rate: 1.5175, minRate: 1.5175, maxRate: 3.8125 },
+      { key: "excellent", label: "優秀（137.25/100以上151.75/100未満）", rate: 1.3725, minRate: 1.3725, maxRate: 1.5174 },
+      { key: "good", label: "良好（124.75/100）", rate: 1.2475, minRate: 1.2475, maxRate: 1.2475 },
+      { key: "not_good", label: "良好でない（115.25/100以下）", rate: 1.1525, minRate: 0, maxRate: 1.1525 },
+    ],
+  },
+  designated: {
+    label: "指定職職員",
+    grades: [
+      { key: "excellent_plus", label: "特に優秀（該当なし）", rate: null },
+      { key: "excellent", label: "優秀（117.5/100以上217.5/100以下。8号は110/100固定）", rate: 1.175, minRate: 1.175, maxRate: 2.175 },
+      { key: "good", label: "良好（104/100）", rate: 1.04, minRate: 1.04, maxRate: 1.04 },
+      { key: "not_good", label: "良好でない（95.5/100以下）", rate: 0.955, minRate: 0, maxRate: 0.955 },
+    ],
+  },
+};
+
+const DESIGNATED_STEP8_EXCELLENT_RATE_POST_RECOMMENDATION_DECEMBER = 1.1;
+
+// ユーザー提供の情報により、俸給表バージョン「人事院勧告反映後（令和9年度）」を選んでいる場合、
+// 6月期・12月期とも勤勉手当の成績率は全区分で+0.0125（上のMERIT_RATE_CATEGORIESの各区分の
+// rate/minRate（0の区分を除く）/maxRateに一律+0.0125したもの）。
+const MERIT_RATE_CATEGORIES_REIWA9_NENDO = {
+  general: {
+    label: "一般職員",
+    grades: [
+      { key: "excellent_plus", label: "特に優秀（126.5/100以上320/100以下）", rate: 1.265, minRate: 1.265, maxRate: 3.2 },
+      { key: "excellent", label: "優秀（115/100以上126.5/100未満）", rate: 1.15, minRate: 1.15, maxRate: 1.2649 },
+      { key: "good", label: "良好（103.5/100）", rate: 1.035, minRate: 1.035, maxRate: 1.035 },
+      { key: "not_good", label: "良好でない（95/100以下）", rate: 0.95, minRate: 0, maxRate: 0.95 },
+    ],
+  },
+  senior_manager: {
+    label: "特定管理職員（本府省課長等）",
+    grades: [
+      { key: "excellent_plus", label: "特に優秀（150.5/100以上380/100以下）", rate: 1.505, minRate: 1.505, maxRate: 3.8 },
+      { key: "excellent", label: "優秀（136/100以上150.5/100未満）", rate: 1.36, minRate: 1.36, maxRate: 1.5049 },
+      { key: "good", label: "良好（123.5/100）", rate: 1.235, minRate: 1.235, maxRate: 1.235 },
+      { key: "not_good", label: "良好でない（114/100以下）", rate: 1.14, minRate: 0, maxRate: 1.14 },
+    ],
+  },
+  designated: {
+    label: "指定職職員",
+    grades: [
+      { key: "excellent_plus", label: "特に優秀（該当なし）", rate: null },
+      { key: "excellent", label: "優秀（116.25/100以上216.25/100以下。8号は108.75/100固定）", rate: 1.1625, minRate: 1.1625, maxRate: 2.1625 },
+      { key: "good", label: "良好（102.75/100）", rate: 1.0275, minRate: 1.0275, maxRate: 1.0275 },
+      { key: "not_good", label: "良好でない（94.25/100以下）", rate: 0.9425, minRate: 0, maxRate: 0.9425 },
+    ],
+  },
+};
+
+const DESIGNATED_STEP8_EXCELLENT_RATE_REIWA9_NENDO = 1.0875;
+
+// 俸給表バージョン・支給期ごとの勤勉手当成績率テーブルの上書き。キー（vintage）・支給期の
+// 組み合わせが無い場合は基本のMERIT_RATE_CATEGORIES/DESIGNATED_STEP8_EXCELLENT_RATEを使う
+// （getMeritCategory・getDesignatedStep8ExcellentRate参照）。
+const MERIT_RATE_CATEGORY_OVERRIDES_BY_VINTAGE = {
+  post_recommendation: { december: MERIT_RATE_CATEGORIES_POST_RECOMMENDATION_DECEMBER },
+  reiwa9_nendo: { june: MERIT_RATE_CATEGORIES_REIWA9_NENDO, december: MERIT_RATE_CATEGORIES_REIWA9_NENDO },
+};
+const DESIGNATED_STEP8_EXCELLENT_RATE_OVERRIDES_BY_VINTAGE = {
+  post_recommendation: { december: DESIGNATED_STEP8_EXCELLENT_RATE_POST_RECOMMENDATION_DECEMBER },
+  reiwa9_nendo: { june: DESIGNATED_STEP8_EXCELLENT_RATE_REIWA9_NENDO, december: DESIGNATED_STEP8_EXCELLENT_RATE_REIWA9_NENDO },
+};
+
+// 「現行との差額」表示の再計算（baselineResultの成績率を求める）に使う、俸給表バージョン・
+// 支給期ごとの勤勉手当成績率の一律シフト幅（現行からの差分）。上記の各テーブルと対応させること。
+// js/app.js・js/simple-mode.jsから参照する。
+const MERIT_RATE_SHIFT_BY_VINTAGE = {
+  post_recommendation: { june: 0, december: 0.025 },
+  reiwa9_nendo: { june: 0.0125, december: 0.0125 },
+};
+
+/** 選択中の俸給表バージョン・支給期における勤勉手当成績率の、現行からのシフト幅を返す。 */
+function getMeritRateShift(period) {
+  const shifts = MERIT_RATE_SHIFT_BY_VINTAGE[CURRENT_VINTAGE_KEY];
+  return (shifts && shifts[period]) || 0;
+}
+
+/** 職員区分・支給期に応じた勤勉手当の成績率区分（MERIT_RATE_CATEGORIES相当）を返す。 */
+function getMeritCategory(staffType, period) {
+  const overrides = MERIT_RATE_CATEGORY_OVERRIDES_BY_VINTAGE[CURRENT_VINTAGE_KEY];
+  const override = overrides && overrides[period];
+  return (override || MERIT_RATE_CATEGORIES)[staffType];
+}
+
+/** 指定職俸給表8号（事務次官等）の「優秀」固定成績率を、支給期に応じて返す。 */
+function getDesignatedStep8ExcellentRate(period) {
+  const overrides = DESIGNATED_STEP8_EXCELLENT_RATE_OVERRIDES_BY_VINTAGE[CURRENT_VINTAGE_KEY];
+  const override = overrides && overrides[period];
+  return override != null ? override : DESIGNATED_STEP8_EXCELLENT_RATE;
+}

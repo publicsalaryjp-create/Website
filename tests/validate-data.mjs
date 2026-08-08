@@ -33,6 +33,7 @@ test("vintages.json: 構造が正しい", () => {
     assert.ok(v.key && v.label, "各バージョンに key と label が必要");
     if (v.available) {
       assert.ok(v.file, `${v.key}: available:true のバージョンは file が必要`);
+      assert.ok(v.allowanceFile, `${v.key}: available:true のバージョンは allowanceFile が必要`);
     }
   }
 });
@@ -91,31 +92,37 @@ for (const v of vintages.vintages) {
   });
 }
 
-const allowanceRates = JSON.parse(readFileSync(path.join(root, "data/allowance-rates.json"), "utf8"));
-
-test("allowance-rates.json: 期末手当の支給月数が正しい", () => {
-  const terminal = allowanceRates.terminalAllowance;
-  assert.ok(allowanceRates.source, "出典が必要");
-  assert.ok(Number.isInteger(allowanceRates.fiscalYear), "年度が必要");
-  assert.equal("annualMonths" in terminal, false, "年間支給月数は保持しない");
-  for (const staffType of ["general", "senior_manager", "designated"]) {
-    assert.ok(terminal[staffType], `${staffType} の定義が必要`);
-    for (const period of ["2026-06", "2026-12"]) {
-      assert.ok(
-        Number.isFinite(terminal[staffType][period]) && terminal[staffType][period] >= 0,
-        `${staffType}.${period} は0以上の数値である必要がある`
-      );
+function validateAllowanceRatesFile(fileLabel, allowanceRates) {
+  test(`${fileLabel}: 期末手当の支給月数が正しい`, () => {
+    const terminal = allowanceRates.terminalAllowance;
+    assert.ok(allowanceRates.source, "出典が必要");
+    assert.ok(Number.isInteger(allowanceRates.fiscalYear), "年度が必要");
+    assert.equal("annualMonths" in terminal, false, "年間支給月数は保持しない");
+    for (const staffType of ["general", "senior_manager", "designated"]) {
+      assert.ok(terminal[staffType], `${staffType} の定義が必要`);
+      for (const period of ["june", "december"]) {
+        assert.ok(
+          Number.isFinite(terminal[staffType][period]) && terminal[staffType][period] >= 0,
+          `${staffType}.${period} は0以上の数値である必要がある`
+        );
+      }
     }
-  }
-});
-
-test("allowance-rates.json: 期末手当の役職段階別加算割合が正しい", () => {
-  const rates = allowanceRates.bonusRoleStageAdditionRates;
-  assert.equal(rates.designated, 0.2);
-  assert.deepEqual(rates.administrative_1, {
-    3: 0.05, 4: 0.1, 5: 0.1, 6: 0.15, 7: 0.15, 8: 0.2, 9: 0.2, 10: 0.2,
   });
-});
+
+  test(`${fileLabel}: 期末手当の役職段階別加算割合が正しい`, () => {
+    const rates = allowanceRates.bonusRoleStageAdditionRates;
+    assert.equal(rates.designated, 0.2);
+    assert.deepEqual(rates.administrative_1, {
+      3: 0.05, 4: 0.1, 5: 0.1, 6: 0.15, 7: 0.15, 8: 0.2, 9: 0.2, 10: 0.2,
+    });
+  });
+}
+
+for (const v of vintages.vintages) {
+  if (!v.available || !v.allowanceFile) continue;
+  const allowanceRates = JSON.parse(readFileSync(path.join(root, "data", v.allowanceFile), "utf8"));
+  validateAllowanceRatesFile(v.allowanceFile, allowanceRates);
+}
 
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed > 0) {

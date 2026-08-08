@@ -68,6 +68,10 @@
   font-size: 0.88rem;
 }
 
+.tool-intro p + p {
+  margin-top: 10px;
+}
+
 .form-category-heading {
   display: flex;
   align-items: center;

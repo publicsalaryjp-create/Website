@@ -27,7 +27,7 @@ vm.runInContext(
 vm.runInContext(readFileSync(path.join(root, "js/data.js"), "utf8"), context, { filename: "js/data.js" });
 vm.runInContext(readFileSync(path.join(root, "js/calculator.js"), "utf8"), context, { filename: "js/calculator.js" });
 
-const allowanceRates = JSON.parse(readFileSync(path.join(root, "data/allowance-rates.json"), "utf8"));
+const allowanceRates = JSON.parse(readFileSync(path.join(root, "data/allowance-rates-r8.json"), "utf8"));
 vm.runInContext(`ALLOWANCE_RATES = ${JSON.stringify(allowanceRates)};`, context);
 
 // テスト用の小さな俸給表カタログに差し替え、実データに依存しない決定的なテストにする。

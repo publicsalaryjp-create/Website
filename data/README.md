@@ -66,11 +66,31 @@ python3 scripts/extract-salary-tables.py path/to/official-salary-tables.xlsx \
 シート名や列レイアウトが大きく異なる場合は `scripts/extract-salary-tables.py` 内の
 `GRADED_SHEETS` 等の定義を実際のファイルに合わせて修正してください。
 
-## `allowance-rates.json` について
+## `allowance-rates-r8.json` / `allowance-rates-r8_kankokugo.json` について
 
 期末手当など、年度によって改定される手当率を俸給表と同様にアプリ本体から分離して管理します。
 `terminalAllowance` に職員区分（`general`、`senior_manager`、`designated`）ごとの支給月数を、
-支給年月（例: `2026-06`）をキーとして記録します。年間支給月数は保持しません。アプリの計算と
-画面表示はこのファイルを参照します。更新時は `source` と `fiscalYear` も合わせて変更してください。
+`june`（6月期）・`december`（12月期）をキーとして記録します。年間支給月数は保持しません。
+更新時は `source` と `fiscalYear` も合わせて変更してください。
 `bonusRoleStageAdditionRates` には、期末・勤勉手当の算定基礎に加える役職段階別加算割合を
 俸給表・級ごとに記録します。指定職は級がないため、区分に対する割合を直接記録します。
+
+俸給表と同様、期末手当の支給月数もバージョン（現行／人事院勧告反映後）ごとに異なりうるため、
+`data/vintages.json` の各バージョンに `allowanceFile` を持たせ、`file`（俸給表）と一緒に
+読み込む・切り替える仕組みになっています（`js/data.js` の `switchVintage()` 参照）。
+ファイル名は年度ごとに「ノーマル（`allowance-rates-r{年度}.json`）」と
+「勧告後（`allowance-rates-r{年度}_kankokugo.json`）」の2本立てで管理します。
+`allowance-rates-r8_kankokugo.json` は令和8年度のうち、6月期は勧告前（現行）の値のまま、
+12月期のみ人事院勧告反映後の推定値（一般職員・特定管理職員・指定職員とも「6月期の値+0.025」）
+に置き換えたものです。12月期の正式な公表値は未入手のため暫定的な推定値であることを
+`source` フィールドに明記しています。なお勤勉手当は成績率のみで算定しており
+「支給月数」の概念を持たないため、勤勉手当側の月数データがあってもこのファイルには反映しません
+（勤勉手当の12月期の成績率シフトは `js/data.js` の `MERIT_RATE_CATEGORIES_POST_RECOMMENDATION_DECEMBER` を参照）。
+
+`allowance-rates-r9nendo.json` は令和9年度（6月期・12月期とも）の推定値で、現行の値に一律
++0.0125（一般職員1.2625→1.275等）を加えたものです。`allowance-rates-r8_kankokugo.json`と同様、
+正式な公表値は未入手のため暫定的な推定値であることを`source`フィールドに明記しています。
+対応する勤勉手当の成績率シフト（6月期・12月期とも+0.0125）は `js/data.js` の
+`MERIT_RATE_CATEGORIES_REIWA9_NENDO` を参照してください。`data/vintages.json` の
+バージョン一覧は、俸給表バージョン・支給期の組み合わせごとの成績率シフト幅を管理する
+`MERIT_RATE_SHIFT_BY_VINTAGE`（`js/data.js`）と対応させる必要があります。

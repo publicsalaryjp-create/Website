@@ -724,7 +724,7 @@ await checkNoConsoleErrors(
   await page.close();
 }
 
-// index.html: 俸給表バージョンのプルダウンで「現行」「人事院勧告反映後」がともに選択可能
+// index.html: 俸給表バージョンのプルダウンで「現行」「人事院勧告反映後（令和9年度）」がともに選択可能
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
@@ -734,16 +734,16 @@ await checkNoConsoleErrors(
     opts.map((o) => ({ value: o.value, disabled: o.disabled }))
   );
   const current = options.find((o) => o.value === "current");
-  const postRecommendation = options.find((o) => o.value === "post_recommendation");
+  const reiwa9Nendo = options.find((o) => o.value === "reiwa9_nendo");
   report(
-    "index.html: 俸給表バージョンは現行・人事院勧告反映後のどちらも選択可能",
-    current && !current.disabled && postRecommendation && !postRecommendation.disabled,
+    "index.html: 俸給表バージョンは現行・人事院勧告反映後（令和9年度）のどちらも選択可能",
+    current && !current.disabled && reiwa9Nendo && !reiwa9Nendo.disabled,
     JSON.stringify(options)
   );
   await page.close();
 }
 
-// index.html: 「人事院勧告反映後」に切り替えると令和8年人事院勧告反映後の俸給額が反映される
+// index.html: 「人事院勧告反映後（令和9年度）」に切り替えると俸給月額が反映される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
@@ -753,19 +753,18 @@ await checkNoConsoleErrors(
   await page.selectOption("#step", "1");
   await page.waitForTimeout(150);
   const salaryBefore = await page.textContent("#r-base");
-  await page.check("#salary-vintage-post_recommendation");
+  await page.check("#salary-vintage-reiwa9_nendo");
   await page.waitForTimeout(300);
   const salaryAfter = await page.textContent("#r-base");
-  const note = await page.textContent("#vintage-note");
   report(
-    "index.html: 人事院勧告反映後に切り替えると俸給月額が変わり、人事院勧告の注記が表示される",
-    salaryBefore !== salaryAfter && note.includes("令和8年人事院勧告"),
-    `切替前=${salaryBefore} 切替後=${salaryAfter} note=${note}`
+    "index.html: 人事院勧告反映後（令和9年度）に切り替えると俸給月額が変わる",
+    salaryBefore !== salaryAfter,
+    `切替前=${salaryBefore} 切替後=${salaryAfter}`
   );
   await page.close();
 }
 
-// index.html: 「人事院勧告反映後」では現行との差額が併記され、「現行」に戻すと消える
+// index.html: 「人事院勧告反映後（令和9年度）」では現行との差額が併記され、「現行」に戻すと消える
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
@@ -777,9 +776,9 @@ await checkNoConsoleErrors(
   await page.waitForTimeout(150);
   const diffHiddenOnCurrent = await page.isHidden("#r-base-diff");
 
-  await page.check("#salary-vintage-post_recommendation");
+  await page.check("#salary-vintage-reiwa9_nendo");
   await page.waitForTimeout(300);
-  const diffVisibleOnPostRecommendation = await page.isVisible("#r-base-diff");
+  const diffVisibleOnReiwa9Nendo = await page.isVisible("#r-base-diff");
   const baseDiffText = await page.textContent("#r-base-diff");
   const annualDiffText = await page.textContent("#r-annual-diff");
   const heroDiffText = await page.textContent("#r-annual-hero-diff");
@@ -790,20 +789,20 @@ await checkNoConsoleErrors(
   const diffHiddenAfterRevert = await page.isHidden("#r-base-diff");
 
   report(
-    "index.html: 人事院勧告反映後では俸給月額・年収に現行との差額（+9,500円等）が併記され、現行に戻すと消える",
+    "index.html: 人事院勧告反映後（令和9年度）では俸給月額・年収に現行との差額（+9,500円等）が併記され、現行に戻すと消える",
     diffHiddenOnCurrent &&
-      diffVisibleOnPostRecommendation &&
+      diffVisibleOnReiwa9Nendo &&
       baseDiffText === "+￥9,500" &&
       annualDiffText.startsWith("+") &&
       heroDiffText.startsWith("+") &&
       noteVisible &&
       diffHiddenAfterRevert,
-    `現行時hidden=${diffHiddenOnCurrent} 勧告後visible=${diffVisibleOnPostRecommendation} 俸給差額=${baseDiffText} 年収差額=${annualDiffText} hero差額=${heroDiffText} note表示=${noteVisible} 復帰後hidden=${diffHiddenAfterRevert}`
+    `現行時hidden=${diffHiddenOnCurrent} 令和9年度visible=${diffVisibleOnReiwa9Nendo} 俸給差額=${baseDiffText} 年収差額=${annualDiffText} hero差額=${heroDiffText} note表示=${noteVisible} 復帰後hidden=${diffHiddenAfterRevert}`
   );
   await page.close();
 }
 
-// index.html（かんたんモード）: 「人事院勧告反映後」では年収目安に現行との差額が併記される
+// index.html（かんたんモード）: 「人事院勧告反映後（令和9年度）」では年収目安に現行との差額が併記される
 {
   const page = await browser.newPage();
   await page.goto(`${base}/index.html`);
@@ -812,15 +811,15 @@ await checkNoConsoleErrors(
   await page.waitForTimeout(500);
   const diffHiddenOnCurrent = await page.isHidden("#simple-r-annual-hero-diff");
 
-  await page.check("#simple-salary-vintage-post_recommendation");
+  await page.check("#simple-salary-vintage-reiwa9_nendo");
   await page.waitForTimeout(300);
-  const diffVisibleOnPostRecommendation = await page.isVisible("#simple-r-annual-hero-diff");
+  const diffVisibleOnReiwa9Nendo = await page.isVisible("#simple-r-annual-hero-diff");
   const heroDiffText = await page.textContent("#simple-r-annual-hero-diff");
 
   report(
-    "index.html（かんたんモード）: 人事院勧告反映後では年収目安に現行との差額が併記される",
-    diffHiddenOnCurrent && diffVisibleOnPostRecommendation && heroDiffText.startsWith("+"),
-    `現行時hidden=${diffHiddenOnCurrent} 勧告後visible=${diffVisibleOnPostRecommendation} hero差額=${heroDiffText}`
+    "index.html（かんたんモード）: 人事院勧告反映後（令和9年度）では年収目安に現行との差額が併記される",
+    diffHiddenOnCurrent && diffVisibleOnReiwa9Nendo && heroDiffText.startsWith("+"),
+    `現行時hidden=${diffHiddenOnCurrent} 令和9年度visible=${diffVisibleOnReiwa9Nendo} hero差額=${heroDiffText}`
   );
   await page.close();
 }

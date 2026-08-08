@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "salary-calculator",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8892"],
+      "port": 8892,
+      "autoPort": true
+    }
+  ]
+}

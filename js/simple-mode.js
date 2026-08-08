@@ -4,8 +4,8 @@
  * 詳細モード（js/app.js, js/form-controls.js）とは入力状態を独立させており、
  * 「役職・年齢の目安」で選んだ代表的な役職に応じた俸給表・級・号俸・職員区分・
  * 俸給の特別調整額を自動で適用する（SIMPLE_ROLE_LEVELS参照）。住居手当はなしと仮定する
- * （本府省業務調整手当は東京都特別区を選んだ場合のみ加算）。
- * 前提にするDOM ID: simple-calc-form, simple-salary-vintage-group, simple-vintage-note,
+ * （本府省業務調整手当は「役職・年齢の目安」で本府省の役職を選んだ場合のみ加算。勤務地は問わない）。
+ * 前提にするDOM ID: simple-calc-form, simple-salary-vintage-group,
  * simple-role-level, simple-role-level-status, simple-regional-prefecture,
  * simple-regional-municipality, simple-regional-rate, simple-regional-rate-status, simple-dependent-count,
  * simple-dependent-field, simple-dependent-exempt-note, simple-overtime-hours,
@@ -22,14 +22,21 @@
 // 人事院・内閣人事局公表のモデル給与（本府省）の代表的な役職・年齢の水準。
 // 級・号俸・俸給の特別調整額の区分は、各役職の標準的な位置づけに基づく代表値であり、
 // 実際の格付けは個人ごとに異なる（あくまで目安）。
+// isMainMinistry: true の役職を選ぶと、勤務地を自動的に東京都特別区（霞が関）にする
+// （applySimpleRoleLocationDefault参照）。本府省勤務は霞が関等（東京都特別区）が前提のため。
 const SIMPLE_ROLE_LEVELS = [
-  { key: "clerk22", label: "22歳 係員", tableKey: "administrative_1", grade: 2, step: 1, specialAdjustmentCategory: null, staffType: "general" },
-  { key: "supervisor28", label: "28歳 係長", tableKey: "administrative_1", grade: 3, step: 5, specialAdjustmentCategory: null, staffType: "general" },
-  { key: "assistant35", label: "35歳 課長補佐", tableKey: "administrative_1", grade: 6, step: 1, specialAdjustmentCategory: null, staffType: "general" },
-  { key: "director40", label: "40歳 室長", tableKey: "administrative_1", grade: 7, step: 1, specialAdjustmentCategory: "type2", staffType: "senior_manager" },
-  { key: "chief50", label: "50歳 課長", tableKey: "administrative_1", grade: 9, step: 4, specialAdjustmentCategory: "type1", staffType: "senior_manager" },
-  { key: "bureauChief", label: "局長", tableKey: "designated", grade: null, step: 4, specialAdjustmentCategory: null, staffType: "designated" },
-  { key: "viceMinister", label: "事務次官", tableKey: "designated", grade: null, step: 8, specialAdjustmentCategory: null, staffType: "designated" },
+  { key: "clerk22", label: "本府省 22歳 係員", tableKey: "administrative_1", grade: 2, step: 1, specialAdjustmentCategory: null, staffType: "general", isMainMinistry: true },
+  { key: "supervisor28", label: "本府省 28歳 係長", tableKey: "administrative_1", grade: 3, step: 5, specialAdjustmentCategory: null, staffType: "general", isMainMinistry: true },
+  { key: "assistant35", label: "本府省 35歳 課長補佐", tableKey: "administrative_1", grade: 6, step: 5, specialAdjustmentCategory: null, staffType: "general", isMainMinistry: true },
+  { key: "director40", label: "本府省 40歳 室長", tableKey: "administrative_1", grade: 7, step: 5, specialAdjustmentCategory: "type2", staffType: "senior_manager", isMainMinistry: true },
+  { key: "chief50", label: "本府省 50歳 課長", tableKey: "administrative_1", grade: 9, step: 4, specialAdjustmentCategory: "type1", staffType: "senior_manager", isMainMinistry: true },
+  { key: "bureauChief", label: "本府省 局長", tableKey: "designated", grade: null, step: 4, specialAdjustmentCategory: null, staffType: "designated", isMainMinistry: true },
+  { key: "viceMinister", label: "本府省 事務次官", tableKey: "designated", grade: null, step: 8, specialAdjustmentCategory: null, staffType: "designated", isMainMinistry: true },
+  { key: "kankuClerk18", label: "管区 18歳 係員", tableKey: "administrative_1", grade: 1, step: 5, specialAdjustmentCategory: null, staffType: "general" },
+  { key: "kankuClerk22", label: "管区 22歳 係員", tableKey: "administrative_1", grade: 1, step: 25, specialAdjustmentCategory: null, staffType: "general" },
+  { key: "kankuSupervisor35", label: "管区 35歳 係長", tableKey: "administrative_1", grade: 3, step: 24, specialAdjustmentCategory: null, staffType: "general" },
+  { key: "kankuSupervisor40", label: "管区 40歳 係長", tableKey: "administrative_1", grade: 3, step: 40, specialAdjustmentCategory: null, staffType: "general" },
+  { key: "kankuChief50", label: "管区 50歳 課長", tableKey: "administrative_1", grade: 4, step: 58, specialAdjustmentCategory: "type5", staffType: "senior_manager" },
 ];
 
 // 本府省業務調整手当（本省手当）は東京都特別区（霞が関等）勤務の場合のみ自動加算する。
@@ -60,10 +67,25 @@ function currentSimpleRoleLevel() {
   return SIMPLE_ROLE_LEVELS[index] || SIMPLE_ROLE_LEVELS[0];
 }
 
-/** 選択中の市区町村が東京都特別区かどうか（本省手当の自動判定に使う） */
+/** 選択中の役職・年齢の目安が本府省勤務（SIMPLE_ROLE_LEVELSのisMainMinistry）かどうか（本省手当の自動判定に使う） */
 function isSimpleHonshoEligible() {
-  const municipalitySelect = document.getElementById("simple-regional-municipality");
-  return !!municipalitySelect && municipalitySelect.value === SIMPLE_HONSHO_MUNICIPALITY_CODE;
+  return !!currentSimpleRoleLevel().isMainMinistry;
+}
+
+/**
+ * 選択中の役職が本府省勤務（SIMPLE_ROLE_LEVELSのisMainMinistry）の場合、勤務地を東京都特別区に
+ * 自動設定する。管区など本府省以外の役職では、前に選んでいた役職の勤務地が残らないよう
+ * 都道府県・市区町村の選択を解除する（未選択に戻すと地域手当は0円になる。resetRateOnClear参照）。
+ */
+function applySimpleRoleLocationDefault() {
+  const role = currentSimpleRoleLevel();
+  const prefectureSelect = document.getElementById("simple-regional-prefecture");
+  prefectureSelect.value = role.isMainMinistry ? "東京都" : "";
+  simpleRegionalAllowance.populateMunicipalityOptions();
+  if (role.isMainMinistry) {
+    document.getElementById("simple-regional-municipality").value = SIMPLE_HONSHO_MUNICIPALITY_CODE;
+  }
+  simpleRegionalAllowance.applyMunicipalitySelection();
 }
 
 // 管理職（俸給の特別調整額の対象・指定職職員）は超過勤務手当の支給対象外のため、時間を0として扱う
@@ -105,7 +127,7 @@ function updateSimpleFieldVisibility() {
  * ラジオ選択・注記・計算結果を再同期する。 */
 function syncSimpleFormAfterVintageChange() {
   populateVintageOptions("simple-salary-vintage-group", "simple-salary-vintage");
-  updateVintageNote("simple-vintage-note");
+  updateVintageNote("vintage-note");
   simpleRecalculate();
 }
 
@@ -124,7 +146,7 @@ async function handleSimpleVintageChange(e) {
     if (original) original.checked = true;
   }
   populateVintageOptions("simple-salary-vintage-group", "simple-salary-vintage");
-  updateVintageNote("simple-vintage-note");
+  updateVintageNote("vintage-note");
   syncDetailedFormAfterVintageChange();
   recalculate();
 }
@@ -143,7 +165,8 @@ const simpleRegionalAllowance = createRegionalAllowanceController({
 /**
  * かんたんモードの入力値を calculateSalary() の入力形式に変換する。
  * 俸給表・級・号俸・職員区分・俸給の特別調整額は、選択中の役職・年齢の目安（SIMPLE_ROLE_LEVELS）に従う。
- * 本省手当は、勤務地に東京都特別区を選んでいる場合のみ自動計算する。勤務成績は各職員区分の「良好」を仮定する。
+ * 本省手当は、選択中の役職・年齢の目安が本府省勤務（isMainMinistry）の場合のみ自動計算する
+ * （勤務地は問わない）。勤務成績は各職員区分の「良好」を仮定する。
  */
 function readSimpleInput() {
   const role = currentSimpleRoleLevel();
@@ -152,8 +175,8 @@ function readSimpleInput() {
   const dependentCount = Number(document.getElementById("simple-dependent-count").value) || 0;
   const overtimeHours = overtimeExempt ? 0 : Math.round(Number(document.getElementById("simple-overtime-hours").value) || 0);
   const terminalRates = ALLOWANCE_RATES.terminalAllowance[role.staffType];
-  const meritGrades = MERIT_RATE_CATEGORIES[role.staffType].grades;
-  const goodMeritRate = meritGrades.find((g) => g.key === "good").rate;
+  const goodMeritRateJune = getMeritCategory(role.staffType, "june").grades.find((g) => g.key === "good").rate;
+  const goodMeritRateDecember = getMeritCategory(role.staffType, "december").grades.find((g) => g.key === "good").rate;
 
   return {
     tableKey: role.tableKey,
@@ -174,11 +197,11 @@ function readSimpleInput() {
         : role.specialAdjustmentCategory
           ? getManagementBonusAdditionRate(role.specialAdjustmentCategory)
           : 0,
-    teishuMonthsJune: terminalRates["2026-06"],
-    teishuMonthsDecember: terminalRates["2026-12"],
+    teishuMonthsJune: terminalRates.june,
+    teishuMonthsDecember: terminalRates.december,
     bonusRoleStageAdditionRate: getBonusRoleStageAdditionRate(role.tableKey, role.grade),
-    meritRateJune: goodMeritRate,
-    meritRateDecember: goodMeritRate,
+    meritRateJune: goodMeritRateJune,
+    meritRateDecember: goodMeritRateDecember,
     // 平日の時間外勤務（深夜・休日を除く）としてのみ概算する
     weekdayNormalHours: Math.max(0, overtimeHours),
     weekdayNightHours: 0,
@@ -208,7 +231,24 @@ function simpleRecalculate() {
   updateSimpleFieldVisibility();
   const input = readSimpleInput();
   const result = calculateSalary(input);
-  const baselineResult = hasVintageComparison() ? calculateSalary(input, BASELINE_SALARY_CATALOG) : null;
+  let baselineResult = null;
+  if (hasVintageComparison()) {
+    // 期末手当の支給月数・勤勉手当の成績率はバージョン・支給期ごとに異なりうるため、
+    // baselineResult計算時は readSimpleInput()の値をそのまま使い回さず、現行バージョンの値で上書きする。
+    const role = currentSimpleRoleLevel();
+    const baselineTerminalRates = BASELINE_ALLOWANCE_RATES.terminalAllowance[role.staffType];
+    const baselineGoodMeritRate = MERIT_RATE_CATEGORIES[role.staffType].grades.find((g) => g.key === "good").rate;
+    baselineResult = calculateSalary(
+      {
+        ...input,
+        teishuMonthsJune: baselineTerminalRates.june,
+        teishuMonthsDecember: baselineTerminalRates.december,
+        meritRateJune: baselineGoodMeritRate,
+        meritRateDecember: baselineGoodMeritRate,
+      },
+      BASELINE_SALARY_CATALOG
+    );
+  }
   renderSimpleResult(result, baselineResult);
 }
 
@@ -218,7 +258,7 @@ function initSimpleForm() {
   const saved = loadFormState("simple");
 
   populateVintageOptions("simple-salary-vintage-group", "simple-salary-vintage");
-  updateVintageNote("simple-vintage-note");
+  updateVintageNote("vintage-note");
   populateSimpleRoleLevelOptions();
   simpleRegionalAllowance.populatePrefectureOptions();
   populateDependentCountOptions("simple-dependent-count");
@@ -228,12 +268,20 @@ function initSimpleForm() {
   simpleRegionalAllowance.populateMunicipalityOptions();
   if (saved && saved["simple-regional-municipality"]) {
     document.getElementById("simple-regional-municipality").value = saved["simple-regional-municipality"];
+  } else {
+    // 保存済みの勤務地がない場合、本府省の役職が選ばれていれば東京都特別区を初期値にする。
+    applySimpleRoleLocationDefault();
   }
   simpleRegionalAllowance.updateRateStatus();
 
   wireCounterButtons(form);
 
-  form.addEventListener("input", () => simpleRecalculate());
+  form.addEventListener("input", (e) => {
+    if (e.target.id === "simple-role-level") {
+      applySimpleRoleLocationDefault();
+    }
+    simpleRecalculate();
+  });
 
   form.addEventListener("change", async (e) => {
     if (e.target.id === "simple-regional-prefecture") {

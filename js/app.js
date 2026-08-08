@@ -21,14 +21,16 @@ function currentGrade() {
 function currentMeritGrade(period) {
   const staffType = currentMeritStaffTypeKey();
   const gradeKey = radioValue(`merit-grade-${period}`);
-  const category = MERIT_RATE_CATEGORIES[staffType];
+  const category = getMeritCategory(staffType, period);
   const grade = category && category.grades.find((g) => g.key === gradeKey);
-  // 指定職俸給表8号（事務次官等）は「優秀」の成績率が107.5/100の固定値になる特例。
-  // 指定職俸給表は級の概念がないflat型で、号（document.getElementById("step")）が
-  // そのまま俸給表steps配列のインデックスに対応するため、grade（職務の級）ではなくstepを見る。
+  // 指定職俸給表8号（事務次官等）は「優秀」の成績率が107.5/100（人事院勧告反映後の12月期は
+  // 110/100）の固定値になる特例。指定職俸給表は級の概念がないflat型で、
+  // 号（document.getElementById("step")）がそのまま俸給表steps配列のインデックスに
+  // 対応するため、grade（職務の級）ではなくstepを見る。
   const designatedStep = Number(document.getElementById("step").value);
   if (grade && staffType === "designated" && gradeKey === "excellent" && designatedStep === 8) {
-    return { ...grade, rate: DESIGNATED_STEP8_EXCELLENT_RATE, minRate: DESIGNATED_STEP8_EXCELLENT_RATE, maxRate: DESIGNATED_STEP8_EXCELLENT_RATE };
+    const fixedRate = getDesignatedStep8ExcellentRate(period);
+    return { ...grade, rate: fixedRate, minRate: fixedRate, maxRate: fixedRate };
   }
   return grade;
 }
@@ -56,8 +58,8 @@ function readInput() {
   const terminalRates = ALLOWANCE_RATES.terminalAllowance[currentMeritStaffTypeKey()];
   return {
     ...readCommonInput(),
-    teishuMonthsJune: terminalRates["2026-06"],
-    teishuMonthsDecember: terminalRates["2026-12"],
+    teishuMonthsJune: terminalRates.june,
+    teishuMonthsDecember: terminalRates.december,
     bonusRoleStageAdditionRate: getBonusRoleStageAdditionRate(currentTableKey(), currentGrade()),
     meritRateJune: currentMeritRate("june"),
     meritRateDecember: currentMeritRate("december"),
@@ -69,12 +71,23 @@ function readInput() {
   };
 }
 
+/**
+ * 比較基準（現行）バージョンの期末手当支給月数を、選択中の職員区分について返す。
+ * 期末手当の支給月数はバージョンごとに異なりうるため、baselineResult計算時は
+ * readInput()の値をそのまま使い回さず、この値で上書きする（recalculate参照）。
+ */
+function baselineTerminalMonths() {
+  const terminalRates = BASELINE_ALLOWANCE_RATES.terminalAllowance[currentMeritStaffTypeKey()];
+  return { teishuMonthsJune: terminalRates.june, teishuMonthsDecember: terminalRates.december };
+}
+
 function renderTerminalAllowanceRateNote() {
   const staffType = currentMeritStaffTypeKey();
   const terminal = ALLOWANCE_RATES.terminalAllowance[staffType];
   const label = MERIT_RATE_CATEGORIES[staffType].label;
+  const year = ALLOWANCE_RATES.fiscalYear;
   document.getElementById("terminal-allowance-rate-note").textContent =
-    `${label}: 2026年6月期 ${terminal["2026-06"]}月分／2026年12月期 ${terminal["2026-12"]}月分`;
+    `${label}: ${year}年6月期 ${terminal.june}月分／${year}年12月期 ${terminal.december}月分`;
 }
 
 /** 平日125%・深夜150%・休日135%・休日深夜160%の各時間単価（月60時間超の割増分は別途注記で案内） */
@@ -107,11 +120,16 @@ function renderResult(result, baselineResult) {
   document.getElementById("ot-warning").hidden = result.overtimeExcessHours <= 0;
 }
 
-/** 職務の級で選択可能な俸給の特別調整額の区分（一種〜五種等）をプルダウンに反映する */
+/**
+ * 職務の級で選択可能な俸給の特別調整額の区分（一種〜五種等）をプルダウンに反映する。
+ * 俸給表バージョンの切替など、級はそのままで選択肢を作り直すだけの場合は、選択中の区分を
+ * 維持する（新しい選択肢に含まれなくなった場合のみ先頭の区分にフォールバックする）。
+ */
 function populateSpecialAdjustmentCategoryOptions() {
   const select = document.getElementById("special-adjustment-category");
   const grade = Number(document.getElementById("grade").value);
   const options = getSpecialAdjustmentOptions(currentTableKey(), grade);
+  const currentValue = select.value;
   select.innerHTML = "";
   options.forEach((opt) => {
     const el = document.createElement("option");
@@ -119,7 +137,9 @@ function populateSpecialAdjustmentCategoryOptions() {
     el.textContent = opt.label;
     select.appendChild(el);
   });
-  if (options.length) select.value = options[0].key;
+  if (options.length) {
+    select.value = options.some((opt) => opt.key === currentValue) ? currentValue : options[0].key;
+  }
 }
 
 /** 選択中の俸給の特別調整額の区分に対応する定額をヒント表示する */
@@ -185,7 +205,7 @@ function splitGradeLabel(label) {
 function populateMeritGradeOptions(period) {
   const group = document.getElementById(`merit-grade-${period}`);
   const staffType = currentMeritStaffTypeKey();
-  const category = MERIT_RATE_CATEGORIES[staffType];
+  const category = getMeritCategory(staffType, period);
   group.innerHTML = "";
   category.grades
     .filter((g) => g.rate != null)
@@ -226,9 +246,9 @@ function updateMeritRateConstraints(period) {
   const input = document.getElementById(`merit-rate-${period}`);
   const grade = currentMeritGrade(period);
   if (!input || !grade || grade.rate == null) return;
-  input.min = String(grade.minRate * 100);
+  input.min = Number((grade.minRate * 100).toFixed(4));
   if (Number.isFinite(grade.maxRate)) {
-    input.max = String(grade.maxRate * 100);
+    input.max = Number((grade.maxRate * 100).toFixed(4));
   } else {
     input.removeAttribute("max");
   }
@@ -257,7 +277,7 @@ function updateMeritGradeNote(period) {
   if (!note) return;
   const staffType = currentMeritStaffTypeKey();
   const gradeKey = radioValue(`merit-grade-${period}`);
-  const category = MERIT_RATE_CATEGORIES[staffType];
+  const category = getMeritCategory(staffType, period);
   const grade = category && category.grades.find((g) => g.key === gradeKey);
   note.textContent = grade ? splitGradeLabel(grade.label).detail : "";
 }
@@ -267,7 +287,20 @@ function recalculate() {
   updateOvertimeVisibility();
   const input = readInput();
   const result = calculateSalary(input);
-  const baselineResult = hasVintageComparison() ? calculateSalary(input, BASELINE_SALARY_CATALOG) : null;
+  const baselineResult = hasVintageComparison()
+    ? calculateSalary(
+        {
+          ...input,
+          ...baselineTerminalMonths(),
+          // 6月期・12月期の成績率は選択中バージョン用にシフトされた値がinput側に入っているため、
+          // 現行（比較基準）ではそのシフト分を差し引く（getMeritRateShift参照。現行を選んでいる
+          // ときはシフト0なので何も変わらない）。
+          meritRateJune: input.meritRateJune - getMeritRateShift("june"),
+          meritRateDecember: input.meritRateDecember - getMeritRateShift("december"),
+        },
+        BASELINE_SALARY_CATALOG
+      )
+    : null;
   renderResult(result, baselineResult);
 }
 
@@ -636,10 +669,15 @@ function restoreSavedVintageKey() {
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    await Promise.all([loadVintages(), loadAllowanceRates()]);
+    await loadVintages();
     restoreSavedVintageKey();
     const initialVintage = getVintage(CURRENT_VINTAGE_KEY);
-    await Promise.all([loadOfficialSalaryTable(initialVintage && initialVintage.file), loadBaselineSalaryTable()]);
+    await Promise.all([
+      loadOfficialSalaryTable(initialVintage && initialVintage.file),
+      loadBaselineSalaryTable(),
+      loadAllowanceRates(initialVintage && initialVintage.allowanceFile),
+      loadBaselineAllowanceRates(),
+    ]);
     updateTableSourceNote();
     renderTerminalAllowanceRateNote();
     initForm();

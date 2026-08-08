@@ -6,8 +6,8 @@
   <meta name="description" content="期末手当と勤勉手当の支給額から、国家公務員の勤勉手当の成績率を概算する計算機です。">
   <title>勤勉手当の成績率計算機｜国家公務員給与計算機</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
-  <link rel="stylesheet" href="../css/style.css?v=20260806-6">
-  <link rel="stylesheet" href="style.css?v=20260802-1">
+  <link rel="stylesheet" href="../css/style.css?v=20260808-1">
+  <link rel="stylesheet" href="style.css?v=20260808-3">
 </head>
 <body>
   <header class="site-header tool-header">
@@ -16,7 +16,6 @@
   </header>
   <nav class="site-nav" aria-label="サイト内ナビゲーション">
     <a href="../index.html">計算機</a>
-    <a href="../allowances.html">各種手当の解説</a>
     <a href="./" aria-current="page">成績率を逆算</a>
     <a href="../about.html">このサイトについて</a>
   </nav>
@@ -25,23 +24,18 @@
     <nav class="breadcrumb" aria-label="パンくずリスト">
       <ol>
         <li><a href="../index.html">トップページ</a></li>
-        <li aria-current="page">勤勉手当の成績率計算機</li>
+        <li aria-current="page">成績率逆算機</li>
       </ol>
     </nav>
-    <section class="panel section-heading">
-      <span class="eyebrow">このツールについて</span>
-      <h2>成績率逆算機の意義</h2>
-      <p>
-        勤勉手当の成績率（人事評価の結果を反映する割合）は、給与明細に直接記載されないことが多く、
-        自分の評価区分を正確に把握しづらいのが実情です。このツールは、実際に支給された期末手当・
-        勤勉手当の金額から成績率を逆算し、「良好」「優秀」「特に優秀」などの区分のどこに位置するかを
-        確認するための概算ツールです。人事評価の結果を客観的な数値で把握する手がかりとしてご活用ください。
-      </p>
+    <section class="panel section-heading tool-intro">
+      <h2>成績率逆算機について</h2>
+      <p>国家公務員の賞与（ボーナス）は期末手当と勤勉手当で構成されます。</p>
+      <p>このうち、勤勉手当の算定には業績評価が考慮されますが、仮に業績評価が上位の区分であっても、必ずしも勤勉手当の成績区分が上位区分になるとは限りません。また、決定された成績区分が必ずしも明示されないこともあります。</p>
+      <p>このツールでは、勤勉手当の金額等から成績率を逆算し、自分がどの区分に位置するかを確認するための概算ツールです。業績評価が給与という形で反映されているかどうかを把握する際の参考としてご活用ください。</p>
     </section>
     <section class="panel calculator-card" aria-labelledby="calculator-heading">
       <div class="section-heading">
-        <span class="eyebrow">支給条件と金額から逆算</span>
-        <h2 id="calculator-heading">支給額を入力</h2>
+        <h2 id="calculator-heading">条件を入力</h2>
         <p>俸給表・職員区分を選び、給与明細に記載された控除前の支給額を入力してください。</p>
       </div>
 
@@ -82,8 +76,6 @@
             </label>
           </div>
         </fieldset>
-
-        <h3 class="form-category-heading">期末手当</h3>
 
         <div class="amount-field">
           <label for="dependent-base-addition">扶養手当（月額）</label>
@@ -131,17 +123,6 @@
             <span aria-hidden="true">円</span>
           </div>
           <p class="input-error" id="term-error" role="alert"></p>
-        </div>
-
-        <h3 class="form-category-heading">勤勉手当</h3>
-        <div class="amount-field">
-          <label for="period-rate">勤勉手当の期間率</label>
-          <div class="percent-input">
-            <input type="number" id="period-rate" name="period-rate" min="0" max="100" step="0.01" value="100">
-            <span aria-hidden="true">%</span>
-          </div>
-          <p class="hint">基準日前6か月の勤務期間に応じた率</p>
-          <p class="input-error" id="period-rate-error" role="alert"></p>
         </div>
 
         <div class="amount-field">
@@ -198,6 +179,6 @@
   </footer>
 
   <script src="../js/regional-allowance-locations.js"></script>
-  <script src="script.js?v=20260807-1"></script>
+  <script src="script.js?v=20260808-3"></script>
 </body>
 </html>

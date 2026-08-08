@@ -10,10 +10,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="国家公務員の月給と年収を概算するシミュレーターです。">
-<title>国家公務員給与計算機</title>
+<meta name="description" content="国家公務員の月給と年収を概算するシミュレーターです。人事院勧告を踏まえた給与額や現行との差額も、かんたんに試算できます。">
+<title>国家公務員給与計算機｜人事院勧告後の給与を試算</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2321568f'/%3E%3Ctext x='16' y='23' font-family='Hiragino Kaku Gothic ProN,Noto Sans JP,sans-serif' font-size='19' font-weight='700' fill='white' text-anchor='middle'%3E%C2%A5%3C/text%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/style.css?v=20260806-6">
+<link rel="stylesheet" href="css/style.css?v=20260808-6">
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -30,28 +30,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </header>
 <nav class="site-nav" aria-label="サイト内ナビゲーション">
   <a href="index.html" aria-current="page">計算機</a>
-  <a href="allowances.html">各種手当の解説</a>
   <a href="kinben-seisekiritsu/">成績率を逆算</a>
   <a href="about.html">このサイトについて</a>
 </nav>
 
 <main>
   <div class="mode-tabs" role="tablist" aria-label="入力モードの切り替え">
-    <button type="button" class="mode-tab" id="tab-simple" role="tab" aria-selected="true" aria-controls="simple-mode-panel">かんたんモード</button>
-    <button type="button" class="mode-tab" id="tab-detailed" role="tab" aria-selected="false" aria-controls="detailed-mode-panel">本格計算モード</button>
+    <button type="button" class="mode-tab" id="tab-simple" role="tab" aria-selected="true" aria-controls="simple-mode-panel">
+      <span class="mode-tab-title">かんたんモード</span>
+      <span class="mode-tab-desc">給与計算にあまり詳しくない方におすすめです</span>
+    </button>
+    <button type="button" class="mode-tab" id="tab-detailed" role="tab" aria-selected="false" aria-controls="detailed-mode-panel">
+      <span class="mode-tab-title">本格計算モード</span>
+      <span class="mode-tab-desc">号俸や各種手当まで細かく設定したい方はこちら</span>
+    </button>
   </div>
-  <p class="mode-tabs-hint">給与計算にあまり詳しくない方は「かんたんモード」がおすすめです。逆に、号俸や各種手当まで細かく設定したい方は「本格計算モード」をご利用ください。</p>
 
   <div class="layout mode-panel" id="simple-mode-panel" role="tabpanel" aria-labelledby="tab-simple">
     <form id="simple-calc-form" class="panel form-panel">
       <p class="hint simple-intro">
-        人事院・内閣人事局公表のモデルケースから選んで試算できます。
+        人事院のモデルケースを参考に設定したパターンから選んで試算できます。
       </p>
 
       <div class="field">
         <span class="field-label-text" id="simple-salary-vintage-label">俸給表のバージョン</span>
         <div class="radio-group" role="radiogroup" aria-labelledby="simple-salary-vintage-label" id="simple-salary-vintage-group"></div>
-        <p class="hint" id="simple-vintage-note"></p>
       </div>
 
       <fieldset>
@@ -63,7 +66,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <button type="button" class="counter-btn" data-target="simple-role-level" data-delta="1" aria-label="上げる">＋</button>
           </div>
           <p class="hint regional-rate-status" id="simple-role-level-status" aria-live="polite"></p>
-          <p class="hint">人事院・内閣人事局公表の本府省モデル給与の代表的な役職・年齢の水準から選べます（実際の級・号俸は個人ごとに異なります）。</p>
+          <p class="hint">人事院公表の代表的な役職・年齢のモデル給与を参考に設定しています。</p>
+          <p class="hint">本府省の役職を選んでいる場合、本府省業務調整手当（本省手当）も自動で加算されます（勤務地は問いません）。</p>
         </div>
       </fieldset>
 
@@ -81,7 +85,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <p class="hint regional-rate-status" id="simple-regional-rate-status" aria-live="polite">市区町村を選ぶと、地域手当の支給割合が自動で設定されます。</p>
         <input type="hidden" id="simple-regional-rate" name="simple-regional-rate" value="0">
-        <p class="hint">東京都特別区（霞が関等）を選ぶと、本府省業務調整手当（本省手当）も自動で加算されます。</p>
       </fieldset>
 
       <fieldset>
@@ -169,7 +172,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </tbody>
       </table>
       <p class="hint">
-        ※ 俸給表は選んだ役職に応じた行政職俸給表(一)または指定職俸給表、勤務成績は「良好」、住居手当はなしと仮定した概算です（本府省業務調整手当は東京都特別区を選んだ場合のみ加算）。
+        ※ 俸給表は選んだ役職に応じた行政職俸給表(一)または指定職俸給表、勤務成績は「良好」、住居手当はなしと仮定した概算です（本府省業務調整手当は本府省の役職を選んだ場合のみ加算）。
         税・社会保険料等控除前の額面金額です。
       </p>
       <p class="hint"><button type="button" class="link-button" id="simple-go-detailed">本格計算モードで詳しく計算する →</button></p>
@@ -181,7 +184,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="field">
       <span class="field-label-text" id="salary-vintage-label">俸給表のバージョン</span>
       <div class="radio-group" role="radiogroup" aria-labelledby="salary-vintage-label" id="salary-vintage-group"></div>
-      <p class="hint" id="vintage-note"></p>
     </div>
     <fieldset>
       <legend>俸給</legend>
@@ -592,6 +594,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <strong>ご利用にあたって：</strong>
   このツールは国家公務員給与の概算シミュレーターであり、計算結果の正確性を保証するものではありません。
   本ツールを利用したことによって発生した不利益や損害について、運営者は一切責任を負いません。
+  <p class="hint disclaimer-note">
+    人事院勧告を踏まえた給与の試算に当たっては、6月期・12月期とも勤勉手当の成績率・期末手当の支給月数をいずれも現行の数字から一律+0.0125としています。
+  </p>
+  <p class="hint disclaimer-note" id="vintage-note"></p>
 </div>
 
 <footer class="site-footer">
@@ -607,12 +613,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <p class="footer-copyright">&copy; 2026 国家公務員給与計算機. 本サイトのコンテンツ・ソースコードの無断転載・複製を禁じます。</p>
 </footer>
 
-<script src="js/regional-allowance-locations.js?v=20260807-3"></script>
-<script src="js/promotion-step-mapping.js?v=20260807-3"></script>
-<script src="js/data.js?v=20260807-3"></script>
-<script src="js/calculator.js?v=20260807-3"></script>
-<script src="js/form-controls.js?v=20260807-3"></script>
-<script src="js/simple-mode.js?v=20260807-3"></script>
-<script src="js/app.js?v=20260807-3"></script>
+<script src="js/regional-allowance-locations.js?v=20260808-6"></script>
+<script src="js/promotion-step-mapping.js?v=20260808-6"></script>
+<script src="js/data.js?v=20260808-6"></script>
+<script src="js/calculator.js?v=20260808-6"></script>
+<script src="js/form-controls.js?v=20260808-6"></script>
+<script src="js/simple-mode.js?v=20260808-6"></script>
+<script src="js/app.js?v=20260808-6"></script>
 </body>
 </html>

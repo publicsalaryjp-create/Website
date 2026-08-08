@@ -3,16 +3,16 @@
   "fiscalYear": 2026,
   "terminalAllowance": {
     "general": {
-      "2026-06": 1.2625,
-      "2026-12": 1.2625
+      "june": 1.2625,
+      "december": 1.2625
     },
     "senior_manager": {
-      "2026-06": 1.0625,
-      "2026-12": 1.0625
+      "june": 1.0625,
+      "december": 1.0625
     },
     "designated": {
-      "2026-06": 0.675,
-      "2026-12": 0.675
+      "june": 0.675,
+      "december": 0.675
     }
   },
   "bonusRoleStageAdditionRates": {

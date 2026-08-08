@@ -4,16 +4,16 @@
     {
       "key": "current",
       "label": "現行",
-      "note": "令和8年4月1日施行",
       "file": "salary-tables-r8.json",
+      "allowanceFile": "allowance-rates-r8.json",
       "effectiveDate": "2026-04-01",
       "available": true
     },
     {
-      "key": "post_recommendation",
+      "key": "reiwa9_nendo",
       "label": "人事院勧告反映後",
-      "note": "令和8年人事院勧告",
       "file": "salary-tables-r9.json",
+      "allowanceFile": "allowance-rates-r9nendo.json",
       "effectiveDate": "2027-04-01",
       "available": true
     }
